@@ -147,6 +147,21 @@ class TestPhysicalGraph:
         roles = {attrs.get("role") for _, attrs in g.nodes(data=True)}
         assert "grandmaster" in roles
 
+    def test_wan_no_skips_wan_seed_nodes(self):
+        reqs = _base_requirements(
+            external_transport={"wan_required": "no",
+                                "carrier_diversity_target": "single_path_allowed",
+                                "transport_separation_policy": "logical_separation"},
+        )
+        g = compile_physical_graph(reqs)
+        roles = {attrs.get("role") for _, attrs in g.nodes(data=True)}
+        assert "wan_edge" not in roles
+
+    def test_wan_yes_has_wan_seed_nodes(self):
+        g = compile_physical_graph(_base_requirements())
+        roles = {attrs.get("role") for _, attrs in g.nodes(data=True)}
+        assert "wan_edge" in roles
+
     def test_tbd_services_not_added(self):
         reqs = _base_requirements(
             critical_services={"video_required": "tbd", "telemetry_required": "yes",
@@ -200,6 +215,18 @@ class TestLogicalGraph:
         g = compile_logical_graph(_base_requirements())
         assert "EXTERNAL" in g
 
+    def test_tbd_zone_model_only_ot(self):
+        reqs = _base_requirements(security_access={"security_zone_model": "tbd",
+                                                    "remote_access_profile": "tbd",
+                                                    "contractor_access_policy": "tbd",
+                                                    "audit_logging_required": "tbd",
+                                                    "oob_required": "tbd"})
+        g = compile_logical_graph(reqs)
+        assert "OT" in g
+        assert "MGMT" not in g
+        assert "DMZ" not in g
+        assert g.number_of_edges() == 0
+
     def test_no_wan_no_external(self):
         reqs = _base_requirements(
             external_transport={"wan_required": "no",
@@ -223,6 +250,28 @@ class TestServiceGraph:
         g = compile_service_graph(_base_requirements())
         assert "service::video" not in g
         assert "service::iiot_edge" not in g
+
+    def test_tbd_zone_model_routes_through_ot(self):
+        reqs = _base_requirements(security_access={"security_zone_model": "tbd",
+                                                    "remote_access_profile": "tbd",
+                                                    "contractor_access_policy": "tbd",
+                                                    "audit_logging_required": "tbd",
+                                                    "oob_required": "tbd"})
+        g = compile_service_graph(reqs)
+        # telemetry service should route from OT, not from MGMT or DMZ
+        if "service::telemetry" in g:
+            assert g.has_edge("OT", "service::telemetry")
+
+    def test_no_wan_no_transport_edges(self):
+        reqs = _base_requirements(
+            external_transport={"wan_required": "no",
+                                "carrier_diversity_target": "single_path_allowed",
+                                "transport_separation_policy": "logical_separation"},
+        )
+        g = compile_service_graph(reqs)
+        # no transport edges to EXTERNAL or DMZ
+        for u, v, data in g.edges(data=True):
+            assert data.get("path_role") != "transport" or v not in {"EXTERNAL", "DMZ"}
 
     def test_tbd_services_not_compiled(self):
         reqs = _base_requirements(

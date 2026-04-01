@@ -36,10 +36,16 @@ EXPECTED_V2_SECTIONS = (
 )
 
 
+V2_MARKER_SECTIONS = {"object_profile", "governance", "acceptance_criteria", "known_unknowns"}
+
+
 def detect_questionnaire_version(questionnaire: dict[str, Any]) -> str:
     if "functional_scope" in questionnaire:
         return "v1"
-    if "object_profile" in questionnaire and "governance" in questionnaire:
+    version_str = str(questionnaire.get("version", ""))
+    if version_str.startswith("0.2"):
+        return "v2"
+    if any(section in questionnaire for section in V2_MARKER_SECTIONS):
         return "v2"
     raise ValueError("Unknown questionnaire structure. Cannot determine questionnaire version.")
 

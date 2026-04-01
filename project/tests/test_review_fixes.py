@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from compiler.build_requirements_model import (
-    apply_archetype_defaults,
     build_requirements_model,
+    detect_questionnaire_version,
     load_archetypes,
 )
 from model_utils import merge_missing_values_tracked
@@ -176,3 +176,43 @@ class TestMissingVsNullTracking:
         merged, assumed = merge_missing_values_tracked(base, defaults, "test_section", "test_arch")
         assert len(assumed) == 0
         assert merged["answered_field"] == "concrete_answer"
+
+
+# ---------------------------------------------------------------------------
+# Codex review Wave 2: sparse v2 detection
+# ---------------------------------------------------------------------------
+
+class TestSparseV2Detection:
+    def test_version_prefix_detects_v2(self):
+        assert detect_questionnaire_version({"version": "0.2.0"}) == "v2"
+
+    def test_version_prefix_0_2_1(self):
+        assert detect_questionnaire_version({"version": "0.2.1"}) == "v2"
+
+    def test_single_v2_marker_section(self):
+        assert detect_questionnaire_version({"governance": {}}) == "v2"
+
+    def test_sparse_questionnaire_compiles(self):
+        """A sparse v2 questionnaire with only metadata + version should compile."""
+        questionnaire = {
+            "version": "0.2.0",
+            "metadata": {
+                "object_id": "sparse_test",
+                "object_name": "Sparse",
+                "object_type": "substation",
+                "project_stage": "concept",
+                "criticality_class": "low",
+            },
+        }
+        requirements, assumptions = build_requirements_model(questionnaire)
+        assert requirements["metadata"]["object_id"] == "sparse_test"
+        # all other sections should be defaulted
+        assert len(assumptions) > 0
+
+    def test_v1_still_detected(self):
+        assert detect_questionnaire_version({"functional_scope": {}}) == "v1"
+
+    def test_unknown_raises(self):
+        import pytest
+        with pytest.raises(ValueError, match="Unknown questionnaire"):
+            detect_questionnaire_version({"random_key": "value"})

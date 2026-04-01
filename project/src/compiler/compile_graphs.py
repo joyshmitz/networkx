@@ -59,14 +59,23 @@ def add_seed_nodes_and_edges(
     object_id = requirements.get("metadata", {}).get("object_id", "unknown_object")
     graph.add_node(object_id, role="object", node_type="object")
 
+    wan_enabled = is_yes(requirements.get("external_transport", {}).get("wan_required"))
+    skip_nodes: set[str] = set()
+
     for node in seed.get("nodes", []):
         attrs = dict(node)
+        node_id = attrs.pop("node_id")
+        if attrs.get("role") == "wan_edge" and not wan_enabled:
+            skip_nodes.add(node_id)
+            continue
         equipment_id = attrs.get("equipment_id")
         if equipment_id and equipment_id in equipment_catalog:
             attrs.update(equipment_catalog[equipment_id])
-        graph.add_node(attrs.pop("node_id"), **attrs)
+        graph.add_node(node_id, **attrs)
 
     for edge in seed.get("edges", []):
+        if edge["source"] in skip_nodes or edge["target"] in skip_nodes:
+            continue
         graph.add_edge(edge["source"], edge["target"], **{k: v for k, v in edge.items() if k not in {"source", "target"}})
 
 
@@ -152,7 +161,8 @@ def enrich_physical_graph(
         )
         graph.add_edge("iiot_edge_local", access_node, edge_role="edge_access")
 
-    if should_have_secondary_path(requirements):
+    wan_enabled = is_yes(requirements.get("external_transport", {}).get("wan_required"))
+    if wan_enabled and should_have_secondary_path(requirements):
         ensure_node(graph, "wan_backup", role="wan_edge", carrier="carrier_b")
         if requirements.get("resilience", {}).get("redundancy_target") in {"active_node_backup", "n_plus_1", "no_spof"}:
             ensure_node(
@@ -207,8 +217,10 @@ def compile_logical_graph(requirements: dict[str, Any]) -> nx.DiGraph:
     for zone in zones:
         graph.add_node(zone, node_type="zone", zone_model=zone_model)
 
-    if zone_model == "flat":
-        if "EXTERNAL" in graph:
+    if zone_model in {"tbd", "flat"}:
+        # tbd: unresolved — only OT zone, no inter-zone edges
+        # flat: no segmentation, just OT-EXTERNAL if present
+        if zone_model == "flat" and "EXTERNAL" in graph:
             graph.add_edge("OT", "EXTERNAL", boundary="flat")
             graph.add_edge("EXTERNAL", "OT", boundary="flat")
     elif zone_model == "segmented":
@@ -220,7 +232,7 @@ def compile_logical_graph(requirements: dict[str, Any]) -> nx.DiGraph:
             graph.add_edge("IIOT", "OT", boundary="shared_transport")
         if "EXTERNAL" in graph:
             graph.add_edge("OT", "EXTERNAL", boundary="edge")
-    else:
+    elif zone_model in {"dmz_centric", "strict_isolation"}:
         graph.add_edge("MGMT", "DMZ", boundary="managed")
         graph.add_edge("DMZ", "OT", boundary="controlled")
         if "VIDEO" in graph:
@@ -233,9 +245,24 @@ def compile_logical_graph(requirements: dict[str, Any]) -> nx.DiGraph:
     return graph
 
 
+def _service_source_zone(zone_model: str, preferred: str) -> str:
+    if zone_model in {"flat", "tbd"}:
+        return "OT"
+    return preferred
+
+
+def _service_transport_zone(zone_model: str, wan_required: bool) -> str | None:
+    if not wan_required:
+        return None
+    if zone_model in {"dmz_centric", "strict_isolation"}:
+        return "DMZ"
+    return "EXTERNAL"
+
+
 def compile_service_graph(requirements: dict[str, Any]) -> nx.DiGraph:
     graph = nx.DiGraph(graph_type="service")
     zone_model = requirements.get("security_access", {}).get("security_zone_model", "segmented")
+    wan_required = is_yes(requirements.get("external_transport", {}).get("wan_required"))
 
     for service_name in enabled_services(requirements):
         service_node = f"service::{service_name}"
@@ -243,16 +270,25 @@ def compile_service_graph(requirements: dict[str, Any]) -> nx.DiGraph:
 
         if service_name == "telemetry":
             graph.add_edge("OT", service_node, path_role="source")
-            graph.add_edge(service_node, "DMZ" if zone_model in {"dmz_centric", "strict_isolation"} else "EXTERNAL", path_role="transport")
+            transport_zone = _service_transport_zone(zone_model, wan_required)
+            if transport_zone:
+                graph.add_edge(service_node, transport_zone, path_role="transport")
         elif service_name == "control":
-            graph.add_edge("MGMT" if zone_model != "flat" else "OT", service_node, path_role="source")
+            source = _service_source_zone(zone_model, "MGMT")
+            graph.add_edge(source, service_node, path_role="source")
             graph.add_edge(service_node, "OT", path_role="control_target")
         elif service_name == "video":
-            graph.add_edge("VIDEO" if zone_model != "flat" else "OT", service_node, path_role="source")
-            graph.add_edge(service_node, "DMZ" if zone_model in {"dmz_centric", "strict_isolation"} else "EXTERNAL", path_role="transport")
+            source = _service_source_zone(zone_model, "VIDEO")
+            graph.add_edge(source, service_node, path_role="source")
+            transport_zone = _service_transport_zone(zone_model, wan_required)
+            if transport_zone:
+                graph.add_edge(service_node, transport_zone, path_role="transport")
         elif service_name == "iiot_edge":
-            graph.add_edge("IIOT" if zone_model != "flat" else "OT", service_node, path_role="source")
-            graph.add_edge(service_node, "DMZ" if zone_model in {"dmz_centric", "strict_isolation"} else "EXTERNAL", path_role="transport")
+            source = _service_source_zone(zone_model, "IIOT")
+            graph.add_edge(source, service_node, path_role="source")
+            transport_zone = _service_transport_zone(zone_model, wan_required)
+            if transport_zone:
+                graph.add_edge(service_node, transport_zone, path_role="transport")
         elif service_name == "local_archiving":
             graph.add_edge("OT", service_node, path_role="source")
             graph.add_edge(service_node, "LOCAL_ARCHIVE", path_role="local_sink")
