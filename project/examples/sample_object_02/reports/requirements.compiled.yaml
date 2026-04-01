@@ -1,0 +1,55 @@
+metadata:
+  object_id: sample_object_02
+  object_name: Remote Metering Point Alpha
+  object_type: utility_process
+  project_stage: concept
+  criticality_class: high
+  questionnaire_version: 0.2.0
+  resolved_archetype: resilient_telemetry_site
+object_profile:
+  staffing_model: remote_ops
+  growth_horizon_months: 60
+critical_services:
+  telemetry_required: 'yes'
+  control_required: tbd
+  video_required: 'no'
+  iiot_required: 'no'
+  local_archiving_required: tbd
+external_transport:
+  wan_required: 'yes'
+  carrier_diversity_target: single_path_allowed
+  transport_separation_policy: shared_ok
+security_access:
+  security_zone_model: segmented
+  remote_access_profile: oob_only
+  contractor_access_policy: tbd
+  audit_logging_required: tbd
+  oob_required: tbd
+time_sync:
+  timing_required: 'yes'
+  sync_protocol: ntp
+  timing_accuracy_class: tens_of_us
+power_environment:
+  power_source_model: dc_24_only
+  cabinet_constraint_class: existing_tight
+  environmental_constraint_class: outdoor_shelter
+  poe_required: 'yes'
+  poe_budget_class: tbd
+resilience:
+  redundancy_target: none
+  degraded_mode_profile: best_effort
+  mttr_target_class: same_day
+  common_cause_separation_required: tbd
+operations:
+  support_model: tbd
+  maintenance_window_model: tbd
+  operations_handoff_required: 'yes'
+  asbuilt_package_required: tbd
+acceptance_criteria:
+  fat_required: tbd
+  sat_required: tbd
+  acceptance_evidence_class: basic_checklists
+governance:
+  evidence_maturity_class: assumption_heavy
+  waiver_policy_class: provisional
+known_unknowns: {}

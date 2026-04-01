@@ -1,0 +1,85 @@
+version: 0.1.0
+deprecated: true
+superseded_by: core_questionnaire_v2.yaml
+questionnaire_id: core_questionnaire
+description_uk: >
+  Базовий опитувальний лист для збору вимог до мережевого baseline конкретного об'єкта.
+
+sections:
+  - id: metadata
+    required: true
+    fields:
+      - object_id
+      - object_name
+      - project_stage
+      - owner_org
+
+  - id: functional_scope
+    required: true
+    fields:
+      - object_purpose
+      - criticality_class
+      - service_windows
+
+  - id: critical_services
+    required: true
+    fields:
+      - telemetry_required
+      - video_required
+      - iiot_required
+      - management_required
+      - timing_required
+
+  - id: external_transport
+    required: true
+    fields:
+      - wan_required
+      - carrier_diversity_target
+      - external_dispatch_required
+
+  - id: security_access
+    required: true
+    fields:
+      - security_zone_model
+      - remote_access_required
+      - audit_logging_required
+
+  - id: time_sync
+    required: true
+    fields:
+      - sync_accuracy_target
+      - sync_protocol
+      - sync_source_diversity
+
+  - id: power_environment
+    required: true
+    fields:
+      - power_source_model
+      - poe_required
+      - cabinet_constraints
+      - environmental_constraints
+
+  - id: resilience
+    required: true
+    fields:
+      - redundancy_target
+      - degraded_mode_expectation
+      - mttr_target
+
+  - id: operations
+    required: true
+    fields:
+      - oob_required
+      - support_model
+      - maintenance_window_model
+
+  - id: acceptance_criteria
+    required: true
+    fields:
+      - acceptance_rules
+
+  - id: known_unknowns
+    required: true
+    fields:
+      - open_questions
+      - required_waivers

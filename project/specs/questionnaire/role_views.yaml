@@ -1,0 +1,208 @@
+version: 0.2.0
+questionnaire_id: core_questionnaire_v2
+derived_from:
+  - ../dictionary/questionnaire_v2_fields.yaml
+notes_uk: >
+  owned_fields у цьому файлі повинні залишатися узгодженими з owner_role
+  у questionnaire_v2_fields.yaml. Одна людина може закривати кілька roles,
+  але ownership лишається role-based. owns_sections/reviews_sections використовуються
+  лише як human-facing navigation hint; остаточне ownership визначається на рівні field_id.
+
+role_views:
+  - role_id: project_manager
+    label_uk: Керівник проєкту
+    owns_sections:
+      - metadata
+      - governance
+    reviews_sections:
+      - operations
+      - acceptance_criteria
+    owned_fields:
+      - object_id
+      - project_stage
+      - asbuilt_package_required
+      - evidence_maturity_class
+      - waiver_policy_class
+    downstream_packs_of_interest:
+      - asbuilt_closure_pack
+      - commissioning_pack
+
+  - role_id: object_owner
+    label_uk: Власник об'єкта / замовник
+    owns_sections:
+      - metadata
+    reviews_sections:
+      - resilience
+      - operations
+      - acceptance_criteria
+    owned_fields:
+      - acceptance_evidence_class
+      - object_name
+      - object_type
+      - criticality_class
+      - growth_horizon_months
+    downstream_packs_of_interest:
+      - network_volume
+      - commissioning_pack
+      - operations_handoff_pack
+
+  - role_id: process_engineer
+    label_uk: Технолог / виробництво
+    owns_sections:
+      - critical_services
+    reviews_sections:
+      - object_profile
+      - resilience
+      - time_sync
+    owned_fields:
+      - telemetry_required
+      - control_required
+      - local_archiving_required
+    downstream_packs_of_interest:
+      - telemetry_transport_pack
+      - video_transport_pack
+      - commissioning_pack
+
+  - role_id: ot_architect
+    label_uk: OT / ICS архітектор
+    owns_sections:
+      - resilience
+    reviews_sections:
+      - metadata
+      - object_profile
+      - critical_services
+      - security_access
+      - time_sync
+    owned_fields:
+      - redundancy_target
+      - common_cause_separation_required
+    downstream_packs_of_interest:
+      - network_volume
+      - firewall_policy_intent_pack
+      - commissioning_pack
+
+  - role_id: network_engineer
+    label_uk: Мережевий інженер
+    owns_sections:
+      - external_transport
+    reviews_sections:
+      - resilience
+      - operations
+      - security_access
+      - time_sync
+    owned_fields:
+      - wan_required
+      - carrier_diversity_target
+      - transport_separation_policy
+    downstream_packs_of_interest:
+      - addressing_framework_pack
+      - firewall_policy_intent_pack
+      - telemetry_transport_pack
+      - commissioning_pack
+
+  - role_id: cybersecurity_engineer
+    label_uk: Інженер з кібербезпеки
+    owns_sections:
+      - security_access
+    reviews_sections:
+      - external_transport
+      - operations
+      - time_sync
+    owned_fields:
+      - security_zone_model
+      - remote_access_profile
+      - contractor_access_policy
+      - audit_logging_required
+    downstream_packs_of_interest:
+      - firewall_policy_intent_pack
+      - operations_handoff_pack
+
+  - role_id: cabinet_power_engineer
+    label_uk: Інженер шаф / живлення
+    owns_sections:
+      - power_environment
+    reviews_sections:
+      - resilience
+    owned_fields:
+      - power_source_model
+      - cabinet_constraint_class
+      - environmental_constraint_class
+      - poe_required
+      - poe_budget_class
+    downstream_packs_of_interest:
+      - cabinet_build_pack
+      - video_transport_pack
+
+  - role_id: telemetry_engineer
+    label_uk: Інженер телеметрії / АСКОЕ
+    reviews_sections:
+      - critical_services
+      - security_access
+      - time_sync
+    owned_fields:
+      - timing_required
+      - sync_protocol
+      - timing_accuracy_class
+    downstream_packs_of_interest:
+      - telemetry_transport_pack
+      - commissioning_pack
+
+  - role_id: video_engineer
+    label_uk: Інженер відеоспостереження
+    annexes:
+      - cctv
+    reviews_sections:
+      - power_environment
+      - external_transport
+    owned_fields:
+      - video_required
+    downstream_packs_of_interest:
+      - video_transport_pack
+      - cabinet_build_pack
+
+  - role_id: iiot_engineer
+    label_uk: Інженер IIoT / edge
+    annexes:
+      - iiot
+    reviews_sections:
+      - security_access
+      - external_transport
+    owned_fields:
+      - iiot_required
+    downstream_packs_of_interest:
+      - iiot_integration_pack
+
+  - role_id: operations_engineer
+    label_uk: Експлуатація
+    owns_sections:
+      - object_profile
+      - operations
+      - resilience
+    reviews_sections:
+      - acceptance_criteria
+      - security_access
+    owned_fields:
+      - staffing_model
+      - oob_required
+      - support_model
+      - maintenance_window_model
+      - operations_handoff_required
+      - mttr_target_class
+      - degraded_mode_profile
+    downstream_packs_of_interest:
+      - operations_handoff_pack
+      - asbuilt_closure_pack
+
+  - role_id: commissioning_engineer
+    label_uk: ПНР / FAT / SAT
+    owns_sections:
+      - acceptance_criteria
+    reviews_sections:
+      - resilience
+      - operations
+    owned_fields:
+      - fat_required
+      - sat_required
+    downstream_packs_of_interest:
+      - commissioning_pack
+      - asbuilt_closure_pack

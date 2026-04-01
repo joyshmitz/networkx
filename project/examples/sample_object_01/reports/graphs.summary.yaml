@@ -1,0 +1,16 @@
+resolved_archetype: video_heavy_site
+physical:
+  nodes: 9
+  edges: 7
+logical:
+  nodes: 5
+  edges: 4
+service:
+  nodes: 9
+  edges: 8
+failure_domain:
+  nodes: 6
+  edges: 2
+interface:
+  nodes: 5
+  edges: 4

@@ -1,0 +1,56 @@
+status: failed
+error_count: 2
+warning_count: 7
+issues:
+- validator: stage_confidence
+  severity: warning
+  message: Concept stage with evidence_maturity_class='assumption_heavy' — validation
+    results are indicative, not binding (confidence_level=indicative).
+- validator: stage_confidence
+  severity: warning
+  message: '12 fields remain ''tbd'': control_required, local_archiving_required,
+    contractor_access_policy, audit_logging_required, oob_required, poe_budget_class,
+    common_cause_separation_required, support_model, maintenance_window_model, asbuilt_package_required,
+    fat_required, sat_required. Validators cannot fully evaluate design with unresolved
+    inputs.'
+- validator: segmentation
+  severity: warning
+  message: High-criticality object with shared_ok transport separation — may violate
+    isolation expectations.
+- validator: resilience
+  severity: error
+  message: High-criticality objects cannot keep redundancy_target='none'.
+- validator: resilience
+  severity: warning
+  message: Remote-ops staffing without OOB creates weak recovery assumptions.
+- validator: resilience
+  severity: warning
+  message: High-criticality object with single_path_allowed carrier diversity — weak
+    for recovery.
+- validator: resilience
+  severity: warning
+  message: High-criticality object with best_effort degraded mode — no guaranteed
+    service survival.
+- validator: resilience
+  severity: warning
+  message: High-criticality object with same_day MTTR — may be too slow for critical
+    operations.
+- validator: time
+  severity: error
+  message: Tens-of-microseconds accuracy requires PTP.
+confidence_level: indicative
+tbd_count: 12
+assumed_count: 0
+tbd_fields:
+- control_required
+- local_archiving_required
+- contractor_access_policy
+- audit_logging_required
+- oob_required
+- poe_budget_class
+- common_cause_separation_required
+- support_model
+- maintenance_window_model
+- asbuilt_package_required
+- fat_required
+- sat_required

@@ -1,0 +1,70 @@
+version: 0.1.0
+deprecated: true
+superseded_by: questionnaire_v2_fields.yaml
+fields:
+  - field_id: object_id
+    label_uk: Ідентифікатор об'єкта
+    type: string
+    required: true
+    unknown_policy: forbidden
+    evidence_required: project_register
+    design_impact: identity
+    downstream_impact: all
+
+  - field_id: criticality_class
+    label_uk: Клас критичності
+    type: enum
+    required: true
+    allowed_values_ref: criticality_class
+    unknown_policy: allowed_with_waiver
+    evidence_required: stakeholder_confirmation
+    design_impact: resilience
+    downstream_impact: operations
+
+  - field_id: telemetry_required
+    label_uk: Потрібна телеметрія
+    type: boolean
+    required: true
+    unknown_policy: forbidden
+    evidence_required: functional_scope
+    design_impact: service_graph
+    downstream_impact: telemetry
+
+  - field_id: security_zone_model
+    label_uk: Модель зонування
+    type: enum
+    required: true
+    allowed_values_ref: security_zone_model
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: cyber_security_basis
+    design_impact: logical_graph
+    downstream_impact: askoe, telemetry, video, iiot_edge
+
+  - field_id: sync_protocol
+    label_uk: Протокол синхронізації
+    type: enum
+    required: true
+    allowed_values_ref: sync_protocol
+    unknown_policy: allowed_with_waiver
+    evidence_required: timing_basis
+    design_impact: timing
+    downstream_impact: telemetry, operations
+
+  - field_id: poe_required
+    label_uk: Потрібен PoE
+    type: boolean
+    required: true
+    unknown_policy: forbidden
+    evidence_required: equipment_list
+    design_impact: power_ports
+    downstream_impact: video
+
+  - field_id: redundancy_target
+    label_uk: Ціль резервування
+    type: enum
+    required: true
+    allowed_values_ref: redundancy_target
+    unknown_policy: allowed_with_waiver
+    evidence_required: resilience_basis
+    design_impact: resilience
+    downstream_impact: all

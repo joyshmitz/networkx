@@ -1,0 +1,102 @@
+version: 0.2.0
+annex_id: ha
+contract_mode: relaxed
+description_uk: >
+  High-availability annex для об'єктів, де core resilience fields недостатньо для
+  опису failover behavior, maintenance without outage або посилених common-cause limits.
+
+applies_when:
+  any_of:
+    - field_id: redundancy_target
+      equals: active_node_backup
+    - field_id: redundancy_target
+      equals: n_plus_1
+    - field_id: redundancy_target
+      equals: no_spof
+
+relaxed_contract:
+  required_keys:
+    - field_id
+    - label_uk
+    - type
+    - owner_role
+    - reviewer_roles
+    - unknown_policy
+    - evidence_required
+  optional_keys:
+    - allowed_values_ref
+    - selection_rule
+    - design_impact
+    - downstream_impact
+  notes_uk: >
+    HA annex збирає лише ті поля, які справді додають зміст beyond core resilience section.
+
+fields:
+  - field_id: failover_time_target
+    label_uk: Цільовий час failover
+    type: string
+    owner_role: ot_architect
+    reviewer_roles:
+      - operations_engineer
+      - commissioning_engineer
+    unknown_policy: allowed_with_waiver
+    evidence_required: resilience_basis
+    selection_rule: Вказується тільки якщо потрібна вимірювана мета failover, а не лише qualitative redundancy target.
+    design_impact:
+      - resilience
+      - acceptance
+    downstream_impact:
+      - commissioning
+      - operations
+
+  - field_id: maintenance_without_outage
+    label_uk: Обслуговування без зупинки
+    type: enum
+    owner_role: operations_engineer
+    reviewer_roles:
+      - ot_architect
+    allowed_values_ref: yes_no_tbd
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: maintenance_basis
+    selection_rule: Значення yes обирається, якщо вікно обслуговування не повинно зупиняти critical service.
+    design_impact:
+      - resilience
+      - operations
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: dual_path_integrity_required
+    label_uk: Потрібна цілісність двох незалежних шляхів
+    type: enum
+    owner_role: ot_architect
+    reviewer_roles:
+      - network_engineer
+      - cybersecurity_engineer
+    allowed_values_ref: yes_no_tbd
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: resilience_basis
+    selection_rule: Значення yes обирається лише якщо резервні шляхи мають бути незалежними beyond basic redundancy.
+    design_impact:
+      - resilience
+      - failure_domain
+    downstream_impact:
+      - telemetry
+      - operations
+
+  - field_id: common_cause_constraints_note
+    label_uk: Нота про common-cause обмеження
+    type: string
+    owner_role: ot_architect
+    reviewer_roles:
+      - operations_engineer
+      - project_manager
+    unknown_policy: informational_only
+    evidence_required: resilience_basis
+    selection_rule: Використовується для site-specific уточнень beyond boolean common_cause_separation_required.
+    design_impact:
+      - failure_domain
+      - governance
+    downstream_impact:
+      - operations
+      - commissioning

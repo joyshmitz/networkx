@@ -1,0 +1,14 @@
+version: 0.1.0
+rules:
+  - rule_id: ptp_requires_ptp_capable_path
+    applies_to: timing
+    description_uk: PTP service не повинен проходити через path без PTP-capable components.
+
+  - rule_id: video_poe_requires_poe_capable_access
+    applies_to: video
+    description_uk: CCTV з PoE не може бути приєднаний до access role без PoE support.
+
+  - rule_id: strict_isolation_requires_controlled_boundary
+    applies_to: security
+    description_uk: strict isolation потребує явної boundary role між zone domains.
+

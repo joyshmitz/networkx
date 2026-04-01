@@ -1,0 +1,43 @@
+version: 0.1.0
+equipment:
+  - equipment_id: sw_access_generic
+    role: access_switch
+    supports_poe: true
+    timing_capability: ntp
+    notes: TBD
+
+  - equipment_id: sw_access_poe_generic
+    role: access_switch
+    supports_poe: true
+    timing_capability: ntp
+    notes: CCTV / PoE oriented generic access switch
+
+  - equipment_id: sw_core_ptp_generic
+    role: core_switch
+    supports_poe: false
+    timing_capability: ptp
+    notes: Generic core switch with PTP support
+
+  - equipment_id: fw_edge_generic
+    role: firewall
+    supports_poe: false
+    timing_capability: ntp
+    notes: TBD
+
+  - equipment_id: local_compute_generic
+    role: edge_compute
+    supports_poe: false
+    timing_capability: ntp
+    notes: Generic local compute / gateway node
+
+  - equipment_id: nvr_generic
+    role: local_archive
+    supports_poe: false
+    timing_capability: ntp
+    notes: Generic local archive / NVR node
+
+  - equipment_id: gm_time_generic
+    role: grandmaster
+    supports_poe: false
+    timing_capability: ptp
+    notes: TBD

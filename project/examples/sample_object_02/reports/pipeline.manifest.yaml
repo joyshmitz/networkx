@@ -1,0 +1,11 @@
+questionnaire: project/examples/sample_object_02/questionnaire.yaml
+schema: /Users/sd/projects/networkx-3.6.1/project/specs/requirements/object_requirements_v2.schema.yaml
+questionnaire_version: 0.2.0
+resolved_archetype: resilient_telemetry_site
+outputs:
+  requirements: requirements.compiled.yaml
+  graph_summary: graphs.summary.yaml
+  validation_summary: validation.summary.yaml
+  network_volume_summary: network_volume_summary.md
+  handoff_matrix: handoff_matrix.md
+status: failed

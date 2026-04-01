@@ -1,0 +1,69 @@
+# Stress-test sample: TBDs, conflicting constraints, archetype fallback pressure.
+# Designed to expose circular validation and false-confidence paths.
+
+version: 0.2.0
+
+metadata:
+  object_id: sample_object_02
+  object_name: Remote Metering Point Alpha
+  object_type: utility_process
+  project_stage: concept
+  criticality_class: high          # high criticality but...
+
+object_profile:
+  staffing_model: remote_ops
+  growth_horizon_months: 60
+
+critical_services:
+  telemetry_required: 'yes'
+  control_required: 'tbd'         # unresolved at concept
+  video_required: 'no'
+  iiot_required: 'no'
+  local_archiving_required: 'tbd' # unresolved at concept
+
+external_transport:
+  wan_required: 'yes'
+  carrier_diversity_target: single_path_allowed   # weak for high criticality
+  transport_separation_policy: shared_ok           # weak for high criticality
+
+security_access:
+  security_zone_model: segmented
+  remote_access_profile: oob_only
+  contractor_access_policy: 'tbd'  # unresolved
+  audit_logging_required: 'tbd'    # unresolved
+  oob_required: 'tbd'             # unresolved — remote_ops without confirmed OOB
+
+time_sync:
+  timing_required: 'yes'
+  sync_protocol: ntp
+  timing_accuracy_class: tens_of_us  # conflict: tens_of_us requires PTP, not NTP
+
+power_environment:
+  power_source_model: dc_24_only
+  cabinet_constraint_class: existing_tight
+  environmental_constraint_class: outdoor_shelter
+  poe_required: 'yes'              # PoE requested but...
+  poe_budget_class: 'tbd'          # ...budget unknown
+
+resilience:
+  redundancy_target: none           # conflict: high criticality + no redundancy
+  degraded_mode_profile: best_effort
+  mttr_target_class: same_day       # weak for high criticality
+  common_cause_separation_required: 'tbd'
+
+operations:
+  support_model: 'tbd'
+  maintenance_window_model: 'tbd'
+  operations_handoff_required: 'yes'
+  asbuilt_package_required: 'tbd'
+
+acceptance_criteria:
+  fat_required: 'tbd'
+  sat_required: 'tbd'
+  acceptance_evidence_class: basic_checklists  # weak for high criticality
+
+governance:
+  evidence_maturity_class: assumption_heavy
+  waiver_policy_class: provisional
+
+known_unknowns: {}

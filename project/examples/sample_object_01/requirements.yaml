@@ -1,0 +1,69 @@
+# Sample normalized requirements snapshot.
+# Canonical generated artifact lives under reports/requirements.compiled.yaml.
+
+metadata:
+  object_id: sample_object_01
+  object_name: Sample Industrial Site
+  object_type: generation
+  project_stage: concept
+  criticality_class: high
+  questionnaire_version: 0.2.0
+  resolved_archetype: video_heavy_site
+
+object_profile:
+  staffing_model: remote_ops
+  growth_horizon_months: 36
+
+critical_services:
+  telemetry_required: 'yes'
+  control_required: 'yes'
+  video_required: 'yes'
+  iiot_required: 'no'
+  local_archiving_required: 'yes'
+
+external_transport:
+  wan_required: 'yes'
+  carrier_diversity_target: dual_carrier_required
+  transport_separation_policy: logical_separation
+
+security_access:
+  security_zone_model: dmz_centric
+  remote_access_profile: controlled_vpn
+  contractor_access_policy: time_bounded_remote
+  audit_logging_required: 'yes'
+  oob_required: 'yes'
+
+time_sync:
+  timing_required: 'yes'
+  sync_protocol: ntp
+  timing_accuracy_class: relaxed_ms
+
+power_environment:
+  power_source_model: ac_dc_hybrid
+  cabinet_constraint_class: new_standard
+  environmental_constraint_class: industrial_indoor
+  poe_required: 'yes'
+  poe_budget_class: medium
+
+resilience:
+  redundancy_target: n_plus_1
+  degraded_mode_profile: telemetry_survives
+  mttr_target_class: four_hours
+  common_cause_separation_required: 'yes'
+
+operations:
+  support_model: hybrid
+  maintenance_window_model: planned_only
+  operations_handoff_required: 'yes'
+  asbuilt_package_required: 'yes'
+
+acceptance_criteria:
+  fat_required: 'yes'
+  sat_required: 'yes'
+  acceptance_evidence_class: test_records
+
+governance:
+  evidence_maturity_class: mixed
+  waiver_policy_class: controlled
+
+known_unknowns: {}

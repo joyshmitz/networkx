@@ -1,0 +1,47 @@
+version: 0.1.0
+deprecated: true
+superseded_by: questionnaire_v2_values.yaml
+dictionaries:
+  criticality_class:
+    - value_code: low
+      label_uk: Низька
+      meaning: Втрата сервісу не створює критичного operational impact.
+    - value_code: medium
+      label_uk: Середня
+      meaning: Деградація сервісу допустима лише короткий час.
+    - value_code: high
+      label_uk: Висока
+      meaning: Потрібна підвищена survivability і контроль failure domains.
+
+  security_zone_model:
+    - value_code: flat
+      label_uk: Пласка
+      meaning: Мінімальне зонування, допускається лише для простих об'єктів.
+    - value_code: segmented
+      label_uk: Сегментована
+      meaning: Є окремі зони для сервісів або trust boundaries.
+    - value_code: strict_isolation
+      label_uk: Жорстка ізоляція
+      meaning: Критичні сервіси мають суворе розділення.
+
+  sync_protocol:
+    - value_code: ntp
+      label_uk: NTP
+      meaning: Базова синхронізація часу.
+    - value_code: ptp
+      label_uk: PTP
+      meaning: Підвищена точність і timing-path sensitivity.
+    - value_code: mixed
+      label_uk: Змішаний
+      meaning: Комбінація PTP / NTP для різних підсистем.
+
+  redundancy_target:
+    - value_code: none
+      label_uk: Без резервування
+      meaning: Допускається single-path design.
+    - value_code: n_plus_1
+      label_uk: N+1
+      meaning: Часткове резервування з контрольованим degraded mode.
+    - value_code: no_spof
+      label_uk: Без SPOF
+      meaning: Single points of failure не допускаються в критичних шляхах.

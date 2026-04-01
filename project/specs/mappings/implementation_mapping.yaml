@@ -1,0 +1,230 @@
+version: 0.2.0
+mapping_id: questionnaire_to_downstream_packs
+
+artifact_classes:
+  - artifact_id: network_volume
+    label_uk: Базовий інфраструктурний том
+  - artifact_id: cabinet_build_pack
+    label_uk: Пакет для збірки шафи і power/media fit
+  - artifact_id: addressing_framework_pack
+    label_uk: Адресний і naming framework
+  - artifact_id: firewall_policy_intent_pack
+    label_uk: Intent-пакет зонування і доступу
+  - artifact_id: telemetry_transport_pack
+    label_uk: Пакет транспорту для АСКОЕ/телеметрії
+  - artifact_id: video_transport_pack
+    label_uk: Пакет транспорту і PoE для відео
+  - artifact_id: iiot_integration_pack
+    label_uk: Пакет інтеграції IIoT/edge
+  - artifact_id: commissioning_pack
+    label_uk: Пакет FAT/SAT і ПНР
+  - artifact_id: operations_handoff_pack
+    label_uk: Пакет для експлуатації
+  - artifact_id: asbuilt_closure_pack
+    label_uk: Intended vs as-built closure pack
+
+mappings:
+  - field_id: object_id
+    network_volume_sections: [scope_and_assumptions, traceability]
+    downstream_consumers: [project_manager, ot_architect]
+    downstream_artifacts: [network_volume, commissioning_pack, operations_handoff_pack, asbuilt_closure_pack]
+
+  - field_id: object_name
+    network_volume_sections: [scope_and_assumptions]
+    downstream_consumers: [project_manager, ot_architect]
+    downstream_artifacts: [network_volume, commissioning_pack, operations_handoff_pack]
+
+  - field_id: object_type
+    network_volume_sections: [scope_and_assumptions, physical_topology, adjacent_volume_interfaces]
+    downstream_consumers: [ot_architect, network_engineer, telemetry_engineer, video_engineer, iiot_engineer]
+    downstream_artifacts: [network_volume, addressing_framework_pack, telemetry_transport_pack, video_transport_pack, iiot_integration_pack]
+
+  - field_id: project_stage
+    network_volume_sections: [scope_and_assumptions, acceptance]
+    downstream_consumers: [project_manager, commissioning_engineer]
+    downstream_artifacts: [network_volume, commissioning_pack, asbuilt_closure_pack]
+
+  - field_id: criticality_class
+    network_volume_sections: [scope_and_assumptions, resilience_and_degraded_modes, security_access]
+    downstream_consumers: [object_owner, ot_architect, operations_engineer]
+    downstream_artifacts: [network_volume, firewall_policy_intent_pack, telemetry_transport_pack, operations_handoff_pack, commissioning_pack]
+
+  - field_id: staffing_model
+    network_volume_sections: [management_oob, resilience_and_degraded_modes, operations_model]
+    downstream_consumers: [operations_engineer, network_engineer]
+    downstream_artifacts: [network_volume, operations_handoff_pack, addressing_framework_pack]
+
+  - field_id: growth_horizon_months
+    network_volume_sections: [scope_and_assumptions, capacity_and_headroom]
+    downstream_consumers: [ot_architect, operations_engineer]
+    downstream_artifacts: [network_volume, cabinet_build_pack, addressing_framework_pack, operations_handoff_pack]
+
+  - field_id: telemetry_required
+    network_volume_sections: [logical_topology_and_zoning, external_transport, time_sync, adjacent_volume_interfaces]
+    downstream_consumers: [telemetry_engineer, commissioning_engineer]
+    downstream_artifacts: [network_volume, telemetry_transport_pack, commissioning_pack]
+
+  - field_id: control_required
+    network_volume_sections: [logical_topology_and_zoning, resilience_and_degraded_modes, security_access]
+    downstream_consumers: [telemetry_engineer, cybersecurity_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, telemetry_transport_pack, firewall_policy_intent_pack, commissioning_pack]
+
+  - field_id: video_required
+    network_volume_sections: [physical_topology, logical_topology_and_zoning, resilience_and_degraded_modes, adjacent_volume_interfaces]
+    downstream_consumers: [video_engineer, cabinet_power_engineer]
+    downstream_artifacts: [network_volume, video_transport_pack, cabinet_build_pack, commissioning_pack]
+
+  - field_id: iiot_required
+    network_volume_sections: [logical_topology_and_zoning, security_access, adjacent_volume_interfaces]
+    downstream_consumers: [iiot_engineer, cybersecurity_engineer]
+    downstream_artifacts: [network_volume, iiot_integration_pack, firewall_policy_intent_pack]
+
+  - field_id: local_archiving_required
+    network_volume_sections: [physical_topology, resilience_and_degraded_modes, equipment_compatibility]
+    downstream_consumers: [video_engineer, telemetry_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, video_transport_pack, telemetry_transport_pack, operations_handoff_pack]
+
+  - field_id: wan_required
+    network_volume_sections: [external_transport]
+    downstream_consumers: [network_engineer, telemetry_engineer, iiot_engineer]
+    downstream_artifacts: [network_volume, telemetry_transport_pack, iiot_integration_pack, firewall_policy_intent_pack]
+
+  - field_id: carrier_diversity_target
+    network_volume_sections: [external_transport, resilience_and_degraded_modes]
+    downstream_consumers: [network_engineer, cybersecurity_engineer, commissioning_engineer]
+    downstream_artifacts: [network_volume, firewall_policy_intent_pack, commissioning_pack, operations_handoff_pack]
+
+  - field_id: transport_separation_policy
+    network_volume_sections: [logical_topology_and_zoning, security_access, adjacent_volume_interfaces]
+    downstream_consumers: [network_engineer, telemetry_engineer, video_engineer, iiot_engineer]
+    downstream_artifacts: [network_volume, telemetry_transport_pack, video_transport_pack, iiot_integration_pack]
+
+  - field_id: security_zone_model
+    network_volume_sections: [logical_topology_and_zoning, security_access]
+    downstream_consumers: [cybersecurity_engineer, network_engineer, telemetry_engineer, video_engineer, iiot_engineer]
+    downstream_artifacts: [network_volume, firewall_policy_intent_pack, telemetry_transport_pack, video_transport_pack, iiot_integration_pack]
+
+  - field_id: remote_access_profile
+    network_volume_sections: [security_access, management_oob]
+    downstream_consumers: [cybersecurity_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, firewall_policy_intent_pack, operations_handoff_pack]
+
+  - field_id: contractor_access_policy
+    network_volume_sections: [security_access, operations_model]
+    downstream_consumers: [cybersecurity_engineer, operations_engineer, project_manager]
+    downstream_artifacts: [network_volume, firewall_policy_intent_pack, operations_handoff_pack, commissioning_pack]
+
+  - field_id: audit_logging_required
+    network_volume_sections: [security_access, operations_model]
+    downstream_consumers: [cybersecurity_engineer, operations_engineer, commissioning_engineer]
+    downstream_artifacts: [network_volume, firewall_policy_intent_pack, operations_handoff_pack, commissioning_pack]
+
+  - field_id: oob_required
+    network_volume_sections: [management_oob, resilience_and_degraded_modes]
+    downstream_consumers: [network_engineer, operations_engineer, commissioning_engineer]
+    downstream_artifacts: [network_volume, addressing_framework_pack, operations_handoff_pack, commissioning_pack]
+
+  - field_id: timing_required
+    network_volume_sections: [time_sync, adjacent_volume_interfaces]
+    downstream_consumers: [telemetry_engineer, network_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, telemetry_transport_pack, commissioning_pack, operations_handoff_pack]
+
+  - field_id: sync_protocol
+    network_volume_sections: [time_sync, adjacent_volume_interfaces, equipment_compatibility]
+    downstream_consumers: [network_engineer, telemetry_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, telemetry_transport_pack, commissioning_pack, operations_handoff_pack]
+
+  - field_id: timing_accuracy_class
+    network_volume_sections: [time_sync, equipment_compatibility]
+    downstream_consumers: [network_engineer, telemetry_engineer, commissioning_engineer]
+    downstream_artifacts: [network_volume, telemetry_transport_pack, commissioning_pack]
+
+  - field_id: power_source_model
+    network_volume_sections: [physical_topology, equipment_compatibility]
+    downstream_consumers: [cabinet_power_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, cabinet_build_pack, operations_handoff_pack]
+
+  - field_id: cabinet_constraint_class
+    network_volume_sections: [physical_topology, equipment_compatibility]
+    downstream_consumers: [cabinet_power_engineer, network_engineer]
+    downstream_artifacts: [network_volume, cabinet_build_pack]
+
+  - field_id: environmental_constraint_class
+    network_volume_sections: [physical_topology, equipment_compatibility]
+    downstream_consumers: [cabinet_power_engineer, commissioning_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, cabinet_build_pack, commissioning_pack, operations_handoff_pack]
+
+  - field_id: poe_required
+    network_volume_sections: [physical_topology, equipment_compatibility]
+    downstream_consumers: [cabinet_power_engineer, video_engineer]
+    downstream_artifacts: [network_volume, cabinet_build_pack, video_transport_pack]
+
+  - field_id: poe_budget_class
+    network_volume_sections: [physical_topology, equipment_compatibility]
+    downstream_consumers: [cabinet_power_engineer, video_engineer]
+    downstream_artifacts: [network_volume, cabinet_build_pack, video_transport_pack]
+
+  - field_id: redundancy_target
+    network_volume_sections: [resilience_and_degraded_modes, external_transport]
+    downstream_consumers: [network_engineer, operations_engineer, commissioning_engineer]
+    downstream_artifacts: [network_volume, commissioning_pack, operations_handoff_pack, asbuilt_closure_pack]
+
+  - field_id: degraded_mode_profile
+    network_volume_sections: [resilience_and_degraded_modes, operations_model]
+    downstream_consumers: [operations_engineer, telemetry_engineer, video_engineer]
+    downstream_artifacts: [network_volume, operations_handoff_pack, commissioning_pack]
+
+  - field_id: mttr_target_class
+    network_volume_sections: [resilience_and_degraded_modes, operations_model]
+    downstream_consumers: [operations_engineer, project_manager]
+    downstream_artifacts: [network_volume, operations_handoff_pack, asbuilt_closure_pack]
+
+  - field_id: common_cause_separation_required
+    network_volume_sections: [resilience_and_degraded_modes, physical_topology]
+    downstream_consumers: [ot_architect, network_engineer, commissioning_engineer]
+    downstream_artifacts: [network_volume, commissioning_pack, asbuilt_closure_pack]
+
+  - field_id: support_model
+    network_volume_sections: [operations_model, management_oob, asbuilt_closure_rules]
+    downstream_consumers: [operations_engineer, project_manager]
+    downstream_artifacts: [network_volume, operations_handoff_pack, asbuilt_closure_pack]
+
+  - field_id: maintenance_window_model
+    network_volume_sections: [operations_model, commissioning]
+    downstream_consumers: [operations_engineer, commissioning_engineer]
+    downstream_artifacts: [network_volume, operations_handoff_pack, commissioning_pack]
+
+  - field_id: operations_handoff_required
+    network_volume_sections: [operations_model]
+    downstream_consumers: [operations_engineer, project_manager]
+    downstream_artifacts: [network_volume, operations_handoff_pack]
+
+  - field_id: asbuilt_package_required
+    network_volume_sections: [asbuilt_closure_rules]
+    downstream_consumers: [project_manager, commissioning_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, asbuilt_closure_pack]
+
+  - field_id: fat_required
+    network_volume_sections: [acceptance]
+    downstream_consumers: [commissioning_engineer, project_manager]
+    downstream_artifacts: [network_volume, commissioning_pack]
+
+  - field_id: sat_required
+    network_volume_sections: [acceptance, asbuilt_closure_rules]
+    downstream_consumers: [commissioning_engineer, operations_engineer]
+    downstream_artifacts: [network_volume, commissioning_pack, asbuilt_closure_pack]
+
+  - field_id: acceptance_evidence_class
+    network_volume_sections: [acceptance]
+    downstream_consumers: [commissioning_engineer, object_owner]
+    downstream_artifacts: [network_volume, commissioning_pack, asbuilt_closure_pack]
+
+  - field_id: evidence_maturity_class
+    network_volume_sections: [scope_and_assumptions, governance]
+    downstream_consumers: [project_manager, ot_architect]
+    downstream_artifacts: [network_volume, commissioning_pack]
+
+  - field_id: waiver_policy_class
+    network_volume_sections: [scope_and_assumptions, governance]
+    downstream_consumers: [project_manager, object_owner]
+    downstream_artifacts: [network_volume, asbuilt_closure_pack, operations_handoff_pack]

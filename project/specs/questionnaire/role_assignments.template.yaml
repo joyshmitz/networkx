@@ -1,0 +1,37 @@
+version: 0.2.0
+questionnaire_id: core_questionnaire_v2
+template_id: role_assignments
+description_uk: >
+  Шаблон агрегування ролей по людях. Одна людина може виконувати кілька ролей,
+  але ownership і sign-off лишаються role-based.
+
+rules:
+  - Один person може мати кілька roles.
+  - Для S4 поля owner і reviewer не повинні зводитися до однієї людини без явного escalation note.
+  - Якщо одна людина закриває owner role і reviewer role для того самого поля, потрібен second reviewer.
+  - Усі downstream packs посилаються на role_id, не на person_id.
+
+assignments:
+  - person_id: pm_01
+    label_uk: Приклад керівника проєкту
+    roles:
+      - project_manager
+      - object_owner
+
+  - person_id: arch_01
+    label_uk: Приклад OT / network архітектора
+    roles:
+      - ot_architect
+      - network_engineer
+
+  - person_id: ops_01
+    label_uk: Приклад operations / cybersecurity
+    roles:
+      - operations_engineer
+      - cybersecurity_engineer
+
+  - person_id: field_01
+    label_uk: Приклад telemetry / commissioning
+    roles:
+      - telemetry_engineer
+      - commissioning_engineer

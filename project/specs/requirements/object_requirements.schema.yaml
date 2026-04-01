@@ -1,0 +1,170 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://local.network-method/object_requirements.schema.yaml"
+title: ObjectRequirements
+deprecated: true
+superseded_by: object_requirements_v2.schema.yaml
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - functional_scope
+  - critical_services
+  - external_transport
+  - security_access
+  - time_sync
+  - power_environment
+  - resilience
+  - operations
+  - acceptance_criteria
+  - known_unknowns
+
+properties:
+  metadata:
+    type: object
+    additionalProperties: false
+    required: [object_id, object_name, project_stage]
+    properties:
+      object_id:
+        type: string
+        minLength: 1
+      object_name:
+        type: string
+        minLength: 1
+      project_stage:
+        type: string
+        enum: [concept, basis, design, implementation, as_built]
+      owner_org:
+        type: string
+
+  functional_scope:
+    type: object
+    additionalProperties: false
+    required: [object_purpose, criticality_class]
+    properties:
+      object_purpose:
+        type: string
+      criticality_class:
+        type: string
+        enum: [low, medium, high]
+      service_windows:
+        type: array
+        items:
+          type: string
+
+  critical_services:
+    type: object
+    additionalProperties: false
+    required:
+      - telemetry_required
+      - video_required
+      - iiot_required
+      - management_required
+      - timing_required
+    properties:
+      telemetry_required:
+        type: boolean
+      video_required:
+        type: boolean
+      iiot_required:
+        type: boolean
+      management_required:
+        type: boolean
+      timing_required:
+        type: boolean
+
+  external_transport:
+    type: object
+    additionalProperties: false
+    properties:
+      wan_required:
+        type: boolean
+      carrier_diversity_target:
+        type: string
+      external_dispatch_required:
+        type: boolean
+
+  security_access:
+    type: object
+    additionalProperties: false
+    properties:
+      security_zone_model:
+        type: string
+        enum: [flat, segmented, strict_isolation]
+      remote_access_required:
+        type: boolean
+      audit_logging_required:
+        type: boolean
+
+  time_sync:
+    type: object
+    additionalProperties: false
+    properties:
+      sync_accuracy_target:
+        type: string
+      sync_protocol:
+        type: string
+        enum: [ntp, ptp, mixed]
+      sync_source_diversity:
+        type: string
+
+  power_environment:
+    type: object
+    additionalProperties: false
+    properties:
+      power_source_model:
+        type: string
+      poe_required:
+        type: boolean
+      cabinet_constraints:
+        type: array
+        items:
+          type: string
+      environmental_constraints:
+        type: array
+        items:
+          type: string
+
+  resilience:
+    type: object
+    additionalProperties: false
+    properties:
+      redundancy_target:
+        type: string
+        enum: [none, n_plus_1, no_spof]
+      degraded_mode_expectation:
+        type: string
+      mttr_target:
+        type: string
+
+  operations:
+    type: object
+    additionalProperties: false
+    properties:
+      oob_required:
+        type: boolean
+      support_model:
+        type: string
+      maintenance_window_model:
+        type: string
+
+  acceptance_criteria:
+    type: object
+    additionalProperties: false
+    properties:
+      acceptance_rules:
+        type: array
+        items:
+          type: string
+
+  known_unknowns:
+    type: object
+    additionalProperties: false
+    properties:
+      open_questions:
+        type: array
+        items:
+          type: string
+      required_waivers:
+        type: array
+        items:
+          type: string

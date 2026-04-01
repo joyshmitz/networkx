@@ -1,0 +1,97 @@
+version: 0.2.0
+questionnaire_id: core_questionnaire_v2
+description_uk: >
+  Object-first core questionnaire v2 для базового інфраструктурного тому "Мережа".
+  Поля орієнтовані на controlled vocabulary, role ownership і downstream traceability.
+
+sections:
+  - id: metadata
+    required: true
+    fields:
+      - object_id
+      - object_name
+      - object_type
+      - project_stage
+      - criticality_class
+
+  - id: object_profile
+    required: true
+    fields:
+      - staffing_model
+      - growth_horizon_months
+
+  - id: critical_services
+    required: true
+    fields:
+      - telemetry_required
+      - control_required
+      - video_required
+      - iiot_required
+      - local_archiving_required
+
+  - id: external_transport
+    required: true
+    fields:
+      - wan_required
+      - carrier_diversity_target
+      - transport_separation_policy
+
+  - id: security_access
+    required: true
+    fields:
+      - security_zone_model
+      - remote_access_profile
+      - contractor_access_policy
+      - audit_logging_required
+      - oob_required
+
+  - id: time_sync
+    required: true
+    fields:
+      - timing_required
+      - sync_protocol
+      - timing_accuracy_class
+
+  - id: power_environment
+    required: true
+    fields:
+      - power_source_model
+      - cabinet_constraint_class
+      - environmental_constraint_class
+      - poe_required
+      - poe_budget_class
+
+  - id: resilience
+    required: true
+    fields:
+      - redundancy_target
+      - degraded_mode_profile
+      - mttr_target_class
+      - common_cause_separation_required
+
+  - id: operations
+    required: true
+    fields:
+      - support_model
+      - maintenance_window_model
+      - operations_handoff_required
+      - asbuilt_package_required
+
+  - id: acceptance_criteria
+    required: true
+    fields:
+      - fat_required
+      - sat_required
+      - acceptance_evidence_class
+
+  - id: governance
+    required: true
+    fields:
+      - evidence_maturity_class
+      - waiver_policy_class
+
+  - id: known_unknowns
+    required: false
+    fields: []
+    note_uk: >
+      Реєстр відкритих питань і винятків ведеться окремо від canonical questionnaire.

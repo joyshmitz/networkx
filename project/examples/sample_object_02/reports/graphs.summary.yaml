@@ -1,0 +1,16 @@
+resolved_archetype: resilient_telemetry_site
+physical:
+  nodes: 5
+  edges: 3
+logical:
+  nodes: 3
+  edges: 3
+service:
+  nodes: 3
+  edges: 2
+failure_domain:
+  nodes: 3
+  edges: 1
+interface:
+  nodes: 4
+  edges: 3

@@ -1,0 +1,20 @@
+version: 0.1.0
+constraints:
+  - id: hard_no_cross_zone_without_boundary
+    severity: error
+    description_uk: Трафік між несумісними зонами не може існувати без явної boundary/control point.
+    validator: validate_segmentation
+    expression: TBD
+
+  - id: hard_time_sync_for_timing_service
+    severity: error
+    description_uk: Якщо timing_required=true, має існувати визначений time sync baseline.
+    validator: validate_time
+    expression: TBD
+
+  - id: hard_poe_fit_when_required
+    severity: error
+    description_uk: Якщо PoE потрібен, сумарний PoE budget має покривати навантаження.
+    validator: validate_power_ports
+    expression: TBD
+

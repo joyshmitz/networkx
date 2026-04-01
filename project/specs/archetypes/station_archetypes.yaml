@@ -1,0 +1,271 @@
+version: 0.1.0
+archetypes:
+  - archetype_id: small_remote_site
+    description_uk: Малий віддалений об'єкт з telemetry-centric workload.
+    intended_for:
+      - telemetry
+      - remote_operations
+    defaults:
+      staffing_model: remote_ops
+      telemetry_required: 'yes'
+      control_required: 'no'
+      video_required: 'no'
+      iiot_required: 'no'
+      local_archiving_required: 'no'
+      carrier_diversity_target: dual_carrier_preferred
+      transport_separation_policy: logical_separation
+      security_zone_model: segmented
+      remote_access_profile: controlled_vpn
+      contractor_access_policy: escorted_only
+      audit_logging_required: 'yes'
+      oob_required: 'yes'
+      timing_required: 'yes'
+      sync_protocol: ntp
+      timing_accuracy_class: relaxed_ms
+      power_source_model: ac_dc_hybrid
+      cabinet_constraint_class: new_standard
+      environmental_constraint_class: industrial_indoor
+      poe_required: 'no'
+      poe_budget_class: none
+      redundancy_target: uplink_backup
+      degraded_mode_profile: telemetry_survives
+      mttr_target_class: four_hours
+      common_cause_separation_required: 'yes'
+      support_model: hybrid
+      maintenance_window_model: planned_only
+      operations_handoff_required: 'yes'
+      asbuilt_package_required: 'yes'
+      fat_required: 'yes'
+      sat_required: 'yes'
+      acceptance_evidence_class: test_records
+      evidence_maturity_class: mixed
+      waiver_policy_class: controlled
+    topology_seed:
+      nodes:
+        - node_id: field_cluster
+          role: process_cluster
+        - node_id: sw_access_a
+          role: access_switch
+          equipment_id: sw_access_generic
+        - node_id: fw_edge_a
+          role: firewall
+          equipment_id: fw_edge_generic
+        - node_id: wan_primary
+          role: wan_edge
+          carrier: carrier_a
+      edges:
+        - source: field_cluster
+          target: sw_access_a
+          edge_role: field_access
+        - source: sw_access_a
+          target: fw_edge_a
+          edge_role: site_uplink
+        - source: fw_edge_a
+          target: wan_primary
+          edge_role: external_uplink
+
+  - archetype_id: video_heavy_site
+    description_uk: Об'єкт з високою часткою CCTV / PoE / uplink pressure.
+    intended_for:
+      - video
+      - security_monitoring
+    defaults:
+      staffing_model: hybrid_ops
+      telemetry_required: 'yes'
+      control_required: 'no'
+      video_required: 'yes'
+      iiot_required: 'no'
+      local_archiving_required: 'yes'
+      carrier_diversity_target: dual_carrier_required
+      transport_separation_policy: logical_separation
+      security_zone_model: dmz_centric
+      remote_access_profile: controlled_vpn
+      contractor_access_policy: time_bounded_remote
+      audit_logging_required: 'yes'
+      oob_required: 'yes'
+      timing_required: 'yes'
+      sync_protocol: ntp
+      timing_accuracy_class: relaxed_ms
+      power_source_model: ac_dc_hybrid
+      cabinet_constraint_class: new_standard
+      environmental_constraint_class: industrial_indoor
+      poe_required: 'yes'
+      poe_budget_class: heavy
+      redundancy_target: n_plus_1
+      degraded_mode_profile: telemetry_survives
+      mttr_target_class: four_hours
+      common_cause_separation_required: 'yes'
+      support_model: hybrid
+      maintenance_window_model: planned_only
+      operations_handoff_required: 'yes'
+      asbuilt_package_required: 'yes'
+      fat_required: 'yes'
+      sat_required: 'yes'
+      acceptance_evidence_class: test_records
+      evidence_maturity_class: mixed
+      waiver_policy_class: controlled
+    topology_seed:
+      nodes:
+        - node_id: field_cluster
+          role: process_cluster
+        - node_id: sw_access_poe
+          role: access_switch
+          equipment_id: sw_access_poe_generic
+        - node_id: nvr_local
+          role: local_archive
+          equipment_id: nvr_generic
+        - node_id: fw_edge_a
+          role: firewall
+          equipment_id: fw_edge_generic
+        - node_id: wan_primary
+          role: wan_edge
+          carrier: carrier_a
+      edges:
+        - source: field_cluster
+          target: sw_access_poe
+          edge_role: field_access
+        - source: nvr_local
+          target: sw_access_poe
+          edge_role: local_archive_access
+        - source: sw_access_poe
+          target: fw_edge_a
+          edge_role: site_uplink
+        - source: fw_edge_a
+          target: wan_primary
+          edge_role: external_uplink
+
+  - archetype_id: resilient_telemetry_site
+    description_uk: Високо-критичний telemetry/control об'єкт без video/IIoT, з посиленою resilience.
+    intended_for:
+      - telemetry
+      - control
+      - high_availability
+    defaults:
+      staffing_model: remote_ops
+      telemetry_required: 'yes'
+      control_required: 'yes'
+      video_required: 'no'
+      iiot_required: 'no'
+      local_archiving_required: 'no'
+      carrier_diversity_target: dual_carrier_required
+      transport_separation_policy: logical_separation
+      security_zone_model: dmz_centric
+      remote_access_profile: oob_only
+      contractor_access_policy: escorted_only
+      audit_logging_required: 'yes'
+      oob_required: 'yes'
+      timing_required: 'yes'
+      sync_protocol: ntp
+      timing_accuracy_class: sub_ms
+      power_source_model: ac_dc_hybrid
+      cabinet_constraint_class: new_standard
+      environmental_constraint_class: industrial_indoor
+      poe_required: 'no'
+      poe_budget_class: none
+      redundancy_target: n_plus_1
+      degraded_mode_profile: telemetry_survives
+      mttr_target_class: four_hours
+      common_cause_separation_required: 'yes'
+      support_model: hybrid
+      maintenance_window_model: planned_only
+      operations_handoff_required: 'yes'
+      asbuilt_package_required: 'yes'
+      fat_required: 'yes'
+      sat_required: 'yes'
+      acceptance_evidence_class: witnessed_protocols
+      evidence_maturity_class: mixed
+      waiver_policy_class: controlled
+    topology_seed:
+      nodes:
+        - node_id: field_cluster
+          role: process_cluster
+        - node_id: sw_core_a
+          role: core_switch
+          equipment_id: sw_core_ptp_generic
+        - node_id: fw_edge_a
+          role: firewall
+          equipment_id: fw_edge_generic
+        - node_id: wan_primary
+          role: wan_edge
+          carrier: carrier_a
+      edges:
+        - source: field_cluster
+          target: sw_core_a
+          edge_role: field_access
+        - source: sw_core_a
+          target: fw_edge_a
+          edge_role: site_uplink
+        - source: fw_edge_a
+          target: wan_primary
+          edge_role: external_uplink
+
+  - archetype_id: mixed_iiot_site
+    description_uk: Об'єкт із поєднанням telemetry, IIoT edge та management traffic.
+    intended_for:
+      - telemetry
+      - iiot_edge
+      - management
+    defaults:
+      staffing_model: hybrid_ops
+      telemetry_required: 'yes'
+      control_required: 'yes'
+      video_required: 'no'
+      iiot_required: 'yes'
+      local_archiving_required: 'yes'
+      carrier_diversity_target: dual_carrier_required
+      transport_separation_policy: logical_separation
+      security_zone_model: dmz_centric
+      remote_access_profile: controlled_vpn
+      contractor_access_policy: time_bounded_remote
+      audit_logging_required: 'yes'
+      oob_required: 'yes'
+      timing_required: 'yes'
+      sync_protocol: mixed
+      timing_accuracy_class: sub_ms
+      power_source_model: ac_dc_hybrid
+      cabinet_constraint_class: new_standard
+      environmental_constraint_class: industrial_indoor
+      poe_required: 'no'
+      poe_budget_class: none
+      redundancy_target: n_plus_1
+      degraded_mode_profile: control_and_telemetry_survive
+      mttr_target_class: one_hour
+      common_cause_separation_required: 'yes'
+      support_model: hybrid
+      maintenance_window_model: planned_only
+      operations_handoff_required: 'yes'
+      asbuilt_package_required: 'yes'
+      fat_required: 'yes'
+      sat_required: 'yes'
+      acceptance_evidence_class: witnessed_protocols
+      evidence_maturity_class: mixed
+      waiver_policy_class: controlled
+    topology_seed:
+      nodes:
+        - node_id: field_cluster
+          role: process_cluster
+        - node_id: sw_core_a
+          role: core_switch
+          equipment_id: sw_core_ptp_generic
+        - node_id: iiot_edge_local
+          role: iiot_edge
+          equipment_id: local_compute_generic
+        - node_id: fw_edge_a
+          role: firewall
+          equipment_id: fw_edge_generic
+        - node_id: wan_primary
+          role: wan_edge
+          carrier: carrier_a
+      edges:
+        - source: field_cluster
+          target: sw_core_a
+          edge_role: field_access
+        - source: iiot_edge_local
+          target: sw_core_a
+          edge_role: edge_access
+        - source: sw_core_a
+          target: fw_edge_a
+          edge_role: site_uplink
+        - source: fw_edge_a
+          target: wan_primary
+          edge_role: external_uplink

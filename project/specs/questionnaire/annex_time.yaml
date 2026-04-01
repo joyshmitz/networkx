@@ -1,0 +1,99 @@
+version: 0.2.0
+annex_id: time
+contract_mode: relaxed
+description_uk: >
+  Time annex для випадків, де базового time_sync блоку недостатньо для точного
+  проєктування timing path, holdover або forensic correlation.
+
+applies_when:
+  field_id: timing_required
+  equals: 'yes'
+
+relaxed_contract:
+  required_keys:
+    - field_id
+    - label_uk
+    - type
+    - owner_role
+    - reviewer_roles
+    - unknown_policy
+    - evidence_required
+  optional_keys:
+    - allowed_values_ref
+    - selection_rule
+    - design_impact
+    - downstream_impact
+  notes_uk: >
+    Time annex додає timing-specific деталі поверх core fields timing_required,
+    sync_protocol і timing_accuracy_class, не дублюючи їх.
+
+fields:
+  - field_id: ptp_profile_required
+    label_uk: Потрібен PTP-specific profile
+    type: enum
+    owner_role: telemetry_engineer
+    reviewer_roles:
+      - network_engineer
+      - ot_architect
+    allowed_values_ref: yes_no_tbd
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: timing_basis
+    selection_rule: Значення yes обирається лише якщо базового sync_protocol=ptp недостатньо без окремого profile note.
+    design_impact:
+      - time_sync
+      - equipment_compatibility
+    downstream_impact:
+      - telemetry
+      - commissioning
+
+  - field_id: holdover_expectation
+    label_uk: Очікування до holdover
+    type: string
+    owner_role: telemetry_engineer
+    reviewer_roles:
+      - operations_engineer
+    unknown_policy: informational_only
+    evidence_required: timing_basis
+    selection_rule: Вказується лише якщо від timing path очікується керована деградація при втраті primary reference.
+    design_impact:
+      - resilience
+      - time_sync
+    downstream_impact:
+      - telemetry
+      - operations
+
+  - field_id: gm_redundancy_required
+    label_uk: Потрібне резервування grandmaster / time source
+    type: enum
+    owner_role: telemetry_engineer
+    reviewer_roles:
+      - ot_architect
+      - network_engineer
+    allowed_values_ref: yes_no_tbd
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: timing_basis
+    selection_rule: Обирається yes лише якщо timing service itself має survivability requirement.
+    design_impact:
+      - time_sync
+      - resilience
+    downstream_impact:
+      - telemetry
+      - commissioning
+
+  - field_id: forensic_time_correlation_required
+    label_uk: Потрібна forensic correlation подій
+    type: enum
+    owner_role: telemetry_engineer
+    reviewer_roles:
+      - operations_engineer
+      - cybersecurity_engineer
+    allowed_values_ref: yes_no_tbd
+    unknown_policy: informational_only
+    evidence_required: incident_analysis_basis
+    selection_rule: Значення yes обирається, якщо подієві журнали різних систем мають бути зіставні для розслідувань.
+    design_impact:
+      - time_sync
+      - security
+    downstream_impact:
+      - telemetry
+      - operations

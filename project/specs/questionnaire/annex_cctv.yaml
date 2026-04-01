@@ -1,0 +1,100 @@
+version: 0.2.0
+annex_id: cctv
+contract_mode: relaxed
+description_uk: >
+  CCTV annex для об'єктів, де відеоспостереження входить у scope.
+  Annex не дублює core questionnaire, а додає лише video-specific поля.
+
+applies_when:
+  field_id: video_required
+  equals: 'yes'
+
+relaxed_contract:
+  required_keys:
+    - field_id
+    - label_uk
+    - type
+    - owner_role
+    - reviewer_roles
+    - unknown_policy
+    - evidence_required
+  optional_keys:
+    - allowed_values_ref
+    - selection_rule
+    - design_impact
+    - downstream_impact
+  notes_uk: >
+    Annex-local fields допускаються у спрощеному контракті, щоб core questionnaire
+    не розростався до video-specific деталей. Якщо annex поле повторюється на
+    багатьох об'єктах і впливає на stage gates, воно має бути promoted у full contract.
+
+fields:
+  - field_id: camera_count_estimate
+    label_uk: Оцінка кількості камер
+    type: integer
+    owner_role: video_engineer
+    reviewer_roles:
+      - network_engineer
+      - cabinet_power_engineer
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: security_monitoring_scope
+    selection_rule: Вказується орієнтовна кількість камер у межах поточного design basis.
+    design_impact:
+      - service_graph
+      - power_ports
+    downstream_impact:
+      - video
+      - operations
+
+  - field_id: retention_profile
+    label_uk: Профіль зберігання відео
+    type: string
+    owner_role: video_engineer
+    reviewer_roles:
+      - operations_engineer
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: retention_basis
+    selection_rule: Фіксується як короткий контрольований опис, якщо core поля local_archiving недостатньо.
+    design_impact:
+      - resilience
+      - equipment_compatibility
+    downstream_impact:
+      - video
+      - operations
+
+  - field_id: cctv_transport_policy
+    label_uk: Політика транспорту CCTV
+    type: enum
+    owner_role: video_engineer
+    reviewer_roles:
+      - network_engineer
+      - cybersecurity_engineer
+    allowed_values_ref: transport_separation_policy
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: transport_basis
+    selection_rule: >
+      Обирається лише якщо CCTV потребує іншого transport profile, ніж загальна
+      transport_separation_policy core questionnaire.
+    design_impact:
+      - external_transport
+      - security
+    downstream_impact:
+      - video
+      - operations
+
+  - field_id: video_analytics_required
+    label_uk: Потрібна відеоаналітика
+    type: enum
+    owner_role: video_engineer
+    reviewer_roles:
+      - operations_engineer
+    allowed_values_ref: yes_no_tbd
+    unknown_policy: informational_only
+    evidence_required: analytics_scope
+    selection_rule: Значення yes обирається лише якщо потрібні compute/storage assumptions beyond recording.
+    design_impact:
+      - equipment_compatibility
+      - growth
+    downstream_impact:
+      - video
+      - iiot_edge

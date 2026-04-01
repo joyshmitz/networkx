@@ -1,0 +1,27 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://local.network-method/waivers.schema.yaml"
+title: WaiverRegister
+type: object
+required: [waivers]
+properties:
+  waivers:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [waiver_id, constraint_id, rationale, approved_by, status]
+      properties:
+        waiver_id:
+          type: string
+        constraint_id:
+          type: string
+        rationale:
+          type: string
+        approved_by:
+          type: string
+        status:
+          type: string
+          enum: [proposed, accepted, rejected, expired]
+        expires_on:
+          type: string
+

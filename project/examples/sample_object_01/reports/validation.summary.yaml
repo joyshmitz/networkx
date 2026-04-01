@@ -1,0 +1,11 @@
+status: ok
+error_count: 0
+warning_count: 1
+issues:
+- validator: stage_confidence
+  severity: warning
+  message: Concept stage with evidence_maturity_class='mixed' — validation results
+    are indicative, not binding (confidence_level=indicative).
+confidence_level: indicative
+tbd_count: 0
+assumed_count: 0

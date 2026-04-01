@@ -1,0 +1,268 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://local.network-method/object_requirements_v2.schema.yaml"
+title: ObjectRequirementsV2
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - object_profile
+  - critical_services
+  - external_transport
+  - security_access
+  - time_sync
+  - power_environment
+  - resilience
+  - operations
+  - acceptance_criteria
+  - governance
+
+properties:
+  metadata:
+    type: object
+    additionalProperties: false
+    required:
+      - object_id
+      - object_name
+      - object_type
+      - project_stage
+      - criticality_class
+      - questionnaire_version
+      - resolved_archetype
+    properties:
+      object_id:
+        type: string
+        minLength: 1
+      object_name:
+        type: string
+        minLength: 1
+      object_type:
+        type: string
+        enum: [generation, substation, utility_process, industrial_site]
+      project_stage:
+        type: string
+        enum: [concept, basic_design, detailed_design, build_commission]
+      criticality_class:
+        type: string
+        enum: [low, medium, high, mission_critical]
+      questionnaire_version:
+        type: string
+      resolved_archetype:
+        type: string
+
+  object_profile:
+    type: object
+    additionalProperties: false
+    required:
+      - staffing_model
+      - growth_horizon_months
+    properties:
+      staffing_model:
+        type: string
+        enum: [local_ops, remote_ops, hybrid_ops, tbd]
+      growth_horizon_months:
+        type: integer
+        minimum: 0
+
+  critical_services:
+    type: object
+    additionalProperties: false
+    required:
+      - telemetry_required
+      - control_required
+      - video_required
+      - iiot_required
+      - local_archiving_required
+    properties:
+      telemetry_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      control_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      video_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      iiot_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      local_archiving_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+
+  external_transport:
+    type: object
+    additionalProperties: false
+    required:
+      - wan_required
+      - carrier_diversity_target
+      - transport_separation_policy
+    properties:
+      wan_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      carrier_diversity_target:
+        type: string
+        enum:
+          - single_path_allowed
+          - dual_carrier_preferred
+          - dual_carrier_required
+          - common_cause_separated
+          - tbd
+      transport_separation_policy:
+        type: string
+        enum:
+          - shared_ok
+          - logical_separation
+          - physical_separation
+          - hybrid_controlled
+          - tbd
+
+  security_access:
+    type: object
+    additionalProperties: false
+    required:
+      - security_zone_model
+      - remote_access_profile
+      - contractor_access_policy
+      - audit_logging_required
+      - oob_required
+    properties:
+      security_zone_model:
+        type: string
+        enum: [flat, segmented, dmz_centric, strict_isolation, tbd]
+      remote_access_profile:
+        type: string
+        enum: [none, controlled_vpn, oob_only, hybrid_support, tbd]
+      contractor_access_policy:
+        type: string
+        enum: [forbidden, escorted_only, time_bounded_remote, managed_service, tbd]
+      audit_logging_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      oob_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+
+  time_sync:
+    type: object
+    additionalProperties: false
+    required:
+      - timing_required
+      - sync_protocol
+      - timing_accuracy_class
+    properties:
+      timing_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      sync_protocol:
+        type: string
+        enum: [ntp, ptp, mixed, tbd]
+      timing_accuracy_class:
+        type: string
+        enum: [relaxed_ms, sub_ms, tens_of_us, site_specific, tbd]
+
+  power_environment:
+    type: object
+    additionalProperties: false
+    required:
+      - power_source_model
+      - cabinet_constraint_class
+      - environmental_constraint_class
+      - poe_required
+      - poe_budget_class
+    properties:
+      power_source_model:
+        type: string
+        enum: [dc_24_only, dc_mixed, ac_only, ac_dc_hybrid, tbd]
+      cabinet_constraint_class:
+        type: string
+        enum: [existing_tight, existing_expandable, new_standard, multi_cabinet, tbd]
+      environmental_constraint_class:
+        type: string
+        enum: [indoor_controlled, industrial_indoor, outdoor_shelter, harsh_critical, tbd]
+      poe_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      poe_budget_class:
+        type: string
+        enum: [none, light, medium, heavy, tbd]
+
+  resilience:
+    type: object
+    additionalProperties: false
+    required:
+      - redundancy_target
+      - degraded_mode_profile
+      - mttr_target_class
+      - common_cause_separation_required
+    properties:
+      redundancy_target:
+        type: string
+        enum: [none, uplink_backup, active_node_backup, n_plus_1, no_spof, tbd]
+      degraded_mode_profile:
+        type: string
+        enum: [best_effort, telemetry_survives, control_and_telemetry_survive, site_specific, tbd]
+      mttr_target_class:
+        type: string
+        enum: [same_day, four_hours, one_hour, near_zero, tbd]
+      common_cause_separation_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+
+  operations:
+    type: object
+    additionalProperties: false
+    required:
+      - support_model
+      - maintenance_window_model
+      - operations_handoff_required
+      - asbuilt_package_required
+    properties:
+      support_model:
+        type: string
+        enum: [inhouse, integrator, vendor_managed, hybrid, tbd]
+      maintenance_window_model:
+        type: string
+        enum: [planned_only, limited_anytime, always_available_ops, tbd]
+      operations_handoff_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      asbuilt_package_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+
+  acceptance_criteria:
+    type: object
+    additionalProperties: false
+    required:
+      - fat_required
+      - sat_required
+      - acceptance_evidence_class
+    properties:
+      fat_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      sat_required:
+        type: string
+        enum: ['yes', 'no', 'tbd']
+      acceptance_evidence_class:
+        type: string
+        enum: [basic_checklists, test_records, witnessed_protocols, regulated_evidence, tbd]
+
+  governance:
+    type: object
+    additionalProperties: false
+    required:
+      - evidence_maturity_class
+      - waiver_policy_class
+    properties:
+      evidence_maturity_class:
+        type: string
+        enum: [assumption_heavy, mixed, mostly_confirmed, field_verified, tbd]
+      waiver_policy_class:
+        type: string
+        enum: [strict, controlled, provisional, tbd]
+
+  known_unknowns:
+    type: object
+    additionalProperties: false

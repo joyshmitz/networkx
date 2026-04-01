@@ -1,0 +1,418 @@
+version: 0.2.0
+
+dictionaries:
+  yes_no_tbd:
+    - value_code: 'yes'
+      label_uk: Так
+      meaning: Вимога або властивість входить у scope і має бути врахована в baseline.
+      selection_rule: Обирається лише за наявності реальної вимоги, а не "про запас".
+    - value_code: 'no'
+      label_uk: Ні
+      meaning: Вимога або властивість не входить у scope поточного об'єкта.
+      selection_rule: Обирається лише якщо рішення справді не потрібне.
+    - value_code: 'tbd'
+      label_uk: Не визначено
+      meaning: Даних або рішення поки недостатньо.
+      selection_rule: Допустимість визначається unknown policy конкретного поля.
+
+  object_type:
+    - value_code: generation
+      label_uk: Генеруючий об'єкт
+      meaning: Об'єкт виробництва електроенергії або енергоносія.
+      selection_rule: Обирається, якщо основна виробнича функція пов'язана з генерацією.
+    - value_code: substation
+      label_uk: Підстанція / розподільчий об'єкт
+      meaning: Об'єкт передачі або розподілу електроенергії.
+      selection_rule: Обирається, якщо ядром є комутація/розподіл.
+    - value_code: utility_process
+      label_uk: Допоміжний технологічний об'єкт
+      meaning: Насосна, котельня, допоміжна станція або інший process utility site.
+      selection_rule: Обирається для допоміжної виробничої інфраструктури.
+    - value_code: industrial_site
+      label_uk: Промисловий майданчик
+      meaning: Об'єкт з більш загальною промисловою або складською функцією.
+      selection_rule: Обирається для mixed-purpose industrial sites.
+
+  project_stage:
+    - value_code: concept
+      label_uk: Концепт
+      meaning: Початкове опрацювання, допускає більше невизначеності.
+      selection_rule: Обирається на ранньому етапі before engineering freeze.
+    - value_code: basic_design
+      label_uk: Базове проєктування
+      meaning: Формується baseline рішень і ключові constraints.
+      selection_rule: Обирається, коли architecture вже синтезується.
+    - value_code: detailed_design
+      label_uk: Детальне проєктування
+      meaning: Рішення мають бути достатньо точними для build packs.
+      selection_rule: Обирається, коли готуються implementation packs.
+    - value_code: build_commission
+      label_uk: Реалізація / ПНР
+      meaning: Проєкт перейшов у build, FAT, SAT і closure.
+      selection_rule: Обирається під час інсталяції та вводу в експлуатацію.
+
+  criticality_class:
+    - value_code: low
+      label_uk: Низька
+      meaning: Коротка втрата сервісу допустима без значного впливу.
+      selection_rule: Обирається лише для справді некритичних контурів.
+    - value_code: medium
+      label_uk: Середня
+      meaning: Деградація допустима, але контрольована і коротка.
+      selection_rule: Обирається для значущих, але не місійно-критичних сервісів.
+    - value_code: high
+      label_uk: Висока
+      meaning: Втрата сервісу істотно впливає на об'єкт або операторів.
+      selection_rule: Обирається для operationally critical objects.
+    - value_code: mission_critical
+      label_uk: Критична
+      meaning: Втрата сервісу неприйнятна без деградованого або резервного режиму.
+      selection_rule: Обирається для об'єктів з високою ціною відмови.
+
+  staffing_model:
+    - value_code: local_ops
+      label_uk: Постійний локальний персонал
+      meaning: На об'єкті є постійний staff для первинної реакції.
+      selection_rule: Обирається, якщо люди реально присутні на зміні.
+    - value_code: remote_ops
+      label_uk: Переважно віддалена експлуатація
+      meaning: Основна підтримка йде віддалено, local response обмежений.
+      selection_rule: Обирається для unattended / lightly staffed sites.
+    - value_code: hybrid_ops
+      label_uk: Змішана модель
+      meaning: Поєднується віддалена і локальна підтримка.
+      selection_rule: Обирається, якщо обидва режими реально використовуються.
+
+  carrier_diversity_target:
+    - value_code: single_path_allowed
+      label_uk: Один канал допустимий
+      meaning: Допускається залежність від одного зовнішнього шляху.
+      selection_rule: Обирається лише для некритичних або тимчасових сценаріїв.
+    - value_code: dual_carrier_preferred
+      label_uk: Два канали бажані
+      meaning: Другий канал бажаний, але не завжди обов'язковий.
+      selection_rule: Обирається, якщо resilience потрібен, але не абсолютний.
+    - value_code: dual_carrier_required
+      label_uk: Два незалежні канали обов'язкові
+      meaning: Один carrier/route не вважається достатнім.
+      selection_rule: Обирається для critical transport paths.
+    - value_code: common_cause_separated
+      label_uk: Потрібна різнорідність і рознесення
+      meaning: Резерв має бути рознесений не лише логічно, а й по common-cause domains.
+      selection_rule: Обирається для найжорсткіших resilience targets.
+
+  transport_separation_policy:
+    - value_code: shared_ok
+      label_uk: Спільний транспорт допустимий
+      meaning: Сервіси можуть ділити транспорт за умови загальних базових правил.
+      selection_rule: Обирається лише при низькому risk envelope.
+    - value_code: logical_separation
+      label_uk: Потрібне логічне розділення
+      meaning: Спільна фізика допускається, але потрібні VLAN/VRF/ACL/QoS boundaries.
+      selection_rule: Типовий варіант для mixed environments.
+    - value_code: physical_separation
+      label_uk: Потрібне фізичне розділення
+      meaning: Критичні сервіси не повинні ділити той самий транспортний каркас.
+      selection_rule: Обирається для control-first або високоризикових об'єктів.
+    - value_code: hybrid_controlled
+      label_uk: Частково спільний, частково розділений
+      meaning: Різні сервіси мають різні вимоги до separation.
+      selection_rule: Обирається лише якщо це явно погоджено.
+
+  security_zone_model:
+    - value_code: flat
+      label_uk: Пласка
+      meaning: Мінімальне зонування, підходить лише для простих low-risk sites.
+      selection_rule: Обирається лише за низької критичності.
+    - value_code: segmented
+      label_uk: Сегментована
+      meaning: Є окремі зони або сегменти для ключових підсистем.
+      selection_rule: Базовий production-friendly варіант.
+    - value_code: dmz_centric
+      label_uk: З DMZ
+      meaning: Є station DMZ або явний buffer between OT and external integrations.
+      selection_rule: Обирається для sites з external access/integration.
+    - value_code: strict_isolation
+      label_uk: Жорстка ізоляція
+      meaning: Потрібні суворі trust boundaries і мінімум спільних path.
+      selection_rule: Обирається для high/mission critical sites.
+
+  remote_access_profile:
+    - value_code: none
+      label_uk: Віддалений доступ не допускається
+      meaning: Remote support не входить у допустимий режим.
+      selection_rule: Обирається лише якщо є постійний локальний staff і policy це дозволяє.
+    - value_code: controlled_vpn
+      label_uk: Контрольований VPN / bastion
+      meaning: Remote access допускається лише через контрольовані точки доступу.
+      selection_rule: Типовий production profile.
+    - value_code: oob_only
+      label_uk: Лише через OOB / break-glass
+      meaning: Remote access допускається лише через окремий аварійний шлях.
+      selection_rule: Обирається для жорстких security/operations моделей.
+    - value_code: hybrid_support
+      label_uk: Кілька контрольованих способів
+      meaning: Поєднання VPN, bastion і/або OOB за правилами.
+      selection_rule: Обирається, коли support model справді змішана.
+
+  contractor_access_policy:
+    - value_code: forbidden
+      label_uk: Підрядний доступ заборонений
+      meaning: Зовнішні підрядники не повинні входити в production environment.
+      selection_rule: Обирається, якщо support model fully internal.
+    - value_code: escorted_only
+      label_uk: Лише супроводжуваний доступ
+      meaning: Доступ можливий тільки під контролем власної служби.
+      selection_rule: Обирається для жорстко контрольованих об'єктів.
+    - value_code: time_bounded_remote
+      label_uk: Лише обмежений у часі віддалений доступ
+      meaning: Доступ можливий на limited basis із logging та approval.
+      selection_rule: Базовий варіант для controlled vendor support.
+    - value_code: managed_service
+      label_uk: Керований сервісний доступ
+      meaning: Є постійний зовнішній сервіс за формалізованим контрактом.
+      selection_rule: Обирається тільки за наявності formal support arrangement.
+
+  sync_protocol:
+    - value_code: ntp
+      label_uk: NTP
+      meaning: Базова мережна синхронізація часу.
+      selection_rule: Обирається, якщо високоточний timing path не потрібен.
+    - value_code: ptp
+      label_uk: PTP
+      meaning: Потрібна підвищена точність і чутливість до timing path.
+      selection_rule: Обирається для time-sensitive applications.
+    - value_code: mixed
+      label_uk: Змішаний
+      meaning: Частина підсистем живе на PTP, частина на NTP.
+      selection_rule: Обирається, якщо вимоги різних підсистем відрізняються.
+
+  timing_accuracy_class:
+    - value_code: relaxed_ms
+      label_uk: Мілісекунди
+      meaning: Достатньо узгодження на рівні мілісекунд.
+      selection_rule: Підходить для базової event correlation.
+    - value_code: sub_ms
+      label_uk: Менше мілісекунди
+      meaning: Потрібна підвищена точність нижче 1 ms.
+      selection_rule: Обирається для чутливіших OT use cases.
+    - value_code: tens_of_us
+      label_uk: Десятки мікросекунд
+      meaning: Потрібен високоточний timing path.
+      selection_rule: Обирається тільки за явної вимоги.
+    - value_code: site_specific
+      label_uk: Спеціалізована вимога
+      meaning: Потрібна окрема timing note поза базовим словником.
+      selection_rule: Обирається, якщо стандартні класи не описують випадок.
+
+  power_source_model:
+    - value_code: dc_24_only
+      label_uk: Лише 24 VDC
+      meaning: Об'єкт має лише 24V DC як базове середовище живлення.
+      selection_rule: Обирається за реальним electrical basis.
+    - value_code: dc_mixed
+      label_uk: Кілька DC шин
+      meaning: Доступні кілька DC-контурів або резервоване DC-живлення.
+      selection_rule: Обирається для richer DC environments.
+    - value_code: ac_only
+      label_uk: Лише AC
+      meaning: Мережеве обладнання живиться від AC-середовища.
+      selection_rule: Обирається, якщо DC не передбачений.
+    - value_code: ac_dc_hybrid
+      label_uk: AC + DC
+      meaning: Є комбінація AC і DC живлення.
+      selection_rule: Обирається, якщо це реально доступно на об'єкті.
+
+  cabinet_constraint_class:
+    - value_code: existing_tight
+      label_uk: Існуюча тісна шафа
+      meaning: Дуже обмежений простір і можливість монтажу.
+      selection_rule: Обирається, якщо нову шафу або значне розширення не планують.
+    - value_code: existing_expandable
+      label_uk: Існуюча з обмеженим резервом
+      meaning: Є існуюча шафа, але з деяким запасом.
+      selection_rule: Обирається для brownfield with limited growth.
+    - value_code: new_standard
+      label_uk: Нова стандартна шафа
+      meaning: Є достатня свобода для стандартного build pack.
+      selection_rule: Типовий greenfield варіант.
+    - value_code: multi_cabinet
+      label_uk: Багатошафне виконання
+      meaning: Архітектура спирається на кілька шаф або рознесені cabinet roles.
+      selection_rule: Обирається для larger designs.
+
+  environmental_constraint_class:
+    - value_code: indoor_controlled
+      label_uk: Контрольоване приміщення
+      meaning: Температура і середовище близькі до нормального server/control room режиму.
+      selection_rule: Обирається лише якщо це підтверджено.
+    - value_code: industrial_indoor
+      label_uk: Промислове приміщення
+      meaning: Є пил, вібрація, температурні коливання або інші промислові фактори.
+      selection_rule: Базовий вибір для більшості виробничих об'єктів.
+    - value_code: outdoor_shelter
+      label_uk: Зовнішнє або напівзовнішнє виконання
+      meaning: Потрібен жорсткіший equipment/environment class.
+      selection_rule: Обирається для вуличних шаф або harsh sites.
+    - value_code: harsh_critical
+      label_uk: Жорстке середовище
+      meaning: Потрібні максимальні обмеження на обладнання і build assumptions.
+      selection_rule: Обирається для найскладніших field conditions.
+
+  poe_budget_class:
+    - value_code: none
+      label_uk: PoE не потрібен
+      meaning: PoE loads відсутні.
+      selection_rule: Обирається лише якщо це явно підтверджено.
+    - value_code: light
+      label_uk: Малий PoE-бюджет
+      meaning: Невелика кількість PoE endpoints.
+      selection_rule: Підходить для кількох камер або sensors.
+    - value_code: medium
+      label_uk: Середній PoE-бюджет
+      meaning: Помітне навантаження на PoE, але не video-heavy site.
+      selection_rule: Обирається для mixed video/edge scenarios.
+    - value_code: heavy
+      label_uk: Високий PoE-бюджет
+      meaning: CCTV або інші PoE endpoints суттєво впливають на design.
+      selection_rule: Обирається для PoE-heavy stations.
+
+  redundancy_target:
+    - value_code: none
+      label_uk: Без резервування
+      meaning: Допускається single-path / single-node design для некритичних випадків.
+      selection_rule: Обирається лише за низької критичності.
+    - value_code: uplink_backup
+      label_uk: Резерв зовнішнього каналу
+      meaning: Потрібно пережити втрату одного uplink/carrier.
+      selection_rule: Обирається для basic resilient transport.
+    - value_code: active_node_backup
+      label_uk: Резерв критичного вузла
+      meaning: Один вузол або один gateway не повинен валити сервіс повністю.
+      selection_rule: Обирається для більш жорстких sites.
+    - value_code: n_plus_1
+      label_uk: N+1
+      meaning: Потрібен структурований запасний елемент або шлях.
+      selection_rule: Базовий industrial-resilient клас.
+    - value_code: no_spof
+      label_uk: Без SPOF
+      meaning: Single points of failure неприйнятні в критичних шляхах.
+      selection_rule: Обирається для high/mission critical designs.
+
+  degraded_mode_profile:
+    - value_code: best_effort
+      label_uk: Best-effort деградація
+      meaning: Після відмови допустиме суттєве зниження функціональності.
+      selection_rule: Обирається для low-criticality objects.
+    - value_code: telemetry_survives
+      label_uk: Має лишитися телеметрія
+      meaning: Основний degraded mode повинен зберігати telemetry/monitoring.
+      selection_rule: Типовий варіант для remotely operated sites.
+    - value_code: control_and_telemetry_survive
+      label_uk: Має лишитися керування і телеметрія
+      meaning: Control path теж не повинен зникнути при одиничній відмові.
+      selection_rule: Обирається для критичних operational sites.
+    - value_code: site_specific
+      label_uk: Спеціалізований профіль
+      meaning: Потрібен окремий degraded mode note.
+      selection_rule: Обирається, якщо стандартні профілі не покривають об'єкт.
+
+  mttr_target_class:
+    - value_code: same_day
+      label_uk: Протягом дня
+      meaning: Відновлення того ж дня є прийнятним.
+      selection_rule: Обирається для non-urgent field repair models.
+    - value_code: four_hours
+      label_uk: До 4 годин
+      meaning: Відновлення має бути швидким, але не миттєвим.
+      selection_rule: Обирається для important operational sites.
+    - value_code: one_hour
+      label_uk: До 1 години
+      meaning: Вимагається дуже швидке відновлення або сильна remote recoverability.
+      selection_rule: Обирається для critical sites.
+    - value_code: near_zero
+      label_uk: Майже без простою
+      meaning: Архітектура має мінімізувати потребу у відновленні як окремій події.
+      selection_rule: Обирається для найбільш жорстких cases.
+
+  support_model:
+    - value_code: inhouse
+      label_uk: Власна служба
+      meaning: Основна підтримка виконується internal team.
+      selection_rule: Обирається за фактичної експлуатаційної моделі.
+    - value_code: integrator
+      label_uk: Інтегратор
+      meaning: Основний support дає інтегратор.
+      selection_rule: Обирається за відповідного contract model.
+    - value_code: vendor_managed
+      label_uk: Вендорський супровід
+      meaning: Критична залежність від вендора або сервісної мережі вендора.
+      selection_rule: Обирається тільки якщо це реально зафіксовано.
+    - value_code: hybrid
+      label_uk: Змішаний супровід
+      meaning: Support розподілений між кількома сторонами.
+      selection_rule: Типовий варіант для більшості production systems.
+
+  maintenance_window_model:
+    - value_code: planned_only
+      label_uk: Лише планові вікна
+      meaning: Зміни допускаються тільки у визначені вікна.
+      selection_rule: Обирається для process-sensitive sites.
+    - value_code: limited_anytime
+      label_uk: Обмежені зміни можливі будь-коли
+      meaning: Невеликі зміни дозволені поза суворими вікнами.
+      selection_rule: Обирається, якщо operations це реально допускає.
+    - value_code: always_available_ops
+      label_uk: Гнучкий режим
+      meaning: Сервісна модель дозволяє ширший change cadence.
+      selection_rule: Обирається для lower-risk environments.
+
+  acceptance_evidence_class:
+    - value_code: basic_checklists
+      label_uk: Базові чеклісти
+      meaning: Достатньо checklist-level evidence.
+      selection_rule: Обирається для менш критичних deliverables.
+    - value_code: test_records
+      label_uk: Протоколи тестів
+      meaning: Потрібні формальні записи результатів перевірок.
+      selection_rule: Базовий production class.
+    - value_code: witnessed_protocols
+      label_uk: Формальні протоколи з погодженням
+      meaning: Потрібні погоджені FAT/SAT protocols.
+      selection_rule: Обирається для critical contractual deliveries.
+    - value_code: regulated_evidence
+      label_uk: Посилена доказова база
+      meaning: Потрібні жорсткіші evidence і closure rules.
+      selection_rule: Обирається для regulated or mission-critical environments.
+
+  evidence_maturity_class:
+    - value_code: assumption_heavy
+      label_uk: Багато припущень
+      meaning: Значна частина baseline ще ґрунтується на припущеннях.
+      selection_rule: Типово для concept stage.
+    - value_code: mixed
+      label_uk: Змішана база
+      meaning: Частина рішень підтверджена, частина ще потребує уточнення.
+      selection_rule: Типово для basic design.
+    - value_code: mostly_confirmed
+      label_uk: Переважно підтверджено
+      meaning: Критичні частини мають достатню доказову базу.
+      selection_rule: Очікуваний рівень перед baseline freeze.
+    - value_code: field_verified
+      label_uk: Підтверджено обстеженням / реалізацією
+      meaning: Дані звірені з field reality.
+      selection_rule: Очікуваний стан для late design / as-built.
+
+  waiver_policy_class:
+    - value_code: strict
+      label_uk: Жорстка політика винятків
+      meaning: Винятки рідкісні, з коротким терміном дії і compensating controls.
+      selection_rule: Обирається для high/mission critical programs.
+    - value_code: controlled
+      label_uk: Керована політика винятків
+      meaning: Винятки допустимі, але строго трасуються.
+      selection_rule: Базовий production-friendly варіант.
+    - value_code: provisional
+      label_uk: Тимчасова політика
+      meaning: На ранніх стадіях можливі тимчасові waivers до stage gate.
+      selection_rule: Обирається переважно для early design stages.

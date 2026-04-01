@@ -1,0 +1,14 @@
+version: 0.1.0
+constraints:
+  - id: soft_prefer_no_spof_for_high_criticality
+    severity: warning
+    description_uk: Для high criticality бажано уникати single points of failure.
+    validator: validate_resilience
+    expression: TBD
+
+  - id: soft_prefer_oob_for_remote_sites
+    severity: warning
+    description_uk: Для віддалених об'єктів бажаний окремий OOB baseline.
+    validator: validate_connectivity
+    expression: TBD
+

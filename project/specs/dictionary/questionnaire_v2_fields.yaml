@@ -1,0 +1,872 @@
+version: 0.2.0
+questionnaire_family: object_first_network_v2
+
+fields:
+  - field_id: object_id
+    label_uk: Ідентифікатор об'єкта
+    purpose: Стабільний машинний ідентифікатор об'єкта для всіх артефактів.
+    type: string
+    strictness: S4
+    required: true
+    owner_role: project_manager
+    reviewer_roles:
+      - ot_architect
+    selection_rule: Має бути унікальним в межах програми.
+    interpretation_rule: Використовується як root key для requirements, graph artifacts і downstream packs.
+    unknown_policy: forbidden
+    evidence_required: project_register
+    design_impact:
+      - identity
+      - traceability
+    downstream_impact:
+      - all
+
+  - field_id: object_name
+    label_uk: Назва об'єкта
+    purpose: Людська ідентифікація об'єкта в документах і звітах.
+    type: string
+    strictness: S3
+    required: true
+    owner_role: object_owner
+    reviewer_roles:
+      - project_manager
+    selection_rule: Використовується офіційна або договірна назва.
+    interpretation_rule: Потрапляє у титули і summaries downstream artifacts.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: source_documents
+    design_impact:
+      - documentation
+    downstream_impact:
+      - all
+
+  - field_id: object_type
+    label_uk: Тип об'єкта
+    purpose: Визначає базовий клас архітектури і коло можливих archetypes.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: object_owner
+    reviewer_roles:
+      - ot_architect
+      - process_engineer
+    allowed_values_ref: object_type
+    selection_rule: Обирається один основний тип, що найкраще описує виробничу функцію об'єкта.
+    interpretation_rule: Використовується для archetype preselection і scope adjacent volumes.
+    unknown_policy: forbidden
+    evidence_required: source_documents
+    design_impact:
+      - archetype_selection
+      - network_volume_scope
+    downstream_impact:
+      - askoe
+      - telemetry
+      - video
+      - iiot_edge
+
+  - field_id: project_stage
+    label_uk: Стадія проєкту
+    purpose: Визначає допустимий рівень невизначеності і деталізації.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: project_manager
+    reviewer_roles:
+      - ot_architect
+    allowed_values_ref: project_stage
+    selection_rule: Обирається поточна фактична стадія.
+    interpretation_rule: Впливає на unknown policy і stage gates.
+    unknown_policy: forbidden
+    evidence_required: project_plan
+    design_impact:
+      - governance
+    downstream_impact:
+      - commissioning
+      - operations
+
+  - field_id: criticality_class
+    label_uk: Клас критичності
+    purpose: Визначає базову жорсткість resilience, security і operations вимог.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: object_owner
+    reviewer_roles:
+      - process_engineer
+      - operations_engineer
+    allowed_values_ref: criticality_class
+    selection_rule: Обирається за наслідком втрати сервісу, а не за бажаністю резервування.
+    interpretation_rule: Піднімає нижню межу для redundancy, OOB, logging і acceptance evidence.
+    unknown_policy: allowed_with_waiver
+    evidence_required: stakeholder_confirmation
+    design_impact:
+      - resilience
+      - security
+      - operations
+    downstream_impact:
+      - all
+
+  - field_id: staffing_model
+    label_uk: Модель присутності персоналу
+    purpose: Визначає, наскільки об'єкт покладається на remote operations і OOB.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: operations_engineer
+    reviewer_roles:
+      - object_owner
+    allowed_values_ref: staffing_model
+    selection_rule: Обирається фактична модель роботи після введення в експлуатацію.
+    interpretation_rule: Впливає на support model, OOB expectations і MTTR assumptions.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: operating_model
+    design_impact:
+      - operations
+      - management_oob
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: growth_horizon_months
+    label_uk: Горизонт розвитку
+    purpose: Фіксує горизонт, на який має закладатися headroom.
+    type: integer
+    strictness: S2
+    required: true
+    owner_role: object_owner
+    reviewer_roles:
+      - ot_architect
+    selection_rule: Вказується в місяцях.
+    interpretation_rule: Використовується у growth/headroom policies.
+    unknown_policy: informational_only
+    evidence_required: planning_assumption
+    design_impact:
+      - growth
+    downstream_impact:
+      - operations
+
+  - field_id: telemetry_required
+    label_uk: Телеметрія входить у scope
+    purpose: Активує telemetry transport і пов'язані handoffs.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: process_engineer
+    reviewer_roles:
+      - telemetry_engineer
+      - ot_architect
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо об'єкт повинен передавати процесні або станні дані назовні або у вищий рівень.
+    interpretation_rule: Активує telemetry service overlay і relevant annexes.
+    unknown_policy: forbidden
+    evidence_required: functional_scope
+    design_impact:
+      - service_graph
+      - adjacent_volume_interfaces
+    downstream_impact:
+      - telemetry
+      - askoe
+
+  - field_id: control_required
+    label_uk: Дистанційне керування входить у scope
+    purpose: Відрізняє control path від суто telemetry path.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: process_engineer
+    reviewer_roles:
+      - telemetry_engineer
+      - cybersecurity_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо через мережу мають проходити команди керування.
+    interpretation_rule: Підвищує вимоги до zoning, latency і survivability.
+    unknown_policy: allowed_with_waiver
+    evidence_required: control_scope_basis
+    design_impact:
+      - service_graph
+      - security
+      - resilience
+    downstream_impact:
+      - telemetry
+
+  - field_id: video_required
+    label_uk: Відеоспостереження входить у scope
+    purpose: Активує CCTV annex, PoE і uplink pressure checks.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: video_engineer
+    reviewer_roles:
+      - cabinet_power_engineer
+      - network_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо об'єкт вимагає камер або video-related transport.
+    interpretation_rule: Активує video transport pack і CCTV-related interface checks.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: security_monitoring_scope
+    design_impact:
+      - service_graph
+      - power_ports
+      - external_transport
+    downstream_impact:
+      - video
+      - operations
+
+  - field_id: iiot_required
+    label_uk: IIoT / edge входить у scope
+    purpose: Активує IIoT isolation, cloud policy і edge-related constraints.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: iiot_engineer
+    reviewer_roles:
+      - cybersecurity_engineer
+      - ot_architect
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо планується broker, analytics, historian edge або cloud-bound workloads.
+    interpretation_rule: Активує IIoT annex і isolation checks.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: digitalization_scope
+    design_impact:
+      - security
+      - adjacent_volume_interfaces
+    downstream_impact:
+      - iiot_edge
+
+  - field_id: local_archiving_required
+    label_uk: Потрібна локальна архівація
+    purpose: Фіксує вимогу до local storage незалежно від виду сервісу.
+    type: enum
+    strictness: S2
+    required: true
+    owner_role: process_engineer
+    reviewer_roles:
+      - operations_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо втрата зовнішнього каналу не повинна знищити історію даних або відео.
+    interpretation_rule: Впливає на local compute/NVR/storage requirements.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: retention_basis
+    design_impact:
+      - resilience
+      - equipment_compatibility
+    downstream_impact:
+      - telemetry
+      - video
+      - operations
+
+  - field_id: wan_required
+    label_uk: Потрібен зовнішній транспорт
+    purpose: Визначає, чи об'єкт потребує WAN/external connectivity.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: network_engineer
+    reviewer_roles:
+      - object_owner
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо об'єкт не є суто локальним.
+    interpretation_rule: Активує external transport baseline і carrier-related checks.
+    unknown_policy: forbidden
+    evidence_required: integration_scope
+    design_impact:
+      - external_transport
+    downstream_impact:
+      - telemetry
+      - video
+      - iiot_edge
+
+  - field_id: carrier_diversity_target
+    label_uk: Ціль різнорідності операторів / каналів
+    purpose: Фіксує рівень допустимої залежності від одного каналу або carrier.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: network_engineer
+    reviewer_roles:
+      - object_owner
+      - operations_engineer
+    allowed_values_ref: carrier_diversity_target
+    selection_rule: Обирається за required resilience, а не за поточним availability у полі.
+    interpretation_rule: Використовується у WAN design і failure-domain checks.
+    unknown_policy: allowed_with_waiver
+    evidence_required: transport_strategy
+    design_impact:
+      - resilience
+      - external_transport
+    downstream_impact:
+      - telemetry
+      - operations
+
+  - field_id: transport_separation_policy
+    label_uk: Політика розділення транспортів
+    purpose: Визначає, чи CCTV/OT/IIoT можуть ділити фізичний або логічний транспорт.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: network_engineer
+    reviewer_roles:
+      - cybersecurity_engineer
+      - video_engineer
+      - telemetry_engineer
+    allowed_values_ref: transport_separation_policy
+    selection_rule: Обирається за risk tolerance і criticality.
+    interpretation_rule: Впливає на zoning, PoE/uplink pressure і admissible paths.
+    unknown_policy: allowed_with_waiver
+    evidence_required: architecture_basis
+    design_impact:
+      - logical_graph
+      - service_graph
+      - resilience
+    downstream_impact:
+      - telemetry
+      - video
+      - iiot_edge
+
+  - field_id: security_zone_model
+    label_uk: Модель зонування
+    purpose: Визначає базову trust architecture.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: cybersecurity_engineer
+    reviewer_roles:
+      - ot_architect
+      - network_engineer
+    allowed_values_ref: security_zone_model
+    selection_rule: Обирається не за красою, а за реальним risk envelope об'єкта.
+    interpretation_rule: Формує logical / zone topology і firewall intent baseline.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: cyber_security_basis
+    design_impact:
+      - logical_graph
+      - interface_graph
+    downstream_impact:
+      - askoe
+      - telemetry
+      - video
+      - iiot_edge
+
+  - field_id: remote_access_profile
+    label_uk: Профіль віддаленого доступу
+    purpose: Фіксує допустимий спосіб remote support.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: cybersecurity_engineer
+    reviewer_roles:
+      - operations_engineer
+    allowed_values_ref: remote_access_profile
+    selection_rule: Обирається за support model і policy безпеки.
+    interpretation_rule: Впливає на bastion/VPN/OOB expectations.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: access_policy
+    design_impact:
+      - security
+      - management_oob
+    downstream_impact:
+      - operations
+      - telemetry
+      - video
+      - iiot_edge
+
+  - field_id: contractor_access_policy
+    label_uk: Політика доступу підрядників
+    purpose: Визначає, як зовнішні сервісні ролі можуть взаємодіяти з системою.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: cybersecurity_engineer
+    reviewer_roles:
+      - object_owner
+      - operations_engineer
+    allowed_values_ref: contractor_access_policy
+    selection_rule: Обирається за risk appetite і фактичним support contract.
+    interpretation_rule: Впливає на firewall intent, logging і break-glass notes.
+    unknown_policy: allowed_with_waiver
+    evidence_required: support_contract
+    design_impact:
+      - security
+      - operations
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: audit_logging_required
+    label_uk: Потрібне журналювання доступу та подій
+    purpose: Визначає нижню межу для logging baseline.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: cybersecurity_engineer
+    reviewer_roles:
+      - operations_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо policy або criticality вимагають збереження access/events trail.
+    interpretation_rule: Впливає на management, security і commissioning evidence.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: compliance_basis
+    design_impact:
+      - security
+      - operations
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: oob_required
+    label_uk: Потрібен out-of-band management
+    purpose: Визначає, чи потрібен окремий шлях керування поза production transport.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: operations_engineer
+    reviewer_roles:
+      - network_engineer
+      - cybersecurity_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Для unattended і high-criticality об'єктів значення yes є очікуваним.
+    interpretation_rule: Формує management/OOB baseline і break-glass expectations.
+    unknown_policy: allowed_with_waiver
+    evidence_required: operations_basis
+    design_impact:
+      - management_oob
+      - resilience
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: timing_required
+    label_uk: Часова синхронізація є суттєвою вимогою
+    purpose: Фіксує, що timing path має бути явно спроєктований.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: telemetry_engineer
+    reviewer_roles:
+      - network_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо події або дані потребують узгодженого часу.
+    interpretation_rule: Активує time annex і timing validators.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: event_correlation_basis
+    design_impact:
+      - time_sync
+    downstream_impact:
+      - telemetry
+      - askoe
+      - iiot_edge
+
+  - field_id: sync_protocol
+    label_uk: Протокол синхронізації
+    purpose: Визначає базовий timing technology choice.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: telemetry_engineer
+    reviewer_roles:
+      - network_engineer
+      - ot_architect
+    allowed_values_ref: sync_protocol
+    selection_rule: Обирається за timing requirement конкретного об'єкта, а не за загальною звичкою.
+    interpretation_rule: Визначає timing overlay, equipment fit і downstream timing dependencies.
+    unknown_policy: allowed_with_waiver
+    evidence_required: timing_basis
+    design_impact:
+      - time_sync
+      - equipment_compatibility
+    downstream_impact:
+      - telemetry
+      - operations
+
+  - field_id: timing_accuracy_class
+    label_uk: Клас точності синхронізації
+    purpose: Задає точнісну межу для time-sync design.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: telemetry_engineer
+    reviewer_roles:
+      - network_engineer
+    allowed_values_ref: timing_accuracy_class
+    selection_rule: Обирається найжорсткіший реальний сценарій.
+    interpretation_rule: Визначає, чи достатньо NTP, чи потрібен PTP і який equipment class допустимий.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: timing_basis
+    design_impact:
+      - time_sync
+      - equipment_compatibility
+    downstream_impact:
+      - telemetry
+      - commissioning
+
+  - field_id: power_source_model
+    label_uk: Модель доступного живлення
+    purpose: Визначає базовий power environment для мережевих і суміжних вузлів.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: cabinet_power_engineer
+    reviewer_roles:
+      - operations_engineer
+    allowed_values_ref: power_source_model
+    selection_rule: Обираються реально доступні типи живлення на об'єкті.
+    interpretation_rule: Впливає на equipment compatibility, cabinet pack і resilience assumptions.
+    unknown_policy: forbidden
+    evidence_required: electrical_basis
+    design_impact:
+      - physical_graph
+      - equipment_compatibility
+    downstream_impact:
+      - video
+      - telemetry
+      - operations
+
+  - field_id: cabinet_constraint_class
+    label_uk: Клас обмежень шафи
+    purpose: Фіксує просторові та монтажні межі.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: cabinet_power_engineer
+    reviewer_roles:
+      - network_engineer
+    allowed_values_ref: cabinet_constraint_class
+    selection_rule: Обирається за фактичним станом або проектними обмеженнями шаф.
+    interpretation_rule: Впливає на build pack, equipment fit і substitution policy.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: cabinet_survey
+    design_impact:
+      - physical_graph
+      - equipment_compatibility
+    downstream_impact:
+      - operations
+      - video
+      - telemetry
+
+  - field_id: environmental_constraint_class
+    label_uk: Клас середовищних обмежень
+    purpose: Визначає температурні, пилові, вологісні та інші field constraints.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: cabinet_power_engineer
+    reviewer_roles:
+      - ot_architect
+    allowed_values_ref: environmental_constraint_class
+    selection_rule: Обирається за найгіршим реальним середовищем, а не за офісним сценарієм.
+    interpretation_rule: Піднімає вимоги до rugged/wide-temperature класів.
+    unknown_policy: allowed_with_waiver
+    evidence_required: site_survey
+    design_impact:
+      - equipment_compatibility
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: poe_required
+    label_uk: Потрібне живлення PoE споживачів
+    purpose: Активує PoE budget і port class перевірки.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: cabinet_power_engineer
+    reviewer_roles:
+      - video_engineer
+      - network_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо хоча б одна цільова підсистема вимагає PoE.
+    interpretation_rule: Впливає на cabinet build pack і video transport pack.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: endpoint_inventory_basis
+    design_impact:
+      - power_ports
+      - equipment_compatibility
+    downstream_impact:
+      - video
+
+  - field_id: poe_budget_class
+    label_uk: Клас PoE-бюджету
+    purpose: Дає ранню нормалізовану оцінку PoE pressure.
+    type: enum
+    strictness: S2
+    required: true
+    owner_role: cabinet_power_engineer
+    reviewer_roles:
+      - video_engineer
+    allowed_values_ref: poe_budget_class
+    selection_rule: Обирається сумарний клас, а не вигадане точне число без inventory.
+    interpretation_rule: Переходить у power/ports fit checks і cabinet build pack.
+    unknown_policy: informational_only
+    evidence_required: endpoint_inventory_basis
+    design_impact:
+      - power_ports
+    downstream_impact:
+      - video
+      - operations
+
+  - field_id: redundancy_target
+    label_uk: Ціль резервування
+    purpose: Визначає мінімальний рівень survivability для інфраструктури.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: ot_architect
+    reviewer_roles:
+      - object_owner
+      - operations_engineer
+    allowed_values_ref: redundancy_target
+    selection_rule: Обирається за tolerated failure impact, а не за бажаністю "мати резерв".
+    interpretation_rule: Породжує resilience baseline, failure-domain rules і SAT obligations.
+    unknown_policy: allowed_with_waiver
+    evidence_required: resilience_basis
+    design_impact:
+      - resilience
+      - failure_domain
+    downstream_impact:
+      - all
+
+  - field_id: degraded_mode_profile
+    label_uk: Профіль деградованого режиму
+    purpose: Фіксує, що саме повинно лишатися живим при часткових відмовах.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: operations_engineer
+    reviewer_roles:
+      - process_engineer
+      - ot_architect
+    allowed_values_ref: degraded_mode_profile
+    selection_rule: Обирається найгірший допустимий, але прийнятний degraded mode.
+    interpretation_rule: Потрапляє у resilience model, commissioning pack і operations handoff.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: operations_basis
+    design_impact:
+      - resilience
+      - operations
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: mttr_target_class
+    label_uk: Клас цільового MTTR
+    purpose: Визначає, наскільки швидко система має бути відновлювана.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: operations_engineer
+    reviewer_roles:
+      - object_owner
+    allowed_values_ref: mttr_target_class
+    selection_rule: Обирається за фактичною сервісною моделлю, а не за оптимістичним очікуванням.
+    interpretation_rule: Впливає на OOB, support model, spares assumptions і commissioning tests.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: support_contract
+    design_impact:
+      - operations
+      - resilience
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: common_cause_separation_required
+    label_uk: Потрібне рознесення common-cause domains
+    purpose: Фіксує, що резерв не повинен ділити спільні failure domains.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: ot_architect
+    reviewer_roles:
+      - network_engineer
+      - operations_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається для об'єктів, де паперовий резерв не приймається.
+    interpretation_rule: Активує future common-cause validation layer.
+    unknown_policy: allowed_with_waiver
+    evidence_required: resilience_basis
+    design_impact:
+      - failure_domain
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: support_model
+    label_uk: Модель супроводу
+    purpose: Визначає, хто і як буде підтримувати систему.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: operations_engineer
+    reviewer_roles:
+      - object_owner
+      - project_manager
+    allowed_values_ref: support_model
+    selection_rule: Обирається фактична after-go-live model, не тимчасова на стадії впровадження.
+    interpretation_rule: Впливає на OOB, contractor policy, MTTR і operations handoff content.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: operating_model
+    design_impact:
+      - operations
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: maintenance_window_model
+    label_uk: Модель вікон обслуговування
+    purpose: Визначає, коли і як можна виконувати planned changes.
+    type: enum
+    strictness: S2
+    required: true
+    owner_role: operations_engineer
+    reviewer_roles:
+      - object_owner
+    allowed_values_ref: maintenance_window_model
+    selection_rule: Обирається реальний режим зупинок/доступності об'єкта.
+    interpretation_rule: Впливає на commissioning strategy і change control notes.
+    unknown_policy: informational_only
+    evidence_required: operating_model
+    design_impact:
+      - operations
+    downstream_impact:
+      - commissioning
+      - operations
+
+  - field_id: operations_handoff_required
+    label_uk: Потрібен formal operations handoff pack
+    purpose: Фіксує, що проєкт повинен завершитися пакетом для експлуатації.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: operations_engineer
+    reviewer_roles:
+      - project_manager
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Для production systems значення yes є очікуваним.
+    interpretation_rule: Активує generation rules для operations handoff pack.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: delivery_scope
+    design_impact:
+      - operations
+    downstream_impact:
+      - operations
+
+  - field_id: asbuilt_package_required
+    label_uk: Потрібен as-built package
+    purpose: Фіксує closure obligation після монтажу і ПНР.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: project_manager
+    reviewer_roles:
+      - commissioning_engineer
+      - operations_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Для production systems значення yes є очікуваним.
+    interpretation_rule: Активує as-built closure rules і downstream closure pack.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: delivery_scope
+    design_impact:
+      - asbuilt_closure
+    downstream_impact:
+      - operations
+      - commissioning
+
+  - field_id: fat_required
+    label_uk: Потрібен FAT
+    purpose: Визначає, чи потрібен factory acceptance stage для мережевої частини.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: commissioning_engineer
+    reviewer_roles:
+      - object_owner
+      - project_manager
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Значення yes обирається, якщо договір, criticality або supply chain risk вимагають FAT.
+    interpretation_rule: Активує commissioning pack requirements.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: contractual_basis
+    design_impact:
+      - acceptance
+    downstream_impact:
+      - commissioning
+
+  - field_id: sat_required
+    label_uk: Потрібен SAT
+    purpose: Визначає, чи потрібен site acceptance stage для мережевої частини.
+    type: enum
+    strictness: S4
+    required: true
+    owner_role: commissioning_engineer
+    reviewer_roles:
+      - object_owner
+      - operations_engineer
+    allowed_values_ref: yes_no_tbd
+    selection_rule: Для production deployments значення yes є типовим.
+    interpretation_rule: Активує site verification obligations і closure logic.
+    unknown_policy: forbidden
+    evidence_required: contractual_basis
+    design_impact:
+      - acceptance
+      - asbuilt_closure
+    downstream_impact:
+      - commissioning
+      - operations
+
+  - field_id: acceptance_evidence_class
+    label_uk: Клас доказів приймання
+    purpose: Визначає, який рівень доказовості потрібен для closing stage.
+    type: enum
+    strictness: S3
+    required: true
+    owner_role: object_owner
+    reviewer_roles:
+      - commissioning_engineer
+      - project_manager
+    allowed_values_ref: acceptance_evidence_class
+    selection_rule: Обирається за договором і критичністю об'єкта.
+    interpretation_rule: Впливає на FAT/SAT pack і as-built closure evidence.
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: contractual_basis
+    design_impact:
+      - acceptance
+    downstream_impact:
+      - commissioning
+      - operations
+
+  - field_id: evidence_maturity_class
+    label_uk: Клас зрілості доказової бази
+    purpose: Показує, наскільки questionnaire базується на фактах, а не припущеннях.
+    type: enum
+    strictness: S2
+    required: true
+    owner_role: project_manager
+    reviewer_roles:
+      - ot_architect
+    allowed_values_ref: evidence_maturity_class
+    selection_rule: Обирається за найслабшою критичною частиною доказової бази.
+    interpretation_rule: Впливає на readiness for baseline freeze.
+    unknown_policy: informational_only
+    evidence_required: evidence_register
+    design_impact:
+      - governance
+    downstream_impact:
+      - all
+
+  - field_id: waiver_policy_class
+    label_uk: Клас політики винятків
+    purpose: Визначає, як поводитися з відхиленнями від baseline rules.
+    type: enum
+    strictness: S2
+    required: true
+    owner_role: project_manager
+    reviewer_roles:
+      - object_owner
+      - ot_architect
+    allowed_values_ref: waiver_policy_class
+    selection_rule: Обирається відповідно до governance model проєкту.
+    interpretation_rule: Впливає на unknown handling, stage gates і closure requirements.
+    unknown_policy: informational_only
+    evidence_required: governance_basis
+    design_impact:
+      - governance
+    downstream_impact:
+      - all

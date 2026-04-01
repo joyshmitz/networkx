@@ -1,0 +1,95 @@
+version: 0.2.0
+annex_id: iiot
+contract_mode: relaxed
+description_uk: >
+  IIoT / edge annex для edge workloads, локальної аналітики і зовнішньої інтеграції.
+
+applies_when:
+  field_id: iiot_required
+  equals: 'yes'
+
+relaxed_contract:
+  required_keys:
+    - field_id
+    - label_uk
+    - type
+    - owner_role
+    - reviewer_roles
+    - unknown_policy
+    - evidence_required
+  optional_keys:
+    - allowed_values_ref
+    - selection_rule
+    - design_impact
+    - downstream_impact
+  notes_uk: >
+    Annex-local поля деталізують IIoT / edge constraints без розростання core questionnaire.
+
+fields:
+  - field_id: edge_nodes_estimate
+    label_uk: Оцінка кількості edge вузлів
+    type: integer
+    owner_role: iiot_engineer
+    reviewer_roles:
+      - network_engineer
+      - operations_engineer
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: digitalization_scope
+    selection_rule: Вказується кількість compute or gateway roles, що мають жити на об'єкті.
+    design_impact:
+      - equipment_compatibility
+      - growth
+    downstream_impact:
+      - iiot_edge
+      - operations
+
+  - field_id: external_cloud_connectivity_profile
+    label_uk: Профіль зовнішньої IIoT інтеграції
+    type: string
+    owner_role: iiot_engineer
+    reviewer_roles:
+      - cybersecurity_engineer
+      - network_engineer
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: integration_basis
+    selection_rule: Фіксується як короткий профіль cloud/API connectivity, якщо core policy недостатньо деталізує шлях.
+    design_impact:
+      - external_transport
+      - security
+    downstream_impact:
+      - iiot_edge
+      - operations
+
+  - field_id: iiot_isolation_profile
+    label_uk: Профіль ізоляції IIoT
+    type: string
+    owner_role: iiot_engineer
+    reviewer_roles:
+      - cybersecurity_engineer
+      - ot_architect
+    unknown_policy: allowed_until_stage_gate
+    evidence_required: security_monitoring_scope
+    selection_rule: Застосовується, якщо треба деталізувати isolation beyond core security_zone_model.
+    design_impact:
+      - security
+      - adjacent_volume_interfaces
+    downstream_impact:
+      - iiot_edge
+      - telemetry
+
+  - field_id: iiot_protocol_mix
+    label_uk: Профіль протоколів IIoT
+    type: string
+    owner_role: iiot_engineer
+    reviewer_roles:
+      - telemetry_engineer
+      - network_engineer
+    unknown_policy: informational_only
+    evidence_required: protocol_scope
+    selection_rule: Вказується як короткий профіль broker/API/edge protocol mix, якщо це впливає на integration pack.
+    design_impact:
+      - adjacent_volume_interfaces
+      - service_graph
+    downstream_impact:
+      - iiot_edge
+      - telemetry
