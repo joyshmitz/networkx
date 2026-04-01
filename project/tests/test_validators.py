@@ -208,6 +208,22 @@ class TestResilience:
         issues = validate_resilience(pg, fg, reqs)
         assert any("same_day" in i["message"] for i in _issues_by(issues, "warning"))
 
+    def test_wan_no_with_dual_carrier_flags_missing_domains(self):
+        pg = nx.Graph()
+        pg.add_node("sw_a", node_type="device")
+        fg = nx.Graph()
+        fg.add_node("power_primary", domain_type="power_domain")
+        # no carrier domains at all (wan_required=no)
+        reqs = {
+            "metadata": {"criticality_class": "medium"},
+            "resilience": {"redundancy_target": "none"},
+            "object_profile": {"staffing_model": "local_ops"},
+            "security_access": {"oob_required": "yes"},
+            "external_transport": {"carrier_diversity_target": "dual_carrier_required"},
+        }
+        issues = validate_resilience(pg, fg, reqs)
+        assert any("carrier" in i["message"].lower() for i in _issues_by(issues, "error"))
+
     def test_no_spof_with_bridge_errors(self):
         pg = nx.Graph()
         pg.add_node("sw_a", node_type="device")

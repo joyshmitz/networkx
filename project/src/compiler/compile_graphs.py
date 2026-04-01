@@ -300,9 +300,11 @@ def compile_failure_domain_graph(requirements: dict[str, Any]) -> nx.Graph:
     graph = nx.Graph(graph_type="failure_domain")
     graph.add_node("power_primary", domain_type="power_domain")
     graph.add_node("cabinet_primary", domain_type="cabinet_domain")
-    graph.add_node("carrier_a", domain_type="carrier_domain")
 
-    if should_have_secondary_path(requirements):
+    wan_enabled = is_yes(requirements.get("external_transport", {}).get("wan_required"))
+    if wan_enabled:
+        graph.add_node("carrier_a", domain_type="carrier_domain")
+    if wan_enabled and should_have_secondary_path(requirements):
         graph.add_node("carrier_b", domain_type="carrier_domain")
     if requirements.get("resilience", {}).get("redundancy_target") in {"active_node_backup", "n_plus_1", "no_spof"}:
         graph.add_node("power_secondary", domain_type="power_domain")

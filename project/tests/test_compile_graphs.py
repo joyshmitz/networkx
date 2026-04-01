@@ -303,6 +303,16 @@ class TestFailureDomainGraph:
         g = compile_failure_domain_graph(reqs)
         assert "carrier_b" in g
 
+    def test_wan_no_skips_carrier_domains(self):
+        reqs = _base_requirements(
+            external_transport={"wan_required": "no",
+                                "carrier_diversity_target": "dual_carrier_required",
+                                "transport_separation_policy": "logical_separation"},
+        )
+        g = compile_failure_domain_graph(reqs)
+        carrier_nodes = [n for n, a in g.nodes(data=True) if a.get("domain_type") == "carrier_domain"]
+        assert len(carrier_nodes) == 0
+
     def test_no_spof_adds_secondary_power_cabinet(self):
         reqs = _base_requirements(
             resilience={"redundancy_target": "no_spof", "degraded_mode_profile": "telemetry_survives",
