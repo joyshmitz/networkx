@@ -2,7 +2,7 @@
 
 **Дата:** 2026-04-02  
 **Гілка:** `research/methodology-foundation-clean`  
-**Статус:** operational current-state contract after Stage 0-7  
+**Статус:** v0 formally released; operational current-state contract after Stage 0-8  
 **Останній branch verify:** `PYTHONPATH=. .venv/bin/python -m pytest project/tests -q` -> `242 passed`
 
 ## Current State
