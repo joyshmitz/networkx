@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
+import sys
 from typing import Any
+
+SRC_ROOT = Path(__file__).resolve().parents[1]
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
 from intake.compile_intake import _count_statuses, compile_intake
 from model_utils import load_yaml, resolve_project_root
@@ -11,6 +16,7 @@ from validators.validate_role_assignments import build_person_to_roles, build_ro
 
 SNAPSHOT_SCHEMA_VERSION = "0.1.0"
 UNRESOLVED_STATUSES = {"tbd", "unanswered", "not_applicable"}
+BLOCKING_PIPELINE_SEVERITIES = {"error", "critical"}
 
 
 def load_field_metadata(
@@ -87,6 +93,47 @@ def collect_unresolved_fields(
     return sorted(unresolved, key=lambda item: (item["section"], item["field_id"]))
 
 
+def collect_evidence_snapshot(
+    all_fields: dict[str, dict[str, Any]],
+    field_index: dict[str, dict[str, Any]],
+    field_to_section: dict[str, str],
+) -> dict[str, Any]:
+    requirements: list[dict[str, Any]] = []
+    observed_signals: list[dict[str, Any]] = []
+
+    for field_id, field_def in sorted(field_index.items()):
+        evidence_required = field_def.get("evidence_required")
+        if evidence_required:
+            entry = all_fields.get(field_id, {})
+            requirements.append(
+                {
+                    "field_id": field_id,
+                    "section": field_to_section.get(field_id, ""),
+                    "evidence_required": evidence_required,
+                    "status": entry.get("status"),
+                    "person_id": entry.get("person_id"),
+                    "signal_present": bool(entry.get("source_ref")),
+                }
+            )
+
+        source_ref = all_fields.get(field_id, {}).get("source_ref")
+        if source_ref:
+            observed_signals.append(
+                {
+                    "field_id": field_id,
+                    "section": field_to_section.get(field_id, ""),
+                    "source_ref": source_ref,
+                    "person_id": all_fields[field_id].get("person_id"),
+                }
+            )
+
+    return {
+        "status": "not_collected",
+        "requirements": requirements,
+        "observed_signals": observed_signals,
+    }
+
+
 def pipeline_error_records(issues: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
         {
@@ -95,7 +142,7 @@ def pipeline_error_records(issues: list[dict[str, Any]]) -> list[dict[str, Any]]
             "message": issue["message"],
         }
         for issue in issues
-        if issue["severity"] == "error"
+        if issue["severity"] in BLOCKING_PIPELINE_SEVERITIES
     ]
 
 
@@ -129,6 +176,7 @@ def build_workspace_snapshot(
     *,
     project_root: Path | None = None,
     snapshot_on: date | None = None,
+    write_pipeline_outputs: bool = False,
 ) -> dict[str, Any]:
     resolved_workspace = workspace_path.resolve()
     if not resolved_workspace.exists():
@@ -149,6 +197,7 @@ def build_workspace_snapshot(
     pipeline_result = execute_pipeline(
         resolved_workspace / "questionnaire.yaml",
         output_dir=resolved_workspace / "reports",
+        write_outputs=write_pipeline_outputs,
     )
 
     field_index, field_to_section = load_field_metadata(project_root)
@@ -187,6 +236,11 @@ def build_workspace_snapshot(
             "unresolved_by_strictness": unresolved_by_strictness,
         },
         "roles": role_resolution,
+        "evidence": collect_evidence_snapshot(
+            compile_result["all_fields"],
+            field_index,
+            field_to_section,
+        ),
         "pipeline": {
             "status": pipeline_result["validation"]["status"],
             "error_count": pipeline_result["validation"]["error_count"],

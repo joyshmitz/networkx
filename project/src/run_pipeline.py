@@ -80,6 +80,105 @@ def _manifest_path(path: Path, base_dir: Path | None = None) -> str:
         return str(resolved_path)
 
 
+def resolve_role_assignments(
+    questionnaire_path: Path,
+    role_assignments_path: Path | None = None,
+) -> dict[str, Any] | None:
+    if role_assignments_path:
+        return load_yaml(role_assignments_path)
+
+    auto_path = questionnaire_path.parent / "role_assignments.yaml"
+    if auto_path.exists():
+        return load_yaml(auto_path)
+    return None
+
+
+def execute_pipeline(
+    questionnaire_path: Path,
+    schema: Path | None = None,
+    output_dir: Path | None = None,
+    role_assignments_path: Path | None = None,
+    *,
+    write_outputs: bool = True,
+) -> dict[str, Any]:
+    schema_path = schema or default_requirements_schema_path()
+
+    questionnaire = load_yaml(questionnaire_path)
+    requirements, assumptions = build_requirements_model(questionnaire)
+    validate_requirements_model(requirements, schema=load_yaml(schema_path))
+
+    role_assignments = resolve_role_assignments(
+        questionnaire_path,
+        role_assignments_path=role_assignments_path,
+    )
+
+    bundle = compile_all_graphs(requirements)
+    graph_summary = summarize_graph_bundle(bundle)
+    issues = run_validators(
+        requirements,
+        graph_summary,
+        bundle,
+        assumptions,
+        role_assignments=role_assignments,
+    )
+    validation_summary = summarize_validation(issues)
+    tbd_fields = count_tbd_fields(requirements)
+    validation_summary["confidence_level"] = derive_confidence_level(requirements)
+    validation_summary["tbd_count"] = len(tbd_fields)
+    validation_summary["assumed_count"] = len(assumptions)
+    if tbd_fields:
+        validation_summary["tbd_fields"] = tbd_fields
+    if assumptions:
+        validation_summary["assumed_fields"] = [
+            {k: v for k, v in a.items() if k != "section"} for a in assumptions
+        ]
+
+    resolved_output_dir = output_dir or default_output_dir(questionnaire_path)
+    if write_outputs:
+        resolved_output_dir.mkdir(parents=True, exist_ok=True)
+
+        compiled_output = dict(requirements)
+        if assumptions:
+            compiled_output["_assumptions"] = assumptions
+        write_yaml(resolved_output_dir / "requirements.compiled.yaml", compiled_output)
+        write_yaml(resolved_output_dir / "graphs.summary.yaml", graph_summary)
+        write_yaml(resolved_output_dir / "validation.summary.yaml", validation_summary)
+        write_yaml(
+            resolved_output_dir / "pipeline.manifest.yaml",
+            {
+                "questionnaire": _manifest_path(questionnaire_path),
+                "schema": _manifest_path(schema_path),
+                "questionnaire_version": requirements.get("metadata", {}).get("questionnaire_version"),
+                "resolved_archetype": requirements.get("metadata", {}).get("resolved_archetype"),
+                "outputs": {
+                    "requirements": "requirements.compiled.yaml",
+                    "graph_summary": "graphs.summary.yaml",
+                    "validation_summary": "validation.summary.yaml",
+                    "network_volume_summary": "network_volume_summary.md",
+                    "handoff_matrix": "handoff_matrix.md",
+                },
+                "status": validation_summary["status"],
+            },
+        )
+        (resolved_output_dir / "network_volume_summary.md").write_text(
+            generate_network_volume_summary(requirements), encoding="utf-8"
+        )
+        (resolved_output_dir / "handoff_matrix.md").write_text(
+            generate_handoff_matrix(requirements), encoding="utf-8"
+        )
+
+    return {
+        "questionnaire_path": questionnaire_path,
+        "schema_path": schema_path,
+        "output_dir": resolved_output_dir,
+        "requirements": requirements,
+        "assumptions": assumptions,
+        "graph_summary": graph_summary,
+        "issues": issues,
+        "validation": validation_summary,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run questionnaire -> requirements -> graphs -> validators -> reports"
@@ -104,65 +203,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    questionnaire = load_yaml(args.questionnaire)
-    requirements, assumptions = build_requirements_model(questionnaire)
-    validate_requirements_model(requirements, schema=load_yaml(args.schema))
-
-    ra_data: dict[str, Any] | None = None
-    if args.role_assignments:
-        ra_data = load_yaml(args.role_assignments)
-    else:
-        auto_path = args.questionnaire.parent / "role_assignments.yaml"
-        if auto_path.exists():
-            ra_data = load_yaml(auto_path)
-
-    bundle = compile_all_graphs(requirements)
-    graph_summary = summarize_graph_bundle(bundle)
-    issues = run_validators(requirements, graph_summary, bundle, assumptions, role_assignments=ra_data)
-    validation_summary = summarize_validation(issues)
-    tbd_fields = count_tbd_fields(requirements)
-    validation_summary["confidence_level"] = derive_confidence_level(requirements)
-    validation_summary["tbd_count"] = len(tbd_fields)
-    validation_summary["assumed_count"] = len(assumptions)
-    if tbd_fields:
-        validation_summary["tbd_fields"] = tbd_fields
-    if assumptions:
-        validation_summary["assumed_fields"] = [
-            {k: v for k, v in a.items() if k != "section"} for a in assumptions
-        ]
-
-    output_dir = args.output_dir or default_output_dir(args.questionnaire)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    compiled_output = dict(requirements)
-    if assumptions:
-        compiled_output["_assumptions"] = assumptions
-    write_yaml(output_dir / "requirements.compiled.yaml", compiled_output)
-    write_yaml(output_dir / "graphs.summary.yaml", graph_summary)
-    write_yaml(output_dir / "validation.summary.yaml", validation_summary)
-    write_yaml(
-        output_dir / "pipeline.manifest.yaml",
-        {
-            "questionnaire": _manifest_path(args.questionnaire),
-            "schema": _manifest_path(args.schema),
-            "questionnaire_version": requirements.get("metadata", {}).get("questionnaire_version"),
-            "resolved_archetype": requirements.get("metadata", {}).get("resolved_archetype"),
-            "outputs": {
-                "requirements": "requirements.compiled.yaml",
-                "graph_summary": "graphs.summary.yaml",
-                "validation_summary": "validation.summary.yaml",
-                "network_volume_summary": "network_volume_summary.md",
-                "handoff_matrix": "handoff_matrix.md",
-            },
-            "status": validation_summary["status"],
-        },
+    result = execute_pipeline(
+        args.questionnaire,
+        schema=args.schema,
+        output_dir=args.output_dir,
+        role_assignments_path=args.role_assignments,
     )
-    (output_dir / "network_volume_summary.md").write_text(
-        generate_network_volume_summary(requirements), encoding="utf-8"
-    )
-    (output_dir / "handoff_matrix.md").write_text(
-        generate_handoff_matrix(requirements), encoding="utf-8"
-    )
+    validation_summary = result["validation"]
+    output_dir = result["output_dir"]
+    requirements = result["requirements"]
+    assumptions = result["assumptions"]
 
     print(
         yaml.safe_dump(

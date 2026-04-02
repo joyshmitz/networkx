@@ -127,6 +127,7 @@ def preview_workspace(
         workspace_path,
         project_root=project_root,
         snapshot_on=preview_on,
+        write_pipeline_outputs=True,
     )
     unresolved_s4_fields = snapshot["fields"]["unresolved_by_strictness"].get("S4", [])
     unresolved_non_s4_fields = [
