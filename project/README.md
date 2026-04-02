@@ -104,3 +104,30 @@ Deterministic regeneration rule:
 - checked-in intake exemplars and golden checks must pass explicit fixed `--date YYYY-MM-DD`;
 - date-only drift in tracked exemplars is not allowed;
 - regeneration drift is allowed only when source/spec/code changed intentionally.
+
+## Happy-Path Golden Contract
+
+Approved golden target: `project/examples/sample_object_01`
+
+Golden files for regenerate-and-compare:
+
+- `questionnaire.yaml`
+- `intake/generated/*.guide.md`
+- `intake/responses/*.xlsx`
+- `intake/responses/*.response.yaml`
+- `reports/intake_status.yaml`
+- `reports/intake_status.md`
+
+Regenerate procedure for Gate B:
+
+```bash
+PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py project/examples/sample_object_01 --date 2026-04-02
+PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py project/examples/sample_object_01 --date 2026-04-02
+```
+
+Golden comparison rules:
+
+- compare the approved golden files byte-for-byte;
+- no normalization is applied within the golden set;
+- `role_assignments.yaml` is a source input, not a regenerated golden output;
+- pipeline reports in `reports/requirements.compiled.yaml`, `graphs.summary.yaml`, `validation.summary.yaml`, `network_volume_summary.md`, `handoff_matrix.md`, and `pipeline.manifest.yaml` are excluded from Gate B and covered by roundtrip/pipeline verification instead.

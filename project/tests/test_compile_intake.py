@@ -6,7 +6,6 @@ version/known_unknowns emit, derived .response.yaml, intake_status.
 """
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +26,8 @@ from intake.compile_intake import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FIXED_DATE = date(2026, 4, 2)
+
+from conftest import GOLDEN_DATE as FIXED_DATE
 
 
 # ---------------------------------------------------------------------------

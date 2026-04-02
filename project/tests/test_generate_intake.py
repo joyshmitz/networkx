@@ -5,7 +5,6 @@ field types (enum/string/integer), unassigned xlsx, guide.md, reference sheet.
 """
 from __future__ import annotations
 
-from datetime import date
 import hashlib
 from pathlib import Path
 
@@ -26,7 +25,8 @@ from intake.generate_intake_sheets import (
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAMPLE_WORKSPACE = PROJECT_ROOT / "examples" / "sample_object_01"
 SAMPLE_WORKSPACE_02 = PROJECT_ROOT / "examples" / "sample_object_02"
-FIXED_DATE = date(2026, 4, 2)
+
+from conftest import GOLDEN_DATE as FIXED_DATE
 
 
 @pytest.fixture(scope="module")
