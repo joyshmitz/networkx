@@ -1,0 +1,59 @@
+schema_version: 0.1.0
+
+validators:
+  resilience:
+    fallback_owner_roles:
+      - ot_architect
+    rules:
+      - issue_code: physical_graph_empty
+        message_contains: "Physical graph is empty"
+      - issue_code: redundancy_target_invalid_for_high_criticality
+        message_contains: "redundancy_target='none'"
+        field_ids:
+          - redundancy_target
+      - issue_code: remote_ops_without_oob
+        message_contains: "without OOB"
+        field_ids:
+          - oob_required
+      - issue_code: carrier_diversity_weak_for_recovery
+        message_contains: "single_path_allowed carrier diversity"
+        field_ids:
+          - carrier_diversity_target
+      - issue_code: degraded_mode_weak_for_recovery
+        message_contains: "best_effort degraded mode"
+        field_ids:
+          - degraded_mode_profile
+      - issue_code: mttr_too_slow_for_critical_operations
+        message_contains: "same_day MTTR"
+        field_ids:
+          - mttr_target_class
+      - issue_code: wan_edges_required
+        message_contains: "requires at least two WAN edges"
+        field_ids:
+          - redundancy_target
+      - issue_code: carrier_domains_required
+        message_contains: "requires at least two carrier domains"
+        field_ids:
+          - carrier_diversity_target
+      - issue_code: no_spof_bridges_present
+        message_contains: "No-SPOF target violated"
+        field_ids:
+          - redundancy_target
+      - issue_code: common_cause_domains_missing
+        message_contains: "secondary power/cabinet domains are not modeled"
+        field_ids:
+          - common_cause_separation_required
+
+  time:
+    fallback_owner_roles:
+      - telemetry_engineer
+    rules:
+      - issue_code: sync_protocol_missing
+        message_contains: "sync_protocol is missing"
+        field_ids:
+          - sync_protocol
+      - issue_code: ptp_required_for_timing_accuracy
+        message_contains: "requires PTP"
+        field_ids:
+          - timing_accuracy_class
+          - sync_protocol

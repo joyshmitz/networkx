@@ -57,17 +57,20 @@ def load_role_resolution(workspace_path: Path) -> dict[str, Any]:
     }
 
 
-def collect_unresolved_fields(
+def _field_sort_key(field_id: str, field_to_section: dict[str, str]) -> tuple[str, str]:
+    return field_to_section.get(field_id, ""), field_id
+
+
+def collect_field_records(
     all_fields: dict[str, dict[str, Any]],
     field_index: dict[str, dict[str, Any]],
     field_to_section: dict[str, str],
     role_to_persons: dict[str, list[str]],
-) -> list[dict[str, Any]]:
-    unresolved: list[dict[str, Any]] = []
-    for field_id, entry in all_fields.items():
-        status = entry["status"]
-        if status not in UNRESOLVED_STATUSES:
-            continue
+) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
+    for field_id in sorted(field_index, key=lambda item: _field_sort_key(item, field_to_section)):
+        entry = all_fields.get(field_id, {})
+        status = entry.get("status", "unanswered")
 
         field_def = field_index.get(field_id, {})
         owner_role = field_def.get("owner_role")
@@ -76,21 +79,35 @@ def collect_unresolved_fields(
         for reviewer_role in reviewer_roles:
             reviewer_persons.update(role_to_persons.get(reviewer_role, []))
 
-        unresolved.append(
-            {
-                "field_id": field_id,
-                "section": field_to_section.get(field_id, ""),
-                "strictness": field_def.get("strictness"),
-                "status": status,
-                "owner_role": owner_role,
-                "reviewer_roles": reviewer_roles,
-                "owner_persons": list(role_to_persons.get(owner_role, [])) if owner_role else [],
-                "reviewer_persons": sorted(reviewer_persons),
-                "person_id": entry.get("person_id"),
-            }
-        )
+        records[field_id] = {
+            "field_id": field_id,
+            "section": field_to_section.get(field_id, ""),
+            "label_uk": field_def.get("label_uk"),
+            "type": field_def.get("type"),
+            "strictness": field_def.get("strictness"),
+            "status": status,
+            "value": entry.get("value"),
+            "comment": entry.get("comment"),
+            "source_ref": entry.get("source_ref"),
+            "owner_role": owner_role,
+            "reviewer_roles": reviewer_roles,
+            "owner_persons": sorted(role_to_persons.get(owner_role, [])) if owner_role else [],
+            "reviewer_persons": sorted(reviewer_persons),
+            "person_id": entry.get("person_id"),
+            "evidence_required": field_def.get("evidence_required"),
+        }
 
-    return sorted(unresolved, key=lambda item: (item["section"], item["field_id"]))
+    return records
+
+
+def collect_unresolved_fields(
+    field_records: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return [
+        record
+        for record in field_records.values()
+        if record["status"] in UNRESOLVED_STATUSES
+    ]
 
 
 def collect_evidence_snapshot(
@@ -205,12 +222,13 @@ def build_workspace_snapshot(
     compile_totals = _count_statuses(compile_result["all_fields"])
     compile_totals["total"] = len(compile_result["all_fields"])
 
-    unresolved_fields = collect_unresolved_fields(
+    field_records = collect_field_records(
         compile_result["all_fields"],
         field_index,
         field_to_section,
         role_resolution["role_to_persons"],
     )
+    unresolved_fields = collect_unresolved_fields(field_records)
     unresolved_by_strictness: dict[str, list[dict[str, Any]]] = {}
     for field in unresolved_fields:
         strictness = field["strictness"] or "unknown"
@@ -232,6 +250,7 @@ def build_workspace_snapshot(
             "warnings": list(compile_result["warnings"]),
         },
         "fields": {
+            "records": field_records,
             "unresolved": unresolved_fields,
             "unresolved_by_strictness": unresolved_by_strictness,
         },

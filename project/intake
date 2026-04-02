@@ -10,6 +10,8 @@ usage() {
 Usage:
   project/intake generate <workspace> [--date YYYY-MM-DD] [--preserve-responses]
   project/intake compile <workspace> [--date YYYY-MM-DD]
+  project/intake preview <workspace> [--date YYYY-MM-DD]
+  project/intake review <workspace> [--date YYYY-MM-DD]
   project/intake verify [pytest args...]
   project/intake demo happy [--date YYYY-MM-DD]
   project/intake demo stress [--date YYYY-MM-DD]
@@ -54,6 +56,22 @@ run_compile() {
     shift
     cd "$ROOT_DIR"
     PYTHONPATH=. "$PYTHON" project/src/intake/compile_intake.py "$workspace" "$@"
+}
+
+run_preview() {
+    [ $# -ge 1 ] || fail "preview requires <workspace>"
+    workspace=$(resolve_path "$1")
+    shift
+    cd "$ROOT_DIR"
+    PYTHONPATH=. "$PYTHON" project/src/intake/preview_status.py "$workspace" "$@"
+}
+
+run_review() {
+    [ $# -ge 1 ] || fail "review requires <workspace>"
+    workspace=$(resolve_path "$1")
+    shift
+    cd "$ROOT_DIR"
+    PYTHONPATH=. "$PYTHON" project/src/intake/review_packets.py "$workspace" "$@"
 }
 
 run_verify() {
@@ -126,6 +144,8 @@ main() {
     case "$command" in
         generate) run_generate "$@" ;;
         compile) run_compile "$@" ;;
+        preview) run_preview "$@" ;;
+        review) run_review "$@" ;;
         verify) run_verify "$@" ;;
         demo) run_demo "$@" ;;
         -h|--help|help)
