@@ -162,6 +162,31 @@ class TestPhysicalGraph:
         roles = {attrs.get("role") for _, attrs in g.nodes(data=True)}
         assert "wan_edge" in roles
 
+    def test_local_archiving_yes_no_video_adds_nvr(self):
+        reqs = _base_requirements(
+            critical_services={"video_required": "no", "telemetry_required": "yes",
+                               "control_required": "no", "iiot_required": "no",
+                               "local_archiving_required": "yes"},
+        )
+        g = compile_physical_graph(reqs)
+        roles = {attrs.get("role") for _, attrs in g.nodes(data=True)}
+        assert "local_archive" in roles
+
+    def test_local_archiving_no_video_yes_removes_seed_nvr(self):
+        """video_heavy_site seeds nvr_local, but local_archiving=no should remove it."""
+        reqs = _base_requirements(
+            critical_services={"video_required": "yes", "telemetry_required": "yes",
+                               "control_required": "no", "iiot_required": "no",
+                               "local_archiving_required": "no"},
+            metadata={"object_id": "test_obj", "object_name": "Test",
+                      "object_type": "substation", "project_stage": "concept",
+                      "criticality_class": "medium", "questionnaire_version": "0.2.0",
+                      "resolved_archetype": "video_heavy_site"},
+        )
+        g = compile_physical_graph(reqs)
+        roles = {attrs.get("role") for _, attrs in g.nodes(data=True)}
+        assert "local_archive" not in roles
+
     def test_tbd_services_not_added(self):
         reqs = _base_requirements(
             critical_services={"video_required": "tbd", "telemetry_required": "yes",

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator
-from model_utils import load_yaml, merge_missing_values_tracked, resolve_project_root
+from model_utils import is_yes, load_yaml, merge_missing_values_tracked, resolve_project_root
 
 
 class SchemaValidationError(ValueError):
@@ -66,9 +66,9 @@ def resolve_archetype_id(questionnaire: dict[str, Any]) -> str:
     metadata = _section(questionnaire, "metadata")
     resilience = _section(questionnaire, "resilience")
 
-    if services.get("iiot_required") == "yes":
+    if is_yes(services.get("iiot_required")):
         return "mixed_iiot_site"
-    if services.get("video_required") == "yes" or power_environment.get("poe_budget_class") in {
+    if is_yes(services.get("video_required")) or power_environment.get("poe_budget_class") in {
         "medium",
         "heavy",
     }:

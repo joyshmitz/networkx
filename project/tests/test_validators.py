@@ -94,6 +94,29 @@ class TestSegmentation:
         issues = validate_segmentation(g, reqs)
         assert any("forbids" in i["message"] for i in _issues_by(issues, "error"))
 
+    def test_tbd_zone_with_video_no_error(self):
+        """tbd zone model + video=yes should not error about missing VIDEO zone."""
+        g = nx.DiGraph()
+        g.add_node("OT", node_type="zone")
+        reqs = {
+            "security_access": {"security_zone_model": "tbd"},
+            "critical_services": {"video_required": "yes", "iiot_required": "no"},
+            "metadata": {"criticality_class": "low"},
+        }
+        issues = validate_segmentation(g, reqs)
+        assert not any("VIDEO zone is missing" in i["message"] for i in issues)
+
+    def test_tbd_zone_with_iiot_no_error(self):
+        g = nx.DiGraph()
+        g.add_node("OT", node_type="zone")
+        reqs = {
+            "security_access": {"security_zone_model": "tbd"},
+            "critical_services": {"video_required": "no", "iiot_required": "yes"},
+            "metadata": {"criticality_class": "low"},
+        }
+        issues = validate_segmentation(g, reqs)
+        assert not any("IIOT zone is missing" in i["message"] for i in issues)
+
     def test_high_crit_shared_ok_warns(self):
         g = nx.DiGraph()
         g.add_node("OT")

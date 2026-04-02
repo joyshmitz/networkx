@@ -60,12 +60,16 @@ def add_seed_nodes_and_edges(
     graph.add_node(object_id, role="object", node_type="object")
 
     wan_enabled = is_yes(requirements.get("external_transport", {}).get("wan_required"))
+    archiving_enabled = is_yes(requirements.get("critical_services", {}).get("local_archiving_required"))
     skip_nodes: set[str] = set()
 
     for node in seed.get("nodes", []):
         attrs = dict(node)
         node_id = attrs.pop("node_id")
         if attrs.get("role") == "wan_edge" and not wan_enabled:
+            skip_nodes.add(node_id)
+            continue
+        if attrs.get("role") == "local_archive" and not archiving_enabled:
             skip_nodes.add(node_id)
             continue
         equipment_id = attrs.get("equipment_id")
@@ -137,17 +141,20 @@ def enrich_physical_graph(
     if is_yes(requirements.get("critical_services", {}).get("video_required")):
         ensure_node(graph, "video_cluster", role="video_cluster", service="video")
         graph.add_edge("video_cluster", access_node, edge_role="video_access")
-        if is_yes(requirements.get("critical_services", {}).get("local_archiving_required")) and not first_node_by_role(
-            graph, "local_archive"
-        ):
-            ensure_node(
-                graph,
-                "nvr_local",
-                role="local_archive",
-                equipment_id="nvr_generic",
-                **equipment_node_attrs(equipment_catalog, "nvr_generic"),
-            )
-            graph.add_edge("nvr_local", access_node, edge_role="local_archive_access")
+
+    archiving_required = is_yes(requirements.get("critical_services", {}).get("local_archiving_required"))
+    has_archive_node = first_node_by_role(graph, "local_archive")
+    if archiving_required and not has_archive_node:
+        ensure_node(
+            graph,
+            "nvr_local",
+            role="local_archive",
+            equipment_id="nvr_generic",
+            **equipment_node_attrs(equipment_catalog, "nvr_generic"),
+        )
+        graph.add_edge("nvr_local", access_node, edge_role="local_archive_access")
+    elif not archiving_required and has_archive_node:
+        graph.remove_node(has_archive_node)
 
     if is_yes(requirements.get("critical_services", {}).get("iiot_required")) and not first_node_by_role(
         graph, "iiot_edge"

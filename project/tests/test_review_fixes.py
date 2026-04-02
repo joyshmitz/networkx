@@ -216,3 +216,83 @@ class TestSparseV2Detection:
         import pytest
         with pytest.raises(ValueError, match="Unknown questionnaire"):
             detect_questionnaire_version({"random_key": "value"})
+
+
+# ---------------------------------------------------------------------------
+# Codex review: boolish flags in archetype resolution
+# ---------------------------------------------------------------------------
+
+class TestBoolishArchetypeResolution:
+    def test_unquoted_yes_video_resolves_video_heavy(self):
+        """PyYAML parses unquoted 'yes' as True. Archetype resolution must handle it."""
+        questionnaire = {
+            "object_profile": {},
+            "governance": {},
+            "version": "0.2.0",
+            "critical_services": {
+                "video_required": True,  # PyYAML bool
+                "telemetry_required": True,
+                "control_required": False,
+                "iiot_required": False,
+                "local_archiving_required": False,
+            },
+            "metadata": {
+                "object_id": "bool_test",
+                "object_name": "Bool Test",
+                "object_type": "substation",
+                "project_stage": "concept",
+                "criticality_class": "low",
+            },
+        }
+        requirements, _ = build_requirements_model(questionnaire)
+        assert requirements["metadata"]["resolved_archetype"] == "video_heavy_site"
+
+    def test_unquoted_yes_iiot_resolves_mixed(self):
+        questionnaire = {
+            "object_profile": {},
+            "governance": {},
+            "version": "0.2.0",
+            "critical_services": {
+                "iiot_required": True,
+                "telemetry_required": True,
+                "control_required": False,
+                "video_required": False,
+                "local_archiving_required": False,
+            },
+            "metadata": {
+                "object_id": "bool_test",
+                "object_name": "Bool Test",
+                "object_type": "substation",
+                "project_stage": "concept",
+                "criticality_class": "low",
+            },
+        }
+        requirements, _ = build_requirements_model(questionnaire)
+        assert requirements["metadata"]["resolved_archetype"] == "mixed_iiot_site"
+
+
+# ---------------------------------------------------------------------------
+# Codex review: sparse v2 survives schema validation
+# ---------------------------------------------------------------------------
+
+class TestSparseV2SchemaValidation:
+    def test_sparse_v2_passes_schema(self):
+        from pathlib import Path
+        questionnaire = {
+            "version": "0.2.0",
+            "metadata": {
+                "object_id": "sparse_schema",
+                "object_name": "Sparse Schema Test",
+                "object_type": "substation",
+                "project_stage": "concept",
+                "criticality_class": "low",
+            },
+        }
+        requirements, assumptions = build_requirements_model(questionnaire)
+        schema_path = Path(__file__).resolve().parents[1] / "specs" / "requirements" / "object_requirements_v2.schema.yaml"
+        from model_utils import load_yaml
+        schema = load_yaml(schema_path)
+        from compiler.build_requirements_model import validate_requirements_model
+        # should not raise
+        validate_requirements_model(requirements, schema=schema)
+        assert len(assumptions) > 0

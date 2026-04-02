@@ -39,7 +39,7 @@ def validate_segmentation(graph: nx.DiGraph, requirements: dict[str, Any]) -> li
             }
         )
 
-    if is_yes(services.get("video_required")) and zone_model != "flat" and "VIDEO" not in graph:
+    if is_yes(services.get("video_required")) and zone_model not in {"flat", "tbd"} and "VIDEO" not in graph:
         issues.append(
             {
                 "validator": "segmentation",
@@ -48,7 +48,7 @@ def validate_segmentation(graph: nx.DiGraph, requirements: dict[str, Any]) -> li
             }
         )
 
-    if is_yes(services.get("iiot_required")) and zone_model != "flat" and "IIOT" not in graph:
+    if is_yes(services.get("iiot_required")) and zone_model not in {"flat", "tbd"} and "IIOT" not in graph:
         issues.append(
             {
                 "validator": "segmentation",
@@ -57,7 +57,7 @@ def validate_segmentation(graph: nx.DiGraph, requirements: dict[str, Any]) -> li
             }
         )
 
-    if is_yes(requirements.get("security_access", {}).get("oob_required")) and "MGMT" not in graph:
+    if is_yes(requirements.get("security_access", {}).get("oob_required")) and zone_model != "tbd" and "MGMT" not in graph:
         issues.append(
             {
                 "validator": "segmentation",

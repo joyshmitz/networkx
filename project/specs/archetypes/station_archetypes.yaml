@@ -7,11 +7,13 @@ archetypes:
       - remote_operations
     defaults:
       staffing_model: remote_ops
+      growth_horizon_months: 36
       telemetry_required: 'yes'
       control_required: 'no'
       video_required: 'no'
       iiot_required: 'no'
       local_archiving_required: 'no'
+      wan_required: 'yes'
       carrier_diversity_target: dual_carrier_preferred
       transport_separation_policy: logical_separation
       security_zone_model: segmented
@@ -71,11 +73,13 @@ archetypes:
       - security_monitoring
     defaults:
       staffing_model: hybrid_ops
+      growth_horizon_months: 36
       telemetry_required: 'yes'
       control_required: 'no'
       video_required: 'yes'
       iiot_required: 'no'
       local_archiving_required: 'yes'
+      wan_required: 'yes'
       carrier_diversity_target: dual_carrier_required
       transport_separation_policy: logical_separation
       security_zone_model: dmz_centric
@@ -142,11 +146,13 @@ archetypes:
       - high_availability
     defaults:
       staffing_model: remote_ops
+      growth_horizon_months: 36
       telemetry_required: 'yes'
       control_required: 'yes'
       video_required: 'no'
       iiot_required: 'no'
       local_archiving_required: 'no'
+      wan_required: 'yes'
       carrier_diversity_target: dual_carrier_required
       transport_separation_policy: logical_separation
       security_zone_model: dmz_centric
@@ -207,11 +213,13 @@ archetypes:
       - management
     defaults:
       staffing_model: hybrid_ops
+      growth_horizon_months: 36
       telemetry_required: 'yes'
       control_required: 'yes'
       video_required: 'no'
       iiot_required: 'yes'
       local_archiving_required: 'yes'
+      wan_required: 'yes'
       carrier_diversity_target: dual_carrier_required
       transport_separation_policy: logical_separation
       security_zone_model: dmz_centric
