@@ -1,0 +1,36 @@
+person_id: sample_ops_sec
+compiled_at: '2026-04-02'
+fields:
+  audit_logging_required:
+    value: 'yes'
+    status: answered
+  contractor_access_policy:
+    value: time_bounded_remote
+    status: answered
+  degraded_mode_profile:
+    value: telemetry_survives
+    status: answered
+  maintenance_window_model:
+    value: planned_only
+    status: answered
+  mttr_target_class:
+    value: four_hours
+    status: answered
+  oob_required:
+    value: 'yes'
+    status: answered
+  operations_handoff_required:
+    value: 'yes'
+    status: answered
+  remote_access_profile:
+    value: controlled_vpn
+    status: answered
+  security_zone_model:
+    value: dmz_centric
+    status: answered
+  staffing_model:
+    value: remote_ops
+    status: answered
+  support_model:
+    value: hybrid
+    status: answered

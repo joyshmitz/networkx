@@ -1,5 +1,5 @@
 questionnaire: project/examples/sample_object_01/questionnaire.yaml
-schema: /Users/sd/projects/networkx-3.6.1/project/specs/requirements/object_requirements_v2.schema.yaml
+schema: project/specs/requirements/object_requirements_v2.schema.yaml
 questionnaire_version: 0.2.0
 resolved_archetype: video_heavy_site
 outputs:

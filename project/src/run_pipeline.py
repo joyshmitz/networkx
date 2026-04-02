@@ -70,6 +70,16 @@ def default_output_dir(questionnaire_path: Path) -> Path:
     return questionnaire_path.parent / "reports"
 
 
+def _manifest_path(path: Path, base_dir: Path | None = None) -> str:
+    """Prefer a stable relative path for manifest artifacts when possible."""
+    resolved_path = path.resolve()
+    resolved_base = (base_dir or Path.cwd()).resolve()
+    try:
+        return str(resolved_path.relative_to(resolved_base))
+    except ValueError:
+        return str(resolved_path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run questionnaire -> requirements -> graphs -> validators -> reports"
@@ -133,8 +143,8 @@ def main() -> None:
     write_yaml(
         output_dir / "pipeline.manifest.yaml",
         {
-            "questionnaire": str(args.questionnaire),
-            "schema": str(args.schema),
+            "questionnaire": _manifest_path(args.questionnaire),
+            "schema": _manifest_path(args.schema),
             "questionnaire_version": requirements.get("metadata", {}).get("questionnaire_version"),
             "resolved_archetype": requirements.get("metadata", {}).get("resolved_archetype"),
             "outputs": {

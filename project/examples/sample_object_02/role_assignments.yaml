@@ -1,0 +1,40 @@
+version: 0.2.0
+questionnaire_id: core_questionnaire_v2
+object_id: sample_object_02
+
+assignments:
+  - person_id: sample2_pm_owner
+    label_uk: Приклад 2 PM / owner
+    roles:
+      - project_manager
+      - object_owner
+
+  - person_id: sample2_process_telemetry
+    label_uk: Приклад 2 process / telemetry
+    roles:
+      - process_engineer
+      - telemetry_engineer
+
+  - person_id: sample2_arch
+    label_uk: Приклад 2 OT / network architect
+    roles:
+      - ot_architect
+      - network_engineer
+
+  - person_id: sample2_ops_sec
+    label_uk: Приклад 2 operations / security
+    roles:
+      - operations_engineer
+      - cybersecurity_engineer
+
+  - person_id: sample2_power_video
+    label_uk: Приклад 2 cabinet / video
+    roles:
+      - cabinet_power_engineer
+      - video_engineer
+
+  - person_id: sample2_iiot_commissioning
+    label_uk: Приклад 2 IIoT / commissioning
+    roles:
+      - iiot_engineer
+      - commissioning_engineer

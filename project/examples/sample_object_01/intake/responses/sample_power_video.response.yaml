@@ -1,0 +1,21 @@
+person_id: sample_power_video
+compiled_at: '2026-04-02'
+fields:
+  cabinet_constraint_class:
+    value: new_standard
+    status: answered
+  environmental_constraint_class:
+    value: industrial_indoor
+    status: answered
+  poe_budget_class:
+    value: medium
+    status: answered
+  poe_required:
+    value: 'yes'
+    status: answered
+  power_source_model:
+    value: ac_dc_hybrid
+    status: answered
+  video_required:
+    value: 'yes'
+    status: answered

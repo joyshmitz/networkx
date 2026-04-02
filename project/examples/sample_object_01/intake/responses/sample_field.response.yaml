@@ -1,0 +1,18 @@
+person_id: sample_field
+compiled_at: '2026-04-02'
+fields:
+  fat_required:
+    value: 'yes'
+    status: answered
+  sat_required:
+    value: 'yes'
+    status: answered
+  sync_protocol:
+    value: ntp
+    status: answered
+  timing_accuracy_class:
+    value: relaxed_ms
+    status: answered
+  timing_required:
+    value: 'yes'
+    status: answered

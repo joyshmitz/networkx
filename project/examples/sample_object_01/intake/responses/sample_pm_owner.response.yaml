@@ -1,0 +1,33 @@
+person_id: sample_pm_owner
+compiled_at: '2026-04-02'
+fields:
+  acceptance_evidence_class:
+    value: test_records
+    status: answered
+  asbuilt_package_required:
+    value: 'yes'
+    status: answered
+  criticality_class:
+    value: high
+    status: answered
+  evidence_maturity_class:
+    value: mixed
+    status: answered
+  growth_horizon_months:
+    value: '36'
+    status: answered
+  object_id:
+    value: sample_object_01
+    status: answered
+  object_name:
+    value: Sample Industrial Site
+    status: answered
+  object_type:
+    value: generation
+    status: answered
+  project_stage:
+    value: concept
+    status: answered
+  waiver_policy_class:
+    value: controlled
+    status: answered

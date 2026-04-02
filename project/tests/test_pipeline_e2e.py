@@ -25,9 +25,19 @@ def _run_full_pipeline(questionnaire_path: Path) -> dict[str, Any]:
     requirements, assumptions = build_requirements_model(questionnaire)
     schema = load_yaml(SCHEMA)
     validate_requirements_model(requirements, schema=schema)
+    role_assignments = None
+    auto_role_assignments = questionnaire_path.parent / "role_assignments.yaml"
+    if auto_role_assignments.exists():
+        role_assignments = load_yaml(auto_role_assignments)
     bundle = compile_all_graphs(requirements)
     graph_summary = summarize_graph_bundle(bundle)
-    issues = run_validators(requirements, graph_summary, bundle, assumptions)
+    issues = run_validators(
+        requirements,
+        graph_summary,
+        bundle,
+        assumptions,
+        role_assignments=role_assignments,
+    )
     return {
         "requirements": requirements,
         "assumptions": assumptions,
@@ -125,6 +135,12 @@ class TestSample02:
         warnings = [i for i in self.result["issues"] if i["severity"] == "warning"
                      and i["validator"] == "stage_confidence"]
         assert len(warnings) >= 1
+
+    def test_role_assignments_autoloaded(self):
+        assert not any(
+            issue["validator"] == "role_assignments"
+            for issue in self.result["issues"]
+        )
 
     def test_schema_valid_with_tbd(self):
         schema = load_yaml(SCHEMA)

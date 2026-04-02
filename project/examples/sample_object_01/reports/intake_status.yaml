@@ -1,0 +1,267 @@
+object_id: sample_object_01
+compiled_at: '2026-04-02'
+totals:
+  answered: 41
+  tbd: 0
+  unanswered: 0
+  not_applicable: 0
+  total: 41
+per_person:
+  _unassigned:
+    roles: []
+    owned: 4
+    answered: 4
+    tbd: 0
+    unanswered: 0
+    not_applicable: 0
+  sample_arch:
+    roles:
+    - network_engineer
+    - ot_architect
+    owned: 5
+    answered: 5
+    tbd: 0
+    unanswered: 0
+    not_applicable: 0
+  sample_field:
+    roles:
+    - commissioning_engineer
+    - telemetry_engineer
+    owned: 5
+    answered: 5
+    tbd: 0
+    unanswered: 0
+    not_applicable: 0
+  sample_ops_sec:
+    roles:
+    - cybersecurity_engineer
+    - operations_engineer
+    owned: 11
+    answered: 11
+    tbd: 0
+    unanswered: 0
+    not_applicable: 0
+  sample_pm_owner:
+    roles:
+    - object_owner
+    - project_manager
+    owned: 10
+    answered: 10
+    tbd: 0
+    unanswered: 0
+    not_applicable: 0
+  sample_power_video:
+    roles:
+    - cabinet_power_engineer
+    - video_engineer
+    owned: 6
+    answered: 6
+    tbd: 0
+    unanswered: 0
+    not_applicable: 0
+fields:
+  acceptance_evidence_class:
+    section: acceptance_criteria
+    person_id: sample_pm_owner
+    status: answered
+    value: test_records
+  fat_required:
+    section: acceptance_criteria
+    person_id: sample_field
+    status: answered
+    value: 'yes'
+  sat_required:
+    section: acceptance_criteria
+    person_id: sample_field
+    status: answered
+    value: 'yes'
+  control_required:
+    section: critical_services
+    person_id: _unassigned
+    status: answered
+    value: 'yes'
+  iiot_required:
+    section: critical_services
+    person_id: _unassigned
+    status: answered
+    value: 'no'
+  local_archiving_required:
+    section: critical_services
+    person_id: _unassigned
+    status: answered
+    value: 'yes'
+  telemetry_required:
+    section: critical_services
+    person_id: _unassigned
+    status: answered
+    value: 'yes'
+  video_required:
+    section: critical_services
+    person_id: sample_power_video
+    status: answered
+    value: 'yes'
+  carrier_diversity_target:
+    section: external_transport
+    person_id: sample_arch
+    status: answered
+    value: dual_carrier_required
+  transport_separation_policy:
+    section: external_transport
+    person_id: sample_arch
+    status: answered
+    value: logical_separation
+  wan_required:
+    section: external_transport
+    person_id: sample_arch
+    status: answered
+    value: 'yes'
+  evidence_maturity_class:
+    section: governance
+    person_id: sample_pm_owner
+    status: answered
+    value: mixed
+  waiver_policy_class:
+    section: governance
+    person_id: sample_pm_owner
+    status: answered
+    value: controlled
+  criticality_class:
+    section: metadata
+    person_id: sample_pm_owner
+    status: answered
+    value: high
+  object_id:
+    section: metadata
+    person_id: sample_pm_owner
+    status: answered
+    value: sample_object_01
+  object_name:
+    section: metadata
+    person_id: sample_pm_owner
+    status: answered
+    value: Sample Industrial Site
+  object_type:
+    section: metadata
+    person_id: sample_pm_owner
+    status: answered
+    value: generation
+  project_stage:
+    section: metadata
+    person_id: sample_pm_owner
+    status: answered
+    value: concept
+  growth_horizon_months:
+    section: object_profile
+    person_id: sample_pm_owner
+    status: answered
+    value: '36'
+  staffing_model:
+    section: object_profile
+    person_id: sample_ops_sec
+    status: answered
+    value: remote_ops
+  asbuilt_package_required:
+    section: operations
+    person_id: sample_pm_owner
+    status: answered
+    value: 'yes'
+  maintenance_window_model:
+    section: operations
+    person_id: sample_ops_sec
+    status: answered
+    value: planned_only
+  operations_handoff_required:
+    section: operations
+    person_id: sample_ops_sec
+    status: answered
+    value: 'yes'
+  support_model:
+    section: operations
+    person_id: sample_ops_sec
+    status: answered
+    value: hybrid
+  cabinet_constraint_class:
+    section: power_environment
+    person_id: sample_power_video
+    status: answered
+    value: new_standard
+  environmental_constraint_class:
+    section: power_environment
+    person_id: sample_power_video
+    status: answered
+    value: industrial_indoor
+  poe_budget_class:
+    section: power_environment
+    person_id: sample_power_video
+    status: answered
+    value: medium
+  poe_required:
+    section: power_environment
+    person_id: sample_power_video
+    status: answered
+    value: 'yes'
+  power_source_model:
+    section: power_environment
+    person_id: sample_power_video
+    status: answered
+    value: ac_dc_hybrid
+  common_cause_separation_required:
+    section: resilience
+    person_id: sample_arch
+    status: answered
+    value: 'yes'
+  degraded_mode_profile:
+    section: resilience
+    person_id: sample_ops_sec
+    status: answered
+    value: telemetry_survives
+  mttr_target_class:
+    section: resilience
+    person_id: sample_ops_sec
+    status: answered
+    value: four_hours
+  redundancy_target:
+    section: resilience
+    person_id: sample_arch
+    status: answered
+    value: n_plus_1
+  audit_logging_required:
+    section: security_access
+    person_id: sample_ops_sec
+    status: answered
+    value: 'yes'
+  contractor_access_policy:
+    section: security_access
+    person_id: sample_ops_sec
+    status: answered
+    value: time_bounded_remote
+  oob_required:
+    section: security_access
+    person_id: sample_ops_sec
+    status: answered
+    value: 'yes'
+  remote_access_profile:
+    section: security_access
+    person_id: sample_ops_sec
+    status: answered
+    value: controlled_vpn
+  security_zone_model:
+    section: security_access
+    person_id: sample_ops_sec
+    status: answered
+    value: dmz_centric
+  sync_protocol:
+    section: time_sync
+    person_id: sample_field
+    status: answered
+    value: ntp
+  timing_accuracy_class:
+    section: time_sync
+    person_id: sample_field
+    status: answered
+    value: relaxed_ms
+  timing_required:
+    section: time_sync
+    person_id: sample_field
+    status: answered
+    value: 'yes'

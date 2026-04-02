@@ -1,0 +1,15 @@
+person_id: _unassigned
+compiled_at: '2026-04-02'
+fields:
+  control_required:
+    value: 'yes'
+    status: answered
+  iiot_required:
+    value: 'no'
+    status: answered
+  local_archiving_required:
+    value: 'yes'
+    status: answered
+  telemetry_required:
+    value: 'yes'
+    status: answered

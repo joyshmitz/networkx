@@ -1,6 +1,6 @@
 status: failed
 error_count: 2
-warning_count: 9
+warning_count: 8
 issues:
 - validator: stage_confidence
   severity: warning
@@ -42,9 +42,6 @@ issues:
   severity: warning
   message: Annex 'time' activation conditions are met, but annex data is not present
     in pipeline input.
-- validator: role_assignments
-  severity: warning
-  message: No role_assignments provided — role conflict checks skipped.
 confidence_level: indicative
 tbd_count: 12
 assumed_count: 0
