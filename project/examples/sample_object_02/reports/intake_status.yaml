@@ -1,0 +1,269 @@
+object_id: sample_object_02
+compiled_at: '2026-04-02'
+totals:
+  answered: 29
+  tbd: 7
+  unanswered: 5
+  not_applicable: 0
+  total: 41
+per_person:
+  sample2_arch:
+    roles:
+    - network_engineer
+    - ot_architect
+    owned: 5
+    answered: 4
+    tbd: 1
+    unanswered: 0
+    not_applicable: 0
+  sample2_iiot_commissioning:
+    roles:
+    - commissioning_engineer
+    - iiot_engineer
+    owned: 3
+    answered: 1
+    tbd: 0
+    unanswered: 2
+    not_applicable: 0
+  sample2_ops_sec:
+    roles:
+    - cybersecurity_engineer
+    - operations_engineer
+    owned: 11
+    answered: 6
+    tbd: 3
+    unanswered: 2
+    not_applicable: 0
+  sample2_pm_owner:
+    roles:
+    - object_owner
+    - project_manager
+    owned: 10
+    answered: 9
+    tbd: 0
+    unanswered: 1
+    not_applicable: 0
+  sample2_power_video:
+    roles:
+    - cabinet_power_engineer
+    - video_engineer
+    owned: 6
+    answered: 5
+    tbd: 1
+    unanswered: 0
+    not_applicable: 0
+  sample2_process_telemetry:
+    roles:
+    - process_engineer
+    - telemetry_engineer
+    owned: 6
+    answered: 4
+    tbd: 2
+    unanswered: 0
+    not_applicable: 0
+fields:
+  acceptance_evidence_class:
+    section: acceptance_criteria
+    person_id: sample2_pm_owner
+    status: answered
+    value: basic_checklists
+  fat_required:
+    section: acceptance_criteria
+    person_id: sample2_iiot_commissioning
+    status: unanswered
+    value: null
+  sat_required:
+    section: acceptance_criteria
+    person_id: sample2_iiot_commissioning
+    status: unanswered
+    value: null
+  control_required:
+    section: critical_services
+    person_id: sample2_process_telemetry
+    status: tbd
+    value: null
+  iiot_required:
+    section: critical_services
+    person_id: sample2_iiot_commissioning
+    status: answered
+    value: 'no'
+  local_archiving_required:
+    section: critical_services
+    person_id: sample2_process_telemetry
+    status: tbd
+    value: null
+  telemetry_required:
+    section: critical_services
+    person_id: sample2_process_telemetry
+    status: answered
+    value: 'yes'
+  video_required:
+    section: critical_services
+    person_id: sample2_power_video
+    status: answered
+    value: 'no'
+  carrier_diversity_target:
+    section: external_transport
+    person_id: sample2_arch
+    status: answered
+    value: single_path_allowed
+  transport_separation_policy:
+    section: external_transport
+    person_id: sample2_arch
+    status: answered
+    value: shared_ok
+  wan_required:
+    section: external_transport
+    person_id: sample2_arch
+    status: answered
+    value: 'yes'
+  evidence_maturity_class:
+    section: governance
+    person_id: sample2_pm_owner
+    status: answered
+    value: assumption_heavy
+  waiver_policy_class:
+    section: governance
+    person_id: sample2_pm_owner
+    status: answered
+    value: provisional
+  criticality_class:
+    section: metadata
+    person_id: sample2_pm_owner
+    status: answered
+    value: high
+  object_id:
+    section: metadata
+    person_id: sample2_pm_owner
+    status: answered
+    value: sample_object_02
+  object_name:
+    section: metadata
+    person_id: sample2_pm_owner
+    status: answered
+    value: Remote Metering Point Alpha
+  object_type:
+    section: metadata
+    person_id: sample2_pm_owner
+    status: answered
+    value: utility_process
+  project_stage:
+    section: metadata
+    person_id: sample2_pm_owner
+    status: answered
+    value: concept
+  growth_horizon_months:
+    section: object_profile
+    person_id: sample2_pm_owner
+    status: answered
+    value: '60'
+  staffing_model:
+    section: object_profile
+    person_id: sample2_ops_sec
+    status: answered
+    value: remote_ops
+  asbuilt_package_required:
+    section: operations
+    person_id: sample2_pm_owner
+    status: unanswered
+    value: null
+  maintenance_window_model:
+    section: operations
+    person_id: sample2_ops_sec
+    status: unanswered
+    value: null
+  operations_handoff_required:
+    section: operations
+    person_id: sample2_ops_sec
+    status: answered
+    value: 'yes'
+  support_model:
+    section: operations
+    person_id: sample2_ops_sec
+    status: unanswered
+    value: null
+  cabinet_constraint_class:
+    section: power_environment
+    person_id: sample2_power_video
+    status: answered
+    value: existing_tight
+  environmental_constraint_class:
+    section: power_environment
+    person_id: sample2_power_video
+    status: answered
+    value: outdoor_shelter
+  poe_budget_class:
+    section: power_environment
+    person_id: sample2_power_video
+    status: tbd
+    value: null
+  poe_required:
+    section: power_environment
+    person_id: sample2_power_video
+    status: answered
+    value: 'yes'
+  power_source_model:
+    section: power_environment
+    person_id: sample2_power_video
+    status: answered
+    value: dc_24_only
+  common_cause_separation_required:
+    section: resilience
+    person_id: sample2_arch
+    status: tbd
+    value: null
+  degraded_mode_profile:
+    section: resilience
+    person_id: sample2_ops_sec
+    status: answered
+    value: best_effort
+  mttr_target_class:
+    section: resilience
+    person_id: sample2_ops_sec
+    status: answered
+    value: same_day
+  redundancy_target:
+    section: resilience
+    person_id: sample2_arch
+    status: answered
+    value: none
+  audit_logging_required:
+    section: security_access
+    person_id: sample2_ops_sec
+    status: tbd
+    value: null
+  contractor_access_policy:
+    section: security_access
+    person_id: sample2_ops_sec
+    status: tbd
+    value: null
+  oob_required:
+    section: security_access
+    person_id: sample2_ops_sec
+    status: tbd
+    value: null
+  remote_access_profile:
+    section: security_access
+    person_id: sample2_ops_sec
+    status: answered
+    value: oob_only
+  security_zone_model:
+    section: security_access
+    person_id: sample2_ops_sec
+    status: answered
+    value: segmented
+  sync_protocol:
+    section: time_sync
+    person_id: sample2_process_telemetry
+    status: answered
+    value: ntp
+  timing_accuracy_class:
+    section: time_sync
+    person_id: sample2_process_telemetry
+    status: answered
+    value: tens_of_us
+  timing_required:
+    section: time_sync
+    person_id: sample2_process_telemetry
+    status: answered
+    value: 'yes'

@@ -1,0 +1,36 @@
+person_id: sample2_ops_sec
+compiled_at: '2026-04-02'
+fields:
+  audit_logging_required:
+    value: null
+    status: tbd
+  contractor_access_policy:
+    value: null
+    status: tbd
+  degraded_mode_profile:
+    value: best_effort
+    status: answered
+  maintenance_window_model:
+    value: null
+    status: unanswered
+  mttr_target_class:
+    value: same_day
+    status: answered
+  oob_required:
+    value: null
+    status: tbd
+  operations_handoff_required:
+    value: 'yes'
+    status: answered
+  remote_access_profile:
+    value: oob_only
+    status: answered
+  security_zone_model:
+    value: segmented
+    status: answered
+  staffing_model:
+    value: remote_ops
+    status: answered
+  support_model:
+    value: null
+    status: unanswered

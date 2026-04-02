@@ -41,15 +41,41 @@ resilience:
   mttr_target_class: same_day
   common_cause_separation_required: tbd
 operations:
-  support_model: tbd
-  maintenance_window_model: tbd
   operations_handoff_required: 'yes'
-  asbuilt_package_required: tbd
+  support_model: hybrid
+  maintenance_window_model: planned_only
+  asbuilt_package_required: 'yes'
 acceptance_criteria:
-  fat_required: tbd
-  sat_required: tbd
   acceptance_evidence_class: basic_checklists
+  fat_required: 'yes'
+  sat_required: 'yes'
 governance:
   evidence_maturity_class: assumption_heavy
   waiver_policy_class: provisional
 known_unknowns: {}
+_assumptions:
+- field_id: support_model
+  section: operations
+  original_value: __missing__
+  assumed_value: hybrid
+  source: archetype:resilient_telemetry_site
+- field_id: maintenance_window_model
+  section: operations
+  original_value: __missing__
+  assumed_value: planned_only
+  source: archetype:resilient_telemetry_site
+- field_id: asbuilt_package_required
+  section: operations
+  original_value: __missing__
+  assumed_value: 'yes'
+  source: archetype:resilient_telemetry_site
+- field_id: fat_required
+  section: acceptance_criteria
+  original_value: __missing__
+  assumed_value: 'yes'
+  source: archetype:resilient_telemetry_site
+- field_id: sat_required
+  section: acceptance_criteria
+  original_value: __missing__
+  assumed_value: 'yes'
+  source: archetype:resilient_telemetry_site

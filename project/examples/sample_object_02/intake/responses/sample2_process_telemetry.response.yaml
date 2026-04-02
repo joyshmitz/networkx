@@ -1,0 +1,21 @@
+person_id: sample2_process_telemetry
+compiled_at: '2026-04-02'
+fields:
+  control_required:
+    value: null
+    status: tbd
+  local_archiving_required:
+    value: null
+    status: tbd
+  sync_protocol:
+    value: ntp
+    status: answered
+  telemetry_required:
+    value: 'yes'
+    status: answered
+  timing_accuracy_class:
+    value: tens_of_us
+    status: answered
+  timing_required:
+    value: 'yes'
+    status: answered

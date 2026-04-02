@@ -1,0 +1,18 @@
+person_id: sample2_arch
+compiled_at: '2026-04-02'
+fields:
+  carrier_diversity_target:
+    value: single_path_allowed
+    status: answered
+  common_cause_separation_required:
+    value: null
+    status: tbd
+  redundancy_target:
+    value: none
+    status: answered
+  transport_separation_policy:
+    value: shared_ok
+    status: answered
+  wan_required:
+    value: 'yes'
+    status: answered

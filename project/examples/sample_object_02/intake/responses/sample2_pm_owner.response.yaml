@@ -1,0 +1,33 @@
+person_id: sample2_pm_owner
+compiled_at: '2026-04-02'
+fields:
+  acceptance_evidence_class:
+    value: basic_checklists
+    status: answered
+  asbuilt_package_required:
+    value: null
+    status: unanswered
+  criticality_class:
+    value: high
+    status: answered
+  evidence_maturity_class:
+    value: assumption_heavy
+    status: answered
+  growth_horizon_months:
+    value: '60'
+    status: answered
+  object_id:
+    value: sample_object_02
+    status: answered
+  object_name:
+    value: Remote Metering Point Alpha
+    status: answered
+  object_type:
+    value: utility_process
+    status: answered
+  project_stage:
+    value: concept
+    status: answered
+  waiver_policy_class:
+    value: provisional
+    status: answered

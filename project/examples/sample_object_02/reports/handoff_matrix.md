@@ -34,12 +34,12 @@
 | degraded_mode_profile | best_effort | baseline | network_volume, operations_handoff_pack, commissioning_pack | operations_engineer, telemetry_engineer, video_engineer |
 | mttr_target_class | same_day | baseline | network_volume, operations_handoff_pack, asbuilt_closure_pack | operations_engineer, project_manager |
 | common_cause_separation_required | tbd | unresolved | network_volume, commissioning_pack, asbuilt_closure_pack | ot_architect, network_engineer, commissioning_engineer |
-| support_model | tbd | unresolved | network_volume, operations_handoff_pack, asbuilt_closure_pack | operations_engineer, project_manager |
-| maintenance_window_model | tbd | unresolved | network_volume, operations_handoff_pack, commissioning_pack | operations_engineer, commissioning_engineer |
+| support_model | hybrid | baseline | network_volume, operations_handoff_pack, asbuilt_closure_pack | operations_engineer, project_manager |
+| maintenance_window_model | planned_only | baseline | network_volume, operations_handoff_pack, commissioning_pack | operations_engineer, commissioning_engineer |
 | operations_handoff_required | yes | required | network_volume, operations_handoff_pack | operations_engineer, project_manager |
-| asbuilt_package_required | tbd | unresolved | network_volume, asbuilt_closure_pack | project_manager, commissioning_engineer, operations_engineer |
-| fat_required | tbd | unresolved | network_volume, commissioning_pack | commissioning_engineer, project_manager |
-| sat_required | tbd | unresolved | network_volume, commissioning_pack, asbuilt_closure_pack | commissioning_engineer, operations_engineer |
+| asbuilt_package_required | yes | required | network_volume, asbuilt_closure_pack | project_manager, commissioning_engineer, operations_engineer |
+| fat_required | yes | required | network_volume, commissioning_pack | commissioning_engineer, project_manager |
+| sat_required | yes | required | network_volume, commissioning_pack, asbuilt_closure_pack | commissioning_engineer, operations_engineer |
 | acceptance_evidence_class | basic_checklists | baseline | network_volume, commissioning_pack, asbuilt_closure_pack | commissioning_engineer, object_owner |
 | evidence_maturity_class | assumption_heavy | baseline | network_volume, commissioning_pack | project_manager, ot_architect |
 | waiver_policy_class | provisional | baseline | network_volume, asbuilt_closure_pack, operations_handoff_pack | project_manager, object_owner |

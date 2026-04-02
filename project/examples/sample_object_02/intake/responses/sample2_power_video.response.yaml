@@ -1,0 +1,21 @@
+person_id: sample2_power_video
+compiled_at: '2026-04-02'
+fields:
+  cabinet_constraint_class:
+    value: existing_tight
+    status: answered
+  environmental_constraint_class:
+    value: outdoor_shelter
+    status: answered
+  poe_budget_class:
+    value: null
+    status: tbd
+  poe_required:
+    value: 'yes'
+    status: answered
+  power_source_model:
+    value: dc_24_only
+    status: answered
+  video_required:
+    value: 'no'
+    status: answered

@@ -8,11 +8,9 @@ issues:
     results are indicative, not binding (confidence_level=indicative).
 - validator: stage_confidence
   severity: warning
-  message: '12 fields remain ''tbd'': control_required, local_archiving_required,
-    contractor_access_policy, audit_logging_required, oob_required, poe_budget_class,
-    common_cause_separation_required, support_model, maintenance_window_model, asbuilt_package_required,
-    fat_required, sat_required. Validators cannot fully evaluate design with unresolved
-    inputs.'
+  message: '7 fields remain ''tbd'': control_required, local_archiving_required, contractor_access_policy,
+    audit_logging_required, oob_required, poe_budget_class, common_cause_separation_required.
+    Validators cannot fully evaluate design with unresolved inputs.'
 - validator: segmentation
   severity: warning
   message: High-criticality object with shared_ok transport separation — may violate
@@ -43,8 +41,8 @@ issues:
   message: Annex 'time' activation conditions are met, but annex data is not present
     in pipeline input.
 confidence_level: indicative
-tbd_count: 12
-assumed_count: 0
+tbd_count: 7
+assumed_count: 5
 tbd_fields:
 - control_required
 - local_archiving_required
@@ -53,8 +51,24 @@ tbd_fields:
 - oob_required
 - poe_budget_class
 - common_cause_separation_required
-- support_model
-- maintenance_window_model
-- asbuilt_package_required
-- fat_required
-- sat_required
+assumed_fields:
+- field_id: support_model
+  original_value: __missing__
+  assumed_value: hybrid
+  source: archetype:resilient_telemetry_site
+- field_id: maintenance_window_model
+  original_value: __missing__
+  assumed_value: planned_only
+  source: archetype:resilient_telemetry_site
+- field_id: asbuilt_package_required
+  original_value: __missing__
+  assumed_value: 'yes'
+  source: archetype:resilient_telemetry_site
+- field_id: fat_required
+  original_value: __missing__
+  assumed_value: 'yes'
+  source: archetype:resilient_telemetry_site
+- field_id: sat_required
+  original_value: __missing__
+  assumed_value: 'yes'
+  source: archetype:resilient_telemetry_site

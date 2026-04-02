@@ -1,0 +1,12 @@
+person_id: sample2_iiot_commissioning
+compiled_at: '2026-04-02'
+fields:
+  fat_required:
+    value: null
+    status: unanswered
+  iiot_required:
+    value: 'no'
+    status: answered
+  sat_required:
+    value: null
+    status: unanswered

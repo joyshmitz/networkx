@@ -100,15 +100,29 @@ class TestSample02:
     def test_has_warnings(self):
         assert self.result["validation"]["warning_count"] >= 5
 
-    def test_zero_assumptions(self):
-        """All TBD fields are preserved, nothing assumed."""
-        assert len(self.result["assumptions"]) == 0
+    def test_expected_assumptions_from_unanswered_fields(self):
+        assumed_fields = {item["field_id"] for item in self.result["assumptions"]}
+        assert assumed_fields == {
+            "support_model",
+            "maintenance_window_model",
+            "asbuilt_package_required",
+            "fat_required",
+            "sat_required",
+        }
 
-    def test_tbd_fields_preserved(self):
+    def test_remaining_tbd_fields_preserved(self):
         reqs = self.result["requirements"]
         assert reqs["critical_services"]["control_required"] == "tbd"
         assert reqs["security_access"]["oob_required"] == "tbd"
         assert reqs["power_environment"]["poe_budget_class"] == "tbd"
+
+    def test_unanswered_fields_are_filled_from_archetype_defaults(self):
+        reqs = self.result["requirements"]
+        assert reqs["operations"]["support_model"] == "hybrid"
+        assert reqs["operations"]["maintenance_window_model"] == "planned_only"
+        assert reqs["operations"]["asbuilt_package_required"] == "yes"
+        assert reqs["acceptance_criteria"]["fat_required"] == "yes"
+        assert reqs["acceptance_criteria"]["sat_required"] == "yes"
 
     def test_resolved_archetype_is_resilient(self):
         assert self.result["requirements"]["metadata"]["resolved_archetype"] == "resilient_telemetry_site"

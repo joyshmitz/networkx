@@ -14,4 +14,4 @@
 - Timing Accuracy Class: tens_of_us
 - Power Source Model: dc_24_only
 - Cabinet Constraint Class: existing_tight
-- Support Model: tbd
+- Support Model: hybrid
