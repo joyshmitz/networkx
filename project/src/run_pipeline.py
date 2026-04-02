@@ -15,7 +15,9 @@ from compiler.compile_graphs import compile_all_graphs, summarize_graph_bundle
 from model_utils import load_yaml, write_yaml
 from reports.generate_handoff_matrix import generate_handoff_matrix
 from reports.generate_network_volume_summary import generate_network_volume_summary
+from validators.validate_annex_activation import validate_annex_activation
 from validators.validate_connectivity import validate_connectivity
+from validators.validate_cross_graph import validate_cross_graph
 from validators.validate_power_ports import validate_power_ports
 from validators.validate_resilience import validate_resilience
 from validators.validate_segmentation import validate_segmentation
@@ -36,6 +38,8 @@ def run_validators(
     issues.extend(validate_resilience(bundle.physical, bundle.failure_domain, requirements))
     issues.extend(validate_power_ports(requirements, bundle.physical))
     issues.extend(validate_time(requirements, bundle.physical))
+    issues.extend(validate_annex_activation(requirements))
+    issues.extend(validate_cross_graph(bundle.logical, bundle.service, bundle.interface, requirements))
 
     if graph_summary["service"]["nodes"] == 0:
         issues.append(

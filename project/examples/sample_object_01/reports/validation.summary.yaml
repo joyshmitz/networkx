@@ -1,11 +1,23 @@
 status: ok
 error_count: 0
-warning_count: 1
+warning_count: 4
 issues:
 - validator: stage_confidence
   severity: warning
   message: Concept stage with evidence_maturity_class='mixed' — validation results
     are indicative, not binding (confidence_level=indicative).
+- validator: annex_activation
+  severity: warning
+  message: Annex 'cctv' activation conditions are met, but annex data is not present
+    in pipeline input.
+- validator: annex_activation
+  severity: warning
+  message: Annex 'ha' activation conditions are met, but annex data is not present
+    in pipeline input.
+- validator: annex_activation
+  severity: warning
+  message: Annex 'time' activation conditions are met, but annex data is not present
+    in pipeline input.
 confidence_level: indicative
 tbd_count: 0
 assumed_count: 0

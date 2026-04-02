@@ -1,6 +1,6 @@
 status: failed
 error_count: 2
-warning_count: 7
+warning_count: 8
 issues:
 - validator: stage_confidence
   severity: warning
@@ -38,6 +38,10 @@ issues:
 - validator: time
   severity: error
   message: Tens-of-microseconds accuracy requires PTP.
+- validator: annex_activation
+  severity: warning
+  message: Annex 'time' activation conditions are met, but annex data is not present
+    in pipeline input.
 confidence_level: indicative
 tbd_count: 12
 assumed_count: 0
