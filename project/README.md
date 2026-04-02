@@ -80,6 +80,24 @@ PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py project/examp
 PYTHONPATH=. .venv/bin/python project/src/run_pipeline.py project/examples/sample_object_01/questionnaire.yaml
 ```
 
+Canonical operator-facing surface:
+
+```bash
+project/intake generate project/examples/my_object --date 2026-04-02
+project/intake compile project/examples/my_object --date 2026-04-02
+project/intake verify
+project/intake demo happy
+project/intake demo stress
+```
+
+Operator surface rules:
+
+- prefer `project/intake ...` for coordinator/operator usage;
+- raw `PYTHONPATH=. .venv/bin/python ...` commands remain the execution contract underneath;
+- `demo` replays checked-in exemplars in a temporary copy, so it does not rewrite tracked files;
+- `demo happy` must succeed;
+- `demo stress` must end in the expected domain validation failure profile.
+
 ## Intake Artifact Policy
 
 Tracked source-of-truth artifacts:

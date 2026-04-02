@@ -72,7 +72,7 @@ def _hydrate_generated_workbooks_from_responses(
             status = entry.get("status", "unanswered")
             value = entry.get("value")
             if status == "answered" and value is not None:
-                intake.cell(row, 5).value = labels.get(str(value), value)
+                intake.cell(row, 5).value = labels.get(str(value), str(value))
             elif status in {"tbd", "not_applicable"}:
                 intake.cell(row, 6).value = status
 
@@ -199,4 +199,3 @@ def test_gate_d_stress_expected_failure_contract(tmp_path):
         issue["validator"] == "role_assignments"
         for issue in pipeline_result["issues"]
     )
-

@@ -1,0 +1,140 @@
+#!/bin/sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+PYTHON="$ROOT_DIR/.venv/bin/python"
+
+usage() {
+    cat <<'EOF'
+Usage:
+  project/intake generate <workspace> [--date YYYY-MM-DD]
+  project/intake compile <workspace> [--date YYYY-MM-DD]
+  project/intake verify [pytest args...]
+  project/intake demo happy [--date YYYY-MM-DD]
+  project/intake demo stress [--date YYYY-MM-DD]
+
+Notes:
+  - Run commands from the repository root.
+  - The canonical interpreter is .venv/bin/python.
+  - `demo` replays checked-in exemplars in a temporary copy and does not edit the repo.
+EOF
+}
+
+fail() {
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+require_python() {
+    if [ ! -x "$PYTHON" ]; then
+        fail "Missing interpreter at $PYTHON. Run: python3 -m venv .venv && .venv/bin/pip install -r project/requirements.txt jsonschema pytest"
+    fi
+}
+
+resolve_path() {
+    case "$1" in
+        /*) printf '%s\n' "$1" ;;
+        *) printf '%s/%s\n' "$(pwd)" "$1" ;;
+    esac
+}
+
+run_generate() {
+    [ $# -ge 1 ] || fail "generate requires <workspace>"
+    workspace=$(resolve_path "$1")
+    shift
+    cd "$ROOT_DIR"
+    PYTHONPATH=. "$PYTHON" project/src/intake/generate_intake_sheets.py "$workspace" "$@"
+}
+
+run_compile() {
+    [ $# -ge 1 ] || fail "compile requires <workspace>"
+    workspace=$(resolve_path "$1")
+    shift
+    cd "$ROOT_DIR"
+    PYTHONPATH=. "$PYTHON" project/src/intake/compile_intake.py "$workspace" "$@"
+}
+
+run_verify() {
+    cd "$ROOT_DIR"
+    PYTHONPATH=. "$PYTHON" -m pytest project/tests -q "$@"
+}
+
+run_demo() {
+    [ $# -ge 1 ] || fail "demo requires 'happy' or 'stress'"
+    demo_name=$1
+    shift
+
+    demo_date=2026-04-02
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --date)
+                [ $# -ge 2 ] || fail "demo --date requires YYYY-MM-DD"
+                demo_date=$2
+                shift 2
+                ;;
+            *)
+                fail "Unknown demo option: $1"
+                ;;
+        esac
+    done
+
+    case "$demo_name" in
+        happy) exemplar_dir="$ROOT_DIR/project/examples/sample_object_01" ;;
+        stress) exemplar_dir="$ROOT_DIR/project/examples/sample_object_02" ;;
+        *) fail "demo target must be 'happy' or 'stress'" ;;
+    esac
+
+    tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/intake-demo.XXXXXX")
+    trap 'rm -rf "$tmp_dir"' EXIT HUP INT TERM
+    workspace="$tmp_dir/$(basename "$exemplar_dir")"
+    cp -R "$exemplar_dir" "$workspace"
+
+    cd "$ROOT_DIR"
+    PYTHONPATH=. "$PYTHON" project/src/intake/compile_intake.py "$workspace" --date "$demo_date"
+
+    if PYTHONPATH=. "$PYTHON" project/src/run_pipeline.py "$workspace/questionnaire.yaml"; then
+        pipeline_rc=0
+    else
+        pipeline_rc=$?
+    fi
+
+    case "$demo_name" in
+        happy)
+            [ "$pipeline_rc" -eq 0 ] || fail "happy demo failed unexpectedly"
+            echo "Happy-path demo completed successfully in $workspace"
+            ;;
+        stress)
+            [ "$pipeline_rc" -eq 1 ] || fail "stress demo expected pipeline exit 1, got $pipeline_rc"
+            echo "Stress demo produced the expected domain validation failure in $workspace"
+            ;;
+    esac
+}
+
+main() {
+    [ $# -ge 1 ] || {
+        usage >&2
+        exit 1
+    }
+
+    require_python
+
+    command=$1
+    shift
+
+    case "$command" in
+        generate) run_generate "$@" ;;
+        compile) run_compile "$@" ;;
+        verify) run_verify "$@" ;;
+        demo) run_demo "$@" ;;
+        -h|--help|help)
+            usage
+            ;;
+        *)
+            usage >&2
+            fail "Unknown command: $command"
+            ;;
+    esac
+}
+
+main "$@"
