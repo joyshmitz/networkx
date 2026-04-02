@@ -20,6 +20,7 @@ from validators.validate_connectivity import validate_connectivity
 from validators.validate_cross_graph import validate_cross_graph
 from validators.validate_power_ports import validate_power_ports
 from validators.validate_resilience import validate_resilience
+from validators.validate_role_assignments import validate_role_assignments
 from validators.validate_segmentation import validate_segmentation
 from validators.validate_stage_confidence import count_tbd_fields, derive_confidence_level, validate_stage_confidence
 from validators.validate_time import validate_time
@@ -30,6 +31,7 @@ def run_validators(
     graph_summary: dict[str, Any],
     bundle: Any,
     assumptions: list[dict[str, str | Any]],
+    role_assignments: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     issues.extend(validate_stage_confidence(requirements, assumptions))
@@ -40,6 +42,7 @@ def run_validators(
     issues.extend(validate_time(requirements, bundle.physical))
     issues.extend(validate_annex_activation(requirements))
     issues.extend(validate_cross_graph(bundle.logical, bundle.service, bundle.interface, requirements))
+    issues.extend(validate_role_assignments(role_assignments))
 
     if graph_summary["service"]["nodes"] == 0:
         issues.append(
@@ -84,15 +87,28 @@ def main() -> None:
         type=Path,
         help="Directory for generated pipeline outputs. Defaults to questionnaire's reports directory.",
     )
+    parser.add_argument(
+        "--role-assignments",
+        type=Path,
+        help="Path to role_assignments.yaml for role conflict validation.",
+    )
     args = parser.parse_args()
 
     questionnaire = load_yaml(args.questionnaire)
     requirements, assumptions = build_requirements_model(questionnaire)
     validate_requirements_model(requirements, schema=load_yaml(args.schema))
 
+    ra_data: dict[str, Any] | None = None
+    if args.role_assignments:
+        ra_data = load_yaml(args.role_assignments)
+    else:
+        auto_path = args.questionnaire.parent / "role_assignments.yaml"
+        if auto_path.exists():
+            ra_data = load_yaml(auto_path)
+
     bundle = compile_all_graphs(requirements)
     graph_summary = summarize_graph_bundle(bundle)
-    issues = run_validators(requirements, graph_summary, bundle, assumptions)
+    issues = run_validators(requirements, graph_summary, bundle, assumptions, role_assignments=ra_data)
     validation_summary = summarize_validation(issues)
     tbd_fields = count_tbd_fields(requirements)
     validation_summary["confidence_level"] = derive_confidence_level(requirements)
