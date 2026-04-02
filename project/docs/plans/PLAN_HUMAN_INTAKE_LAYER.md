@@ -63,43 +63,41 @@ Generator emits `intake_manifest.yaml` з:
 
 **Чому:** Якщо fields.yaml або role_assignments.yaml змінюється після генерації sheets, merge з старими sheets дасть семантично неправильний результат. Manifest робить це видимим.
 
-### D1: Формат — Markdown guide cards (read-only) + structured response YAML (fillable)
+### D1: Формат — Excel primary (fillable) + Markdown guide (reference) + YAML derived
 
-**Чому не Markdown таблиці:** довгі описи, controlled values з поясненнями і selection rules погано рендеряться в таблицях і дають ugly diffs.
+**Чому Excel:** dropdown validation для controlled values (неможливо ввести невалідне), кольорове маркування strictness, offline, zero learning curve для інженерів. 60-70% промислових проєктів використовують Excel для multi-stakeholder intake.
 
-**Чому не Excel:** потрібен version control (git), diff-ability, zero dependencies.
+**Чому не YAML як primary:** навіть технічні люди роблять синтаксичні помилки, немає validation при вводі.
 
-**Два артефакти per person:**
-- `generated/{person_id}.guide.md` — read-only guide з field cards
-- `responses/{person_id}.response.yaml` — fillable structured response
+**Чому не web form:** overhead, deployment, не потрібно для 3 об'єктів.
 
-Response YAML format per field:
-```yaml
-manifest_id: obj_01-intake-v1
-person_id: sample_arch
-roles: [ot_architect, network_engineer]
-answers:
-  wan_required:
-    status: answered       # unanswered | answered | tbd | not_applicable
-    value: 'yes'
-    comment: null
-    source_ref: "ТЗ розд. 3.2"
-  carrier_diversity_target:
-    status: tbd
-    value: 'tbd'           # NOT null — explicit string 'tbd' for pipeline compatibility
-    comment: "Очікуємо відповідь оператора до 2026-04-15"
-    source_ref: null
-```
+**Три артефакти per person:**
+- `generated/{person_id}.guide.md` — read-only reference guide з field cards (для глибокого контексту)
+- `responses/{person_id}.xlsx` — **primary fillable artifact** з dropdowns, validation, кольоровим маркуванням
+- `responses/{person_id}.response.yaml` — derived від Excel при compile (для git diff і pipeline)
 
-**Normalization rules for questionnaire.yaml:**
+**Excel sheet structure per person:**
+
+| Колонка | Зміст | Editable? |
+|---|---|---|
+| A: Field ID | `wan_required` | Ні (locked) |
+| B: Питання | "Потрібен зовнішній транспорт" | Ні (locked) |
+| C: Strictness | `S4` | Ні (locked, кольорове: S4=червоне, S3=помаранчеве, S2=жовте, S1=сіре) |
+| D: Фаза | `2` | Ні (locked) |
+| E: Значення | dropdown з allowed values | **Так** |
+| F: Статус | dropdown: answered / tbd / not_applicable | **Так** |
+| G: Коментар | free text | **Так** |
+| H: Джерело | free text (source_ref) | **Так** |
+
+Другий sheet `_reference` — повний словник значень (value code + description + selection_rule для кожного enum). Locked, read-only.
+
+**Normalization rules при compile (Excel → questionnaire.yaml):**
 - `status: answered` → write `value` as-is
 - `status: tbd` → write string `'tbd'` (schema accepts tbd for all enums)
-- `status: not_applicable` → write string `'tbd'` + record in intake_compiled.yaml that original status was not_applicable. Schema has no `not_applicable` enum value; downstream validators see `tbd` and flag it per stage-confidence rules.
-- `status: unanswered` → **omit field** from questionnaire.yaml (truly missing → eligible for archetype defaults in build_requirements_model)
+- `status: not_applicable` → write string `'tbd'` + record real status in intake_compiled.yaml
+- `status:` empty + `value:` empty → **omit field** (truly unanswered → eligible for archetype defaults)
 
-**Чому:** pipeline's `merge_missing_values_tracked` replaces `None` with archetype defaults but preserves string `'tbd'`. Writing `null` for tbd would cause silent default backfill. Writing `'tbd'` for not_applicable is conservative — validators flag it, compiled snapshot preserves the real intent.
-
-**Чому structured:** дозволяє відрізнити untouched від intentionally tbd, зберігає source/evidence, готовий для reviewer workflow.
+**Чому:** pipeline's `merge_missing_values_tracked` replaces `None`/missing with archetype defaults but preserves string `'tbd'`. Omitting unanswered fields lets archetype defaults work. Writing explicit `'tbd'` preserves human intent.
 
 ### D2: Temporal ordering — 3 UX фази
 
@@ -214,27 +212,30 @@ role_assignments.yaml
          │
          ▼
 generate_intake_sheets.py
-  ├──► intake_manifest.yaml
-  ├──► generated/{person}.guide.md     (read-only, human)
-  ├──► responses/{person}.response.yaml (fillable, structured)
-  └──► reviews/{person}.review.yaml    (reviewer comment-only)
+  ├──► intake/intake_manifest.yaml
+  ├──► intake/generated/{person}.guide.md       (read-only reference)
+  ├──► intake/responses/{person}.xlsx            (primary fillable, dropdowns)
+  └──► intake/reviews/{person}.review.xlsx       (reviewer comment-only)
          │
-         ▼ (people fill response files, reviewers add comments)
+         ▼ (people fill .xlsx files)
          │
 compile_intake.py
-  reads: responses/{person}.response.yaml
-         reviews/{person}.review.yaml (optional)
-         intake_manifest.yaml
-  ├──► compiled/intake_compiled.yaml   (full snapshot + provenance)
-  ├──► reports/intake_status.yaml      (machine-readable coverage)
-  ├──► reports/intake_status.md        (human-readable dashboard)
-  └──► questionnaire.yaml             (normalized, pipeline-compatible)
+  reads: intake/responses/{person}.xlsx
+         intake/reviews/{person}.review.xlsx (optional)
+         intake/intake_manifest.yaml
+  ├──► intake/responses/{person}.response.yaml   (derived from xlsx, for git diff)
+  ├──► compiled/intake_compiled.yaml              (full snapshot + provenance)
+  ├──► reports/intake_status.yaml                 (machine-readable coverage)
+  ├──► reports/intake_status.md                   (human-readable dashboard)
+  └──► questionnaire.yaml                        (normalized, pipeline-compatible)
          │
          ▼
 run_pipeline.py questionnaire.yaml
   ├──► reports/ (requirements, graphs, validation)
   └──► feedback → iterate
 ```
+
+**Dependency:** `openpyxl` for Excel generation and parsing.
 
 ---
 
@@ -244,15 +245,15 @@ run_pipeline.py questionnaire.yaml
 
 | Файл | Призначення | Inputs | Outputs |
 |---|---|---|---|
-| `src/intake/generate_intake_sheets.py` | Генерує manifest + per-person guide cards + response templates + review templates | role_assignments, fields, values | manifest, guides, response templates, review templates |
-| `src/intake/compile_intake.py` | Збирає responses у compiled snapshot + normalized questionnaire | response files, manifest | intake_compiled.yaml, questionnaire.yaml, intake_status |
+| `src/intake/generate_intake_sheets.py` | Генерує manifest + per-person Excel workbooks + guide cards + review workbooks | role_assignments, fields, values | manifest, .xlsx, .guide.md, .review.xlsx |
+| `src/intake/compile_intake.py` | Парсить Excel responses, збирає у compiled snapshot + normalized questionnaire | .xlsx response files, manifest | .response.yaml (derived), intake_compiled.yaml, questionnaire.yaml, intake_status |
 
 ### Нові тести
 
 | Файл | Що тестує |
 |---|---|
-| `tests/test_generate_intake.py` | Correct fields per person, values included, phases shown, manifest hashes, ownership uniqueness, reviewer fields separate |
-| `tests/test_compile_intake.py` | Happy path merge, gaps detection, conflict detection, tbd handling, stale manifest rejection, non-owner value rejection, mode preview vs baseline_ready |
+| `tests/test_generate_intake.py` | Correct fields per person, Excel dropdowns match allowed values, phases shown, manifest hashes, ownership uniqueness, reviewer workbooks separate |
+| `tests/test_compile_intake.py` | Excel parsing, happy path merge, gaps detection, conflict detection, tbd handling, stale manifest rejection, non-owner value rejection, mode preview vs baseline_ready, derived YAML matches Excel |
 
 ### Нові sample артефакти
 
@@ -283,32 +284,56 @@ run_pipeline.py questionnaire.yaml
 7. Compute manifest hashes (SHA256 of fields, values, role_assignments content)
 8. Write `intake_manifest.yaml`
 9. For each person:
-   a. Collect owned_fields
-   b. Collect reviewer_fields (fields where their roles ∈ reviewer_roles)
-   c. Group by section, sort by phase
-   d. Write `generated/{person_id}.guide.md` — Markdown field cards
-   e. Write `responses/{person_id}.response.yaml` — structured template з `status: unanswered`
-   f. Write `reviews/{person_id}.review.yaml` — reviewer checklist template
+   a. Collect owned_fields + reviewer_fields
+   b. Group by section, sort by phase
+   c. Write `generated/{person_id}.guide.md` — Markdown field cards (reference)
+   d. Write `responses/{person_id}.xlsx` — Excel workbook з dropdowns
+   e. Write `reviews/{person_id}.review.xlsx` — reviewer checklist (if has reviewer fields)
 
-**Guide card format:**
+**Excel workbook structure (`{person_id}.xlsx`):**
+
+Sheet 1 `intake` (primary, editable):
+
+| A (locked) | B (locked) | C (locked) | D (locked) | E (editable) | F (editable) | G (editable) | H (editable) |
+|---|---|---|---|---|---|---|---|
+| field_id | label_uk | strictness | phase | value | status | comment | source_ref |
+| `wan_required` | Потрібен зовнішній транспорт | S4 | 2 | *(dropdown)* | *(dropdown)* | | |
+
+- Column E `value`: data validation dropdown з allowed values для цього поля (з questionnaire_v2_values)
+- Column F `status`: data validation dropdown `answered / tbd / not_applicable`
+- Conditional formatting: S4 rows — red background, S3 — orange, S2 — yellow, S1 — grey
+- Header row frozen, columns A-D protected (locked)
+- Hidden row з `manifest_id` для compile validation
+
+Sheet 2 `_reference` (locked, read-only):
+- Повний словник значень: value_code | label_uk | description | selection_rule
+- Для кожного enum з questionnaire_v2_values
+
+**Reviewer workbook (`{person_id}.review.xlsx`):**
+
+| A (locked) | B (locked) | C (locked) | D (editable) | E (editable) |
+|---|---|---|---|---|
+| field_id | label_uk | owner_person | review_status | review_comment |
+| `wan_required` | Потрібен зовнішній транспорт | arch_01 | *(dropdown: pending/approved/concern)* | |
+
+**Guide card format (Markdown, reference):**
 
 ```markdown
-## Фаза 1: Identity & Scope
+## Фаза 2: Constraints & Architecture
 
-### staffing_model — Модель кадрового забезпечення
+### wan_required — Потрібен зовнішній транспорт
 
-- **Секція:** object_profile
-- **Strictness:** S2
-- **Навіщо:** Визначає чи об'єкт має постійний персонал, що впливає на OOB, MTTR, remote access
+- **Секція:** external_transport
+- **Strictness:** S4
+- **Навіщо:** Визначає чи об'єкт потребує WAN/external connectivity
 - **Допустимі значення:**
-  - `local_ops` — постійний локальний персонал
-  - `remote_ops` — керування лише дистанційно
-  - `hybrid_ops` — комбінована модель
+  - `yes` — потрібен зовнішній канал
+  - `no` — об'єкт працює автономно
   - `tbd` — ще не визначено
-- **Правило вибору:** Якщо персонал є лише на рівні чергового → remote_ops
-- **Якщо невідомо:** Допускається tbd до baseline_ready, потрібен коментар з причиною
-- **Джерело/підстава:** required для S3/S4; recommended для S1/S2
-- **Рецензенти:** ot_architect
+- **Правило вибору:** Якщо є хоча б один зовнішній споживач даних → yes
+- **Якщо невідомо:** tbd до baseline_ready, потрібен коментар
+- **Джерело/підстава:** required (S4)
+- **Рецензенти:** telemetry_engineer, iiot_engineer
 ```
 
 ### 6.2 compile_intake.py
@@ -317,8 +342,8 @@ run_pipeline.py questionnaire.yaml
 
 **Logic:**
 1. Load `intake_manifest.yaml`, verify hashes match current spec files
-2. Load all `responses/{person_id}.response.yaml`
-3. Verify each response has matching `manifest_id`
+2. Load all `responses/{person_id}.xlsx` — parse Excel into structured dicts (openpyxl)
+3. Verify each workbook has matching `manifest_id` (from hidden row)
 4. For each field:
    a. Find owner response → extract answer
    b. If non-owner supplied value → **hard error**
@@ -328,10 +353,11 @@ run_pipeline.py questionnaire.yaml
    a. S4 fields must be `answered` (not tbd/unanswered)
    b. S3/S4 fields must have `source_ref`
    c. Missing reviewer sign-off on S3/S4 → warning
-6. Load reviewer files (optional), attach review_status/comments to compiled output
-7. Write `compiled/intake_compiled.yaml` — full snapshot
-8. Write `questionnaire.yaml` — normalized (section → field → value only)
-9. Write `reports/intake_status.yaml` + `reports/intake_status.md`
+6. Load reviewer `.review.xlsx` files (optional), attach review_status/comments to compiled output
+7. Write `responses/{person_id}.response.yaml` — derived from xlsx (for git diff tracking)
+8. Write `compiled/intake_compiled.yaml` — full snapshot with all answer objects + provenance
+9. Write `questionnaire.yaml` — normalized (section → field → value only, pipeline-compatible)
+10. Write `reports/intake_status.yaml` + `reports/intake_status.md`
 
 **intake_status.yaml format:**
 ```yaml
