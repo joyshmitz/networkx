@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from openpyxl import load_workbook
+import yaml
 
 from intake.generate_intake_sheets import (
     assign_fields_to_persons,
@@ -509,3 +510,104 @@ class TestOwnershipValidation:
         field_index = build_field_index(fields_data)
         with pytest.raises(ValueError, match="Role.*assigned to both"):
             assign_fields_to_persons(field_index, person_roles)
+
+
+# ---------------------------------------------------------------------------
+# Preserve responses
+# ---------------------------------------------------------------------------
+
+
+class TestPreserveResponses:
+    @staticmethod
+    def _find_row(ws, field_id: str) -> int:
+        for row in range(7, ws.max_row + 1):
+            if ws.cell(row, 1).value == field_id:
+                return row
+        raise AssertionError(f"{field_id} not found")
+
+    def test_preserve_responses_keeps_existing_cells(self, tmp_path):
+        import shutil
+
+        workspace = tmp_path / "preserve_workspace"
+        workspace.mkdir()
+        shutil.copy(
+            SAMPLE_WORKSPACE / "role_assignments.yaml",
+            workspace / "role_assignments.yaml",
+        )
+
+        generate(workspace, project_root=PROJECT_ROOT, generated_on=FIXED_DATE)
+
+        xlsx = workspace / "intake" / "responses" / "sample_pm_owner.xlsx"
+        wb = load_workbook(xlsx)
+        ws = wb["intake"]
+        object_name_row = self._find_row(ws, "object_name")
+        evidence_row = self._find_row(ws, "acceptance_evidence_class")
+        ws.cell(object_name_row, 5).value = "Preserved Object Name"
+        ws.cell(object_name_row, 7).value = "captured from workshop"
+        ws.cell(object_name_row, 8).value = "meeting-notes-01"
+        ws.cell(evidence_row, 6).value = "tbd"
+        wb.save(xlsx)
+
+        regenerate_summary = generate(
+            workspace,
+            project_root=PROJECT_ROOT,
+            generated_on=FIXED_DATE,
+            preserve_responses=True,
+        )
+
+        assert regenerate_summary["preserved_field_count"] >= 2
+
+        regenerated = load_workbook(xlsx)
+        ws = regenerated["intake"]
+        object_name_row = self._find_row(ws, "object_name")
+        evidence_row = self._find_row(ws, "acceptance_evidence_class")
+        assert ws.cell(object_name_row, 5).value == "Preserved Object Name"
+        assert ws.cell(object_name_row, 7).value == "captured from workshop"
+        assert ws.cell(object_name_row, 8).value == "meeting-notes-01"
+        assert ws.cell(evidence_row, 6).value == "tbd"
+
+    def test_preserve_responses_moves_field_to_new_owner(self, tmp_path):
+        import shutil
+
+        workspace = tmp_path / "reassigned_workspace"
+        workspace.mkdir()
+        role_assignments_path = workspace / "role_assignments.yaml"
+        shutil.copy(SAMPLE_WORKSPACE / "role_assignments.yaml", role_assignments_path)
+
+        generate(workspace, project_root=PROJECT_ROOT, generated_on=FIXED_DATE)
+
+        unassigned_xlsx = workspace / "intake" / "responses" / "_unassigned.xlsx"
+        wb = load_workbook(unassigned_xlsx)
+        ws = wb["intake"]
+        telemetry_row = self._find_row(ws, "telemetry_required")
+        ws.cell(telemetry_row, 6).value = "tbd"
+        ws.cell(telemetry_row, 7).value = "waiting for process engineer"
+        ws.cell(telemetry_row, 8).value = "ticket-42"
+        wb.save(unassigned_xlsx)
+
+        role_data = yaml.safe_load(role_assignments_path.read_text(encoding="utf-8"))
+        for assignment in role_data["assignments"]:
+            if assignment["person_id"] == "sample_field":
+                assignment["roles"].append("process_engineer")
+                break
+        role_assignments_path.write_text(
+            yaml.safe_dump(role_data, sort_keys=False, allow_unicode=True),
+            encoding="utf-8",
+        )
+
+        regenerate_summary = generate(
+            workspace,
+            project_root=PROJECT_ROOT,
+            generated_on=FIXED_DATE,
+            preserve_responses=True,
+        )
+
+        assert regenerate_summary["unassigned_fields"] == ["iiot_required"]
+
+        sample_field_xlsx = workspace / "intake" / "responses" / "sample_field.xlsx"
+        regenerated = load_workbook(sample_field_xlsx)
+        ws = regenerated["intake"]
+        telemetry_row = self._find_row(ws, "telemetry_required")
+        assert ws.cell(telemetry_row, 6).value == "tbd"
+        assert ws.cell(telemetry_row, 7).value == "waiting for process engineer"
+        assert ws.cell(telemetry_row, 8).value == "ticket-42"

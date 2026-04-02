@@ -98,6 +98,14 @@ Operator surface rules:
 - `demo happy` must succeed;
 - `demo stress` must end in the expected domain validation failure profile.
 
+Regenerate without losing filled workbook cells:
+
+```bash
+project/intake generate project/examples/sample_object_01 --date 2026-04-02 --preserve-responses
+```
+
+`--preserve-responses` reuses existing workbook columns `E/F/G/H` by `field_id`, so answers survive regenerate even if a field moves to another person's sheet.
+
 ## Intake Artifact Policy
 
 Tracked source-of-truth artifacts:

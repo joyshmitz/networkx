@@ -3,7 +3,7 @@
 
 Usage:
     PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py \
-        project/examples/sample_object_01 --date 2026-04-02
+        project/examples/sample_object_01 --date 2026-04-02 --preserve-responses
 """
 from __future__ import annotations
 
@@ -11,10 +11,13 @@ import argparse
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any
+import xml.etree.ElementTree as ET
+from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import yaml
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill, Protection, numbers
 from openpyxl.utils import get_column_letter
@@ -67,6 +70,106 @@ def _parse_cli_date(raw: str) -> date:
 
 def _stable_workbook_timestamp(run_date: date) -> datetime:
     return datetime(run_date.year, run_date.month, run_date.day, tzinfo=timezone.utc)
+
+
+def _normalize_xlsx_archive(path: Path, run_date: date) -> None:
+    namespaces = {
+        "cp": "http://schemas.openxmlformats.org/package/2006/metadata/core-properties",
+        "dcterms": "http://purl.org/dc/terms/",
+    }
+    ET.register_namespace("cp", namespaces["cp"])
+    ET.register_namespace("dc", "http://purl.org/dc/elements/1.1/")
+    ET.register_namespace("dcterms", namespaces["dcterms"])
+    ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+
+    stable_w3cdtf = f"{run_date.isoformat()}T00:00:00Z"
+    stable_zip_dt = (run_date.year, run_date.month, run_date.day, 0, 0, 0)
+
+    with ZipFile(path, "r") as src:
+        core_xml = src.read("docProps/core.xml")
+        root = ET.fromstring(core_xml)
+        created = root.find("dcterms:created", namespaces)
+        modified = root.find("dcterms:modified", namespaces)
+        if created is not None:
+            created.text = stable_w3cdtf
+        if modified is not None:
+            modified.text = stable_w3cdtf
+
+        with NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_file:
+            temp_path = Path(tmp_file.name)
+
+        try:
+            with ZipFile(temp_path, "w", compression=ZIP_DEFLATED) as dst:
+                for info in src.infolist():
+                    data = src.read(info.filename)
+                    if info.filename == "docProps/core.xml":
+                        data = ET.tostring(root, encoding="utf-8", xml_declaration=False)
+                    stable_info = ZipInfo(info.filename, date_time=stable_zip_dt)
+                    stable_info.compress_type = ZIP_DEFLATED
+                    stable_info.comment = info.comment
+                    stable_info.extra = info.extra
+                    stable_info.internal_attr = 0
+                    stable_info.external_attr = 0
+                    stable_info.create_system = 0
+                    stable_info.flag_bits = info.flag_bits
+                    dst.writestr(stable_info, data)
+            temp_path.replace(path)
+        finally:
+            if temp_path.exists():
+                temp_path.unlink()
+
+
+def _has_preserved_content(entry: dict[str, Any]) -> bool:
+    for key in ("raw_value", "raw_status", "comment", "source_ref"):
+        value = entry.get(key)
+        if value is None:
+            continue
+        if str(value).strip():
+            return True
+    return False
+
+
+def _load_preserved_responses(workspace_path: Path) -> dict[str, dict[str, Any]]:
+    responses_dir = workspace_path / "intake" / "responses"
+    if not responses_dir.exists():
+        return {}
+
+    preserved: dict[str, dict[str, Any]] = {}
+    origins: dict[str, str] = {}
+
+    for xlsx_path in sorted(responses_dir.glob("*.xlsx")):
+        wb = load_workbook(xlsx_path, data_only=False)
+        ws = wb["intake"]
+
+        for row in range(7, ws.max_row + 1):
+            fid_cell = ws.cell(row, 1).value
+            if fid_cell is None:
+                continue
+
+            fid = str(fid_cell).strip()
+            if not fid:
+                continue
+
+            entry = {
+                "raw_value": ws.cell(row, 5).value,
+                "raw_status": ws.cell(row, 6).value,
+                "comment": ws.cell(row, 7).value,
+                "source_ref": ws.cell(row, 8).value,
+            }
+            if not _has_preserved_content(entry):
+                continue
+
+            existing = preserved.get(fid)
+            if existing is not None and existing != entry:
+                raise ValueError(
+                    f"Field '{fid}' has conflicting preserved responses in "
+                    f"{origins[fid]} and {xlsx_path.name}"
+                )
+
+            preserved[fid] = entry
+            origins[fid] = xlsx_path.name
+
+    return preserved
 
 
 # ---------------------------------------------------------------------------
@@ -250,6 +353,7 @@ def write_xlsx(
     value_dicts: dict,
     object_id: str,
     generated_on: date,
+    preserved_fields: dict[str, dict[str, Any]] | None = None,
 ) -> None:
     wb = Workbook()
     stable_ts = _stable_workbook_timestamp(generated_on)
@@ -405,6 +509,13 @@ def write_xlsx(
         c_h.number_format = numbers.FORMAT_TEXT
         c_h.fill = fill
 
+        preserved = (preserved_fields or {}).get(fid)
+        if preserved:
+            c_e.value = preserved.get("raw_value")
+            c_f.value = preserved.get("raw_status")
+            c_g.value = preserved.get("comment")
+            c_h.value = preserved.get("source_ref")
+
     # --- Sheet protection (lock A-D, unlock E-H) ---
     ws.protection.sheet = True
     ws.protection.password = ""
@@ -414,6 +525,7 @@ def write_xlsx(
 
     path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(path)
+    _normalize_xlsx_archive(path, generated_on)
 
 
 def _write_reference_sheet(
@@ -550,6 +662,7 @@ def generate(
     workspace_path: Path,
     project_root: Path | None = None,
     generated_on: date | None = None,
+    preserve_responses: bool = False,
 ) -> dict[str, Any]:
     """Generate intake sheets for all persons in workspace.
 
@@ -576,6 +689,10 @@ def generate(
     value_dicts = build_value_dicts(values_data)
     person_roles = build_person_roles(role_data)
     object_id = role_data.get("object_id", workspace_path.name)
+    preserved_fields = (
+        _load_preserved_responses(workspace_path)
+        if preserve_responses else {}
+    )
 
     person_fields, unassigned = assign_fields_to_persons(field_index, person_roles)
 
@@ -583,6 +700,7 @@ def generate(
         "object_id": object_id,
         "persons": {},
         "unassigned_fields": unassigned,
+        "preserved_field_count": len(preserved_fields),
     }
 
     for pid, fids in person_fields.items():
@@ -597,6 +715,7 @@ def generate(
             xlsx_path, pid, info["label_uk"], info["roles"],
             fids, field_index, field_to_section, value_dicts, object_id,
             generated_on,
+            preserved_fields=preserved_fields,
         )
         write_guide_md(
             guide_path, pid, info["label_uk"], info["roles"],
@@ -619,6 +738,7 @@ def generate(
             unassigned_path, "_unassigned", "Нерозподілені поля", set(),
             unassigned, field_index, field_to_section, value_dicts, object_id,
             generated_on,
+            preserved_fields=preserved_fields,
         )
         write_guide_md(
             unassigned_guide, "_unassigned", "Нерозподілені поля", set(),
@@ -642,6 +762,11 @@ def main() -> None:
         type=_parse_cli_date,
         help="Fixed generation date in YYYY-MM-DD format.",
     )
+    parser.add_argument(
+        "--preserve-responses",
+        action="store_true",
+        help="Reuse existing intake/responses/*.xlsx values by field_id when regenerating.",
+    )
     args = parser.parse_args()
 
     workspace = Path(args.workspace_path).resolve()
@@ -649,7 +774,11 @@ def main() -> None:
         print(f"Workspace not found: {workspace}", file=sys.stderr)
         sys.exit(1)
 
-    summary = generate(workspace, generated_on=args.generated_on)
+    summary = generate(
+        workspace,
+        generated_on=args.generated_on,
+        preserve_responses=args.preserve_responses,
+    )
 
     print(f"Generated intake sheets for {summary['object_id']}:")
     for pid, info in summary["persons"].items():

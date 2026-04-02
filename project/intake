@@ -8,7 +8,7 @@ PYTHON="$ROOT_DIR/.venv/bin/python"
 usage() {
     cat <<'EOF'
 Usage:
-  project/intake generate <workspace> [--date YYYY-MM-DD]
+  project/intake generate <workspace> [--date YYYY-MM-DD] [--preserve-responses]
   project/intake compile <workspace> [--date YYYY-MM-DD]
   project/intake verify [pytest args...]
   project/intake demo happy [--date YYYY-MM-DD]
@@ -18,6 +18,7 @@ Notes:
   - Run commands from the repository root.
   - The canonical interpreter is .venv/bin/python.
   - `demo` replays checked-in exemplars in a temporary copy and does not edit the repo.
+  - `generate --preserve-responses` reuses existing E/F/G/H workbook cells by field_id.
 EOF
 }
 
