@@ -23,6 +23,14 @@ class TestPersonRoleMapping:
         assert mapping["p1"] == {"role_a", "role_b"}
         assert mapping["p2"] == {"role_c"}
 
+    def test_duplicate_person_id_unions_roles(self):
+        assignments = [
+            {"person_id": "p1", "roles": ["role_a"]},
+            {"person_id": "p1", "roles": ["role_b"]},
+        ]
+        mapping = build_person_to_roles(assignments)
+        assert mapping["p1"] == {"role_a", "role_b"}
+
     def test_build_role_to_persons(self):
         p2r = {"p1": {"role_a", "role_b"}, "p2": {"role_a"}}
         r2p = build_role_to_persons(p2r)

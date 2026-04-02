@@ -225,7 +225,27 @@ class TestLogicalGraph:
         assert "OT" in g
         assert "MGMT" not in g
         assert "DMZ" not in g
+        assert "EXTERNAL" not in g
+        assert "VIDEO" not in g
+        assert "IIOT" not in g
+        assert g.number_of_nodes() == 1
         assert g.number_of_edges() == 0
+
+    def test_tbd_zone_model_suppresses_derived_zones_even_with_services(self):
+        """Even with video=yes and wan=yes, tbd zone model must stay OT-only."""
+        reqs = _base_requirements(
+            security_access={"security_zone_model": "tbd",
+                             "remote_access_profile": "tbd",
+                             "contractor_access_policy": "tbd",
+                             "audit_logging_required": "tbd",
+                             "oob_required": "tbd"},
+            critical_services={"video_required": "yes", "telemetry_required": "yes",
+                               "control_required": "no", "iiot_required": "yes",
+                               "local_archiving_required": "no"},
+        )
+        g = compile_logical_graph(reqs)
+        assert g.number_of_nodes() == 1
+        assert list(g.nodes) == ["OT"]
 
     def test_no_wan_no_external(self):
         reqs = _base_requirements(
@@ -251,16 +271,19 @@ class TestServiceGraph:
         assert "service::video" not in g
         assert "service::iiot_edge" not in g
 
-    def test_tbd_zone_model_routes_through_ot(self):
+    def test_tbd_zone_model_routes_through_ot_no_transport(self):
         reqs = _base_requirements(security_access={"security_zone_model": "tbd",
                                                     "remote_access_profile": "tbd",
                                                     "contractor_access_policy": "tbd",
                                                     "audit_logging_required": "tbd",
                                                     "oob_required": "tbd"})
         g = compile_service_graph(reqs)
-        # telemetry service should route from OT, not from MGMT or DMZ
+        # telemetry service should route from OT
         if "service::telemetry" in g:
             assert g.has_edge("OT", "service::telemetry")
+        # no transport edges to EXTERNAL or DMZ
+        for _, v, data in g.edges(data=True):
+            assert v not in {"EXTERNAL", "DMZ"}, f"tbd zone model should not have transport to {v}"
 
     def test_no_wan_no_transport_edges(self):
         reqs = _base_requirements(

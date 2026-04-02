@@ -203,16 +203,17 @@ def compile_logical_graph(requirements: dict[str, Any]) -> nx.DiGraph:
     zone_model = requirements.get("security_access", {}).get("security_zone_model", "segmented")
     zones = ["OT"]
 
-    if zone_model in {"segmented", "dmz_centric", "strict_isolation"}:
-        zones.append("MGMT")
-    if zone_model in {"dmz_centric", "strict_isolation"}:
-        zones.append("DMZ")
-    if is_yes(requirements.get("critical_services", {}).get("video_required")):
-        zones.append("VIDEO")
-    if is_yes(requirements.get("critical_services", {}).get("iiot_required")):
-        zones.append("IIOT")
-    if is_yes(requirements.get("external_transport", {}).get("wan_required")):
-        zones.append("EXTERNAL")
+    if zone_model != "tbd":
+        if zone_model in {"segmented", "dmz_centric", "strict_isolation"}:
+            zones.append("MGMT")
+        if zone_model in {"dmz_centric", "strict_isolation"}:
+            zones.append("DMZ")
+        if is_yes(requirements.get("critical_services", {}).get("video_required")):
+            zones.append("VIDEO")
+        if is_yes(requirements.get("critical_services", {}).get("iiot_required")):
+            zones.append("IIOT")
+        if is_yes(requirements.get("external_transport", {}).get("wan_required")):
+            zones.append("EXTERNAL")
 
     for zone in zones:
         graph.add_node(zone, node_type="zone", zone_model=zone_model)
@@ -252,7 +253,7 @@ def _service_source_zone(zone_model: str, preferred: str) -> str:
 
 
 def _service_transport_zone(zone_model: str, wan_required: bool) -> str | None:
-    if not wan_required:
+    if not wan_required or zone_model == "tbd":
         return None
     if zone_model in {"dmz_centric", "strict_isolation"}:
         return "DMZ"

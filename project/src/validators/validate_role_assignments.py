@@ -20,7 +20,10 @@ def build_person_to_roles(assignments: list[dict[str, Any]]) -> dict[str, set[st
     for entry in assignments:
         person_id = entry.get("person_id", "")
         roles = set(entry.get("roles", []))
-        mapping[person_id] = roles
+        if person_id in mapping:
+            mapping[person_id] |= roles
+        else:
+            mapping[person_id] = roles
     return mapping
 
 
