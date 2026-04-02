@@ -52,3 +52,55 @@
 
 NetworkX тут використовується як analysis engine.
 Source of truth живе у YAML / Markdown.
+
+## Execution Contract
+
+- working directory: repository root;
+- interpreter: `.venv/bin/python`;
+- `PYTHONPATH=.` для тестів і CLI.
+
+Bootstrap:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r project/requirements.txt jsonschema pytest
+```
+
+Verify:
+
+```bash
+PYTHONPATH=. .venv/bin/python -m pytest project/tests -q
+```
+
+Canonical intake/runtime commands:
+
+```bash
+PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py project/examples/sample_object_01 --date 2026-04-02
+PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py project/examples/sample_object_01 --date 2026-04-02
+PYTHONPATH=. .venv/bin/python project/src/run_pipeline.py project/examples/sample_object_01/questionnaire.yaml
+```
+
+## Intake Artifact Policy
+
+Tracked source-of-truth artifacts:
+
+- `role_assignments.yaml`
+- filled `*.response.yaml`
+- compiled `questionnaire.yaml`
+- `reports/intake_status.yaml`
+- `reports/intake_status.md`
+
+Demo artifacts:
+
+- `intake/responses/*.xlsx`
+- `intake/generated/*.guide.md`
+
+Golden/regression artifacts:
+
+- only stable, machine-comparable outputs used for regenerate-and-compare checks
+
+Deterministic regeneration rule:
+
+- checked-in intake exemplars and golden checks must pass explicit fixed `--date YYYY-MM-DD`;
+- date-only drift in tracked exemplars is not allowed;
+- regeneration drift is allowed only when source/spec/code changed intentionally.

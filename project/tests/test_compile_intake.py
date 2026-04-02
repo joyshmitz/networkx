@@ -6,6 +6,7 @@ version/known_unknowns emit, derived .response.yaml, intake_status.
 """
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,7 @@ from intake.compile_intake import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+FIXED_DATE = date(2026, 4, 2)
 
 
 # ---------------------------------------------------------------------------
@@ -402,7 +404,7 @@ class TestCompileIntegration:
         )
 
         # Generate
-        generate(ws, project_root=PROJECT_ROOT)
+        generate(ws, project_root=PROJECT_ROOT, generated_on=FIXED_DATE)
 
         # Fill with existing questionnaire values
         from openpyxl import load_workbook as lw
@@ -435,7 +437,11 @@ class TestCompileIntegration:
             wb.save(xlsx)
 
         # Compile
-        return compile_intake(ws, project_root=PROJECT_ROOT), ws, existing
+        return (
+            compile_intake(ws, project_root=PROJECT_ROOT, compiled_on=FIXED_DATE),
+            ws,
+            existing,
+        )
 
     def test_questionnaire_version(self, compiled):
         result, _, _ = compiled
@@ -494,6 +500,7 @@ class TestCompileIntegration:
         assert path.exists()
         text = path.read_text(encoding="utf-8")
         assert "Intake Status" in text
+        assert f"Compiled at: {FIXED_DATE.isoformat()}" in text
         assert "41/41" in text
         assert "## Per Person" in text
         assert "## Phase Readiness" in text
@@ -509,6 +516,23 @@ class TestCompileIntegration:
             data = yaml.safe_load(resp.read_text(encoding="utf-8"))
             assert data["person_id"] == pid
             assert "fields" in data
+
+    def test_fixed_compile_date_propagated_to_outputs(self, compiled):
+        _, ws, _ = compiled
+        status = yaml.safe_load(
+            (ws / "reports" / "intake_status.yaml").read_text(encoding="utf-8")
+        )
+        assert status["compiled_at"] == FIXED_DATE.isoformat()
+
+        response = yaml.safe_load(
+            (
+                ws
+                / "intake"
+                / "responses"
+                / "sample_arch.response.yaml"
+            ).read_text(encoding="utf-8")
+        )
+        assert response["compiled_at"] == FIXED_DATE.isoformat()
 
     def test_no_warnings(self, compiled):
         result, _, _ = compiled

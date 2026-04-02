@@ -5,6 +5,8 @@ field types (enum/string/integer), unassigned xlsx, guide.md, reference sheet.
 """
 from __future__ import annotations
 
+from datetime import date
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -23,6 +25,8 @@ from intake.generate_intake_sheets import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAMPLE_WORKSPACE = PROJECT_ROOT / "examples" / "sample_object_01"
+SAMPLE_WORKSPACE_02 = PROJECT_ROOT / "examples" / "sample_object_02"
+FIXED_DATE = date(2026, 4, 2)
 
 
 @pytest.fixture(scope="module")
@@ -39,7 +43,11 @@ def summary(tmp_path_factory):
         workspace / "role_assignments.yaml",
     )
 
-    return generate(workspace, project_root=PROJECT_ROOT)
+    return generate(
+        workspace,
+        project_root=PROJECT_ROOT,
+        generated_on=FIXED_DATE,
+    )
 
 
 @pytest.fixture(scope="module")
@@ -48,6 +56,26 @@ def workspace_path(summary):
     # Derive from first person's xlsx path
     first_person = next(iter(summary["persons"].values()))
     return Path(first_person["xlsx"]).parents[2]
+
+
+@pytest.fixture(scope="module")
+def summary_sample02(tmp_path_factory):
+    """Run generate for sample_object_02 into a temp workspace."""
+    tmp = tmp_path_factory.mktemp("intake02")
+    workspace = tmp / "sample_object_02"
+    workspace.mkdir()
+
+    import shutil
+    shutil.copy(
+        SAMPLE_WORKSPACE_02 / "role_assignments.yaml",
+        workspace / "role_assignments.yaml",
+    )
+
+    return generate(
+        workspace,
+        project_root=PROJECT_ROOT,
+        generated_on=FIXED_DATE,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -90,6 +118,18 @@ class TestFieldDistribution:
         assert len(summary["persons"]) == 5
 
 
+class TestFieldDistributionSample02:
+    def test_all_41_fields_assigned(self, summary_sample02):
+        total = sum(p["field_count"] for p in summary_sample02["persons"].values())
+        assert total == 41
+
+    def test_no_unassigned_fields(self, summary_sample02):
+        assert summary_sample02["unassigned_fields"] == []
+
+    def test_six_persons_generated(self, summary_sample02):
+        assert len(summary_sample02["persons"]) == 6
+
+
 # ---------------------------------------------------------------------------
 # Excel structure
 # ---------------------------------------------------------------------------
@@ -128,6 +168,60 @@ class TestExcelStructure:
         wb = load_workbook(xlsx)
         ws = wb["intake"]
         assert ws.cell(7, 1).value is not None
+
+    def test_explicit_date_written_to_xlsx_and_guide(self, tmp_path):
+        import shutil
+
+        workspace = tmp_path / "dated_workspace"
+        workspace.mkdir()
+        shutil.copy(
+            SAMPLE_WORKSPACE / "role_assignments.yaml",
+            workspace / "role_assignments.yaml",
+        )
+
+        dated_summary = generate(
+            workspace,
+            project_root=PROJECT_ROOT,
+            generated_on=FIXED_DATE,
+        )
+
+        xlsx = dated_summary["persons"]["sample_arch"]["xlsx"]
+        wb = load_workbook(xlsx)
+        ws = wb["intake"]
+        assert FIXED_DATE.isoformat() in str(ws["A2"].value)
+
+        guide_path = Path(dated_summary["persons"]["sample_arch"]["guide"])
+        guide_text = guide_path.read_text(encoding="utf-8")
+        assert f"**Дата генерації:** {FIXED_DATE.isoformat()}" in guide_text
+
+    def test_fixed_date_generation_is_byte_stable(self, tmp_path):
+        import shutil
+
+        workspaces: list[Path] = []
+        for name in ("first", "second"):
+            workspace = tmp_path / name
+            workspace.mkdir()
+            shutil.copy(
+                SAMPLE_WORKSPACE / "role_assignments.yaml",
+                workspace / "role_assignments.yaml",
+            )
+            generate(
+                workspace,
+                project_root=PROJECT_ROOT,
+                generated_on=FIXED_DATE,
+            )
+            workspaces.append(workspace)
+
+        left, right = workspaces
+        rel_paths = sorted(
+            path.relative_to(left)
+            for path in (left / "intake").rglob("*")
+            if path.is_file()
+        )
+        for rel_path in rel_paths:
+            left_hash = hashlib.sha256((left / rel_path).read_bytes()).hexdigest()
+            right_hash = hashlib.sha256((right / rel_path).read_bytes()).hexdigest()
+            assert left_hash == right_hash, rel_path.as_posix()
 
 
 # ---------------------------------------------------------------------------

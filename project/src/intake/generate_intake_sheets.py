@@ -2,12 +2,14 @@
 """Generate per-person intake Excel sheets and guide.md from specs.
 
 Usage:
-    python src/intake/generate_intake_sheets.py examples/sample_object_01/
+    PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py \
+        project/examples/sample_object_01 --date 2026-04-02
 """
 from __future__ import annotations
 
+import argparse
 import sys
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -52,6 +54,19 @@ HEADER_LABELS = [
 
 LOCKED = Protection(locked=True)
 UNLOCKED = Protection(locked=False)
+
+
+def _parse_cli_date(raw: str) -> date:
+    try:
+        return date.fromisoformat(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"Expected YYYY-MM-DD date, got: {raw!r}"
+        ) from exc
+
+
+def _stable_workbook_timestamp(run_date: date) -> datetime:
+    return datetime(run_date.year, run_date.month, run_date.day, tzinfo=timezone.utc)
 
 
 # ---------------------------------------------------------------------------
@@ -234,8 +249,12 @@ def write_xlsx(
     field_to_section: dict[str, str],
     value_dicts: dict,
     object_id: str,
+    generated_on: date,
 ) -> None:
     wb = Workbook()
+    stable_ts = _stable_workbook_timestamp(generated_on)
+    wb.properties.created = stable_ts
+    wb.properties.modified = stable_ts
     ws = wb.active
     ws.title = "intake"
 
@@ -244,7 +263,7 @@ def write_xlsx(
 
     # --- Title rows 1-5 ---
     roles_str = ", ".join(sorted(roles))
-    today = date.today().isoformat()
+    today = generated_on.isoformat()
 
     ws.merge_cells("A1:H1")
     ws["A1"] = f"Intake Sheet \u2014 {label_uk} ({object_id})"
@@ -445,12 +464,13 @@ def write_guide_md(
     field_to_section: dict[str, str],
     value_dicts: dict,
     object_id: str,
+    generated_on: date,
 ) -> None:
     lines = [
         f"# Intake Guide \u2014 {label_uk} ({object_id})",
         "",
         f"**\u0420\u043e\u043b\u0456:** {', '.join(sorted(roles))}",
-        f"**\u0414\u0430\u0442\u0430 \u0433\u0435\u043d\u0435\u0440\u0430\u0446\u0456\u0457:** {date.today().isoformat()}",
+        f"**\u0414\u0430\u0442\u0430 \u0433\u0435\u043d\u0435\u0440\u0430\u0446\u0456\u0457:** {generated_on.isoformat()}",
         "",
         "---",
         "",
@@ -526,13 +546,19 @@ def write_guide_md(
 # Main entry point
 # ---------------------------------------------------------------------------
 
-def generate(workspace_path: Path, project_root: Path | None = None) -> dict[str, Any]:
+def generate(
+    workspace_path: Path,
+    project_root: Path | None = None,
+    generated_on: date | None = None,
+) -> dict[str, Any]:
     """Generate intake sheets for all persons in workspace.
 
     Returns summary dict for testing/reporting.
     """
     if project_root is None:
         project_root = Path(__file__).resolve().parents[2]
+    if generated_on is None:
+        generated_on = date.today()
 
     fields_data = _load_yaml(
         project_root / "specs" / "dictionary" / "questionnaire_v2_fields.yaml"
@@ -570,10 +596,12 @@ def generate(workspace_path: Path, project_root: Path | None = None) -> dict[str
         write_xlsx(
             xlsx_path, pid, info["label_uk"], info["roles"],
             fids, field_index, field_to_section, value_dicts, object_id,
+            generated_on,
         )
         write_guide_md(
             guide_path, pid, info["label_uk"], info["roles"],
             fids, field_index, field_to_section, value_dicts, object_id,
+            generated_on,
         )
 
         summary["persons"][pid] = {
@@ -590,10 +618,12 @@ def generate(workspace_path: Path, project_root: Path | None = None) -> dict[str
         write_xlsx(
             unassigned_path, "_unassigned", "Нерозподілені поля", set(),
             unassigned, field_index, field_to_section, value_dicts, object_id,
+            generated_on,
         )
         write_guide_md(
             unassigned_guide, "_unassigned", "Нерозподілені поля", set(),
             unassigned, field_index, field_to_section, value_dicts, object_id,
+            generated_on,
         )
         summary["unassigned_xlsx"] = str(unassigned_path)
         summary["unassigned_guide"] = str(unassigned_guide)
@@ -602,19 +632,24 @@ def generate(workspace_path: Path, project_root: Path | None = None) -> dict[str
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print(
-            "Usage: generate_intake_sheets.py <workspace_path>",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Generate per-person intake sheets and guides.",
+    )
+    parser.add_argument("workspace_path", help="Workspace directory to generate into.")
+    parser.add_argument(
+        "--date",
+        dest="generated_on",
+        type=_parse_cli_date,
+        help="Fixed generation date in YYYY-MM-DD format.",
+    )
+    args = parser.parse_args()
 
-    workspace = Path(sys.argv[1]).resolve()
+    workspace = Path(args.workspace_path).resolve()
     if not workspace.exists():
         print(f"Workspace not found: {workspace}", file=sys.stderr)
         sys.exit(1)
 
-    summary = generate(workspace)
+    summary = generate(workspace, generated_on=args.generated_on)
 
     print(f"Generated intake sheets for {summary['object_id']}:")
     for pid, info in summary["persons"].items():

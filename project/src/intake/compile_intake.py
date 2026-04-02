@@ -2,10 +2,12 @@
 """Compile per-person intake Excel sheets into questionnaire.yaml.
 
 Usage:
-    python src/intake/compile_intake.py examples/sample_object_01/
+    PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py \
+        project/examples/sample_object_01 --date 2026-04-02
 """
 from __future__ import annotations
 
+import argparse
 import sys
 from datetime import date
 from pathlib import Path
@@ -39,6 +41,15 @@ SERVICE_FIELDS: dict[str, str] = {
     "iiot_required": "iiot_edge",
     "local_archiving_required": "local_archiving",
 }
+
+
+def _parse_cli_date(raw: str) -> date:
+    try:
+        return date.fromisoformat(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"Expected YYYY-MM-DD date, got: {raw!r}"
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -264,11 +275,14 @@ def _build_questionnaire(
 # ---------------------------------------------------------------------------
 
 def _write_response_yaml(
-    path: Path, person_id: str, fields: dict[str, dict],
+    path: Path,
+    person_id: str,
+    fields: dict[str, dict],
+    compiled_on: date,
 ) -> None:
     payload: dict[str, Any] = {
         "person_id": person_id,
-        "compiled_at": date.today().isoformat(),
+        "compiled_at": compiled_on.isoformat(),
         "fields": {},
     }
     for fid in sorted(fields):
@@ -305,6 +319,7 @@ def _build_intake_status_yaml(
     person_fields: dict[str, dict[str, dict]],
     role_data: dict,
     field_to_section: dict[str, str],
+    compiled_on: date,
 ) -> dict[str, Any]:
     totals = _count_statuses(all_fields)
     totals["total"] = len(all_fields)
@@ -341,7 +356,7 @@ def _build_intake_status_yaml(
 
     return {
         "object_id": object_id,
-        "compiled_at": date.today().isoformat(),
+        "compiled_at": compiled_on.isoformat(),
         "totals": totals,
         "per_person": per_person,
         "fields": fields_detail,
@@ -389,6 +404,7 @@ def _write_intake_status_md(
     role_data: dict,
     field_index: dict[str, dict],
     field_to_section: dict[str, str],
+    compiled_on: date,
 ) -> None:
     total = len(all_fields)
     counts = _count_statuses(all_fields)
@@ -412,6 +428,8 @@ def _write_intake_status_md(
 
     lines = [
         f"# Intake Status \u2014 {object_id}",
+        "",
+        f"Compiled at: {compiled_on.isoformat()}",
         "",
         f"Answered: {counts['answered']}/{total} ({pct}%) "
         f"| TBD: {counts['tbd']} | Unanswered: {counts['unanswered']} "
@@ -493,6 +511,7 @@ def _write_intake_status_md(
 def compile_intake(
     workspace_path: Path,
     project_root: Path | None = None,
+    compiled_on: date | None = None,
 ) -> dict[str, Any]:
     """Compile intake xlsx files into questionnaire.yaml + status reports.
 
@@ -501,6 +520,8 @@ def compile_intake(
     """
     if project_root is None:
         project_root = Path(__file__).resolve().parents[2]
+    if compiled_on is None:
+        compiled_on = date.today()
 
     # --- 1. Load specs ---
     fields_data = _load_yaml(
@@ -576,11 +597,12 @@ def compile_intake(
     # per-person .response.yaml
     for pid, fields in person_fields.items():
         resp_path = responses_dir / f"{pid}.response.yaml"
-        _write_response_yaml(resp_path, pid, fields)
+        _write_response_yaml(resp_path, pid, fields, compiled_on)
 
     # intake_status.yaml
     status_yaml = _build_intake_status_yaml(
         object_id, all_fields, person_fields, role_data, field_to_section,
+        compiled_on,
     )
     _write_yaml(workspace_path / "reports" / "intake_status.yaml", status_yaml)
 
@@ -588,7 +610,7 @@ def compile_intake(
     _write_intake_status_md(
         workspace_path / "reports" / "intake_status.md",
         object_id, all_fields, person_fields,
-        role_data, field_index, field_to_section,
+        role_data, field_index, field_to_section, compiled_on,
     )
 
     # --- 7. Print warnings ---
@@ -605,19 +627,24 @@ def compile_intake(
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print(
-            "Usage: compile_intake.py <workspace_path>",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Compile intake sheets into questionnaire and status reports.",
+    )
+    parser.add_argument("workspace_path", help="Workspace directory to compile from.")
+    parser.add_argument(
+        "--date",
+        dest="compiled_on",
+        type=_parse_cli_date,
+        help="Fixed compile date in YYYY-MM-DD format.",
+    )
+    args = parser.parse_args()
 
-    workspace = Path(sys.argv[1]).resolve()
+    workspace = Path(args.workspace_path).resolve()
     if not workspace.exists():
         print(f"Workspace not found: {workspace}", file=sys.stderr)
         sys.exit(1)
 
-    result = compile_intake(workspace)
+    result = compile_intake(workspace, compiled_on=args.compiled_on)
 
     counts = _count_statuses(result["all_fields"])
     total = len(result["all_fields"])
