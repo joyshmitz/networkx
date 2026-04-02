@@ -68,7 +68,13 @@ def collect_field_records(
     role_to_persons: dict[str, list[str]],
 ) -> dict[str, dict[str, Any]]:
     records: dict[str, dict[str, Any]] = {}
-    for field_id in sorted(field_index, key=lambda item: _field_sort_key(item, field_to_section)):
+    # Prefer the canonical field dictionary for ordering, but keep any extra
+    # compiled keys visible so the snapshot contract does not silently narrow.
+    field_ids = sorted(
+        set(field_index) | set(all_fields),
+        key=lambda item: _field_sort_key(item, field_to_section),
+    )
+    for field_id in field_ids:
         entry = all_fields.get(field_id, {})
         status = entry.get("status", "unanswered")
 

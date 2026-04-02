@@ -10,6 +10,7 @@ from model_utils import load_yaml
 from conftest import GOLDEN_DATE, copy_workspace
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+HAPPY_PATH = PROJECT_ROOT / "examples" / "sample_object_01"
 STRESS_PATH = PROJECT_ROOT / "examples" / "sample_object_02"
 
 
@@ -79,6 +80,35 @@ def test_review_routes_assigned_field_items_to_primary_and_secondary_people(tmp_
     assert item["review_item_id"] in reviewer_entry["primary_item_ids"]
     assert (workspace / "reports" / "review_packet.sample2_ops_sec.md").exists()
     assert (workspace / "reports" / "review_packet.sample2_arch.md").exists()
+
+
+def test_review_happy_path_covers_existing_advisory_findings(tmp_path):
+    workspace = copy_workspace(tmp_path, HAPPY_PATH)
+
+    result = review_workspace(
+        workspace,
+        project_root=PROJECT_ROOT,
+        review_on=GOLDEN_DATE,
+    )
+
+    registry = load_yaml(workspace / "reports" / "reviewer_registry.yaml")
+    coordinator_text = (workspace / "reports" / "review_packet._coordinator.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert len(result["review_items"]) == 4
+    assert {item["source_kind"] for item in result["review_items"]} == {"validator_issue"}
+    assert {item["routing_state"] for item in result["review_items"]} == {
+        "coordinator_escalation"
+    }
+    assert registry["summary"]["total_review_items"] == 4
+    assert len(registry["coordinator"]["item_ids"]) == 4
+    assert "Coordinator queue: 4" in coordinator_text
+    assert "## Coordinator Queue" in coordinator_text
+    assert "annex_activation" in coordinator_text
+    assert "stage_confidence" in coordinator_text
+    assert all(reviewer["packet_path"] is None for reviewer in registry["reviewers"])
+    assert not any(workspace.glob("reports/review_packet.sample*.md"))
 
 
 def test_review_sends_ambiguous_validator_issue_to_coordinator(tmp_path):

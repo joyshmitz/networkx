@@ -21,6 +21,31 @@ from model_utils import load_yaml, resolve_project_root, write_yaml
 REVIEW_SCHEMA_VERSION = "0.1.0"
 PRIORITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 SOURCE_KIND_ORDER = {"field": 0, "validator_issue": 1, "evidence_gap": 2}
+SKIPPED_VALIDATORS = {"role_assignments"}
+FIELD_CONTEXT_DEFAULTS = {
+    "field_id": None,
+    "related_field_ids": [],
+    "section": "",
+    "field_label_uk": None,
+    "current_value": None,
+    "status": None,
+    "strictness": None,
+    "owner_role": None,
+    "reviewer_roles": [],
+    "owner_persons": [],
+    "reviewer_persons": [],
+    "comment": None,
+    "source_ref": None,
+}
+REQUIRED_ROUTING_KEYS = {
+    "target_role",
+    "primary_role",
+    "primary_person",
+    "secondary_roles",
+    "secondary_persons",
+    "routing_state",
+    "escalation_reason",
+}
 
 
 def _parse_cli_date(raw: str) -> date:
@@ -35,10 +60,6 @@ def _parse_cli_date(raw: str) -> date:
 def _slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
     return slug or "item"
-
-
-def _humanize_identifier(value: str) -> str:
-    return value.replace("_", " ")
 
 
 def _list_or_none(values: list[str]) -> str:
@@ -117,6 +138,91 @@ def _item_sort_key(item: dict[str, Any]) -> tuple[Any, ...]:
         item.get("field_id") or "",
         item["review_item_id"],
     )
+
+
+def _field_context_from_record(field_record: dict[str, Any] | None) -> dict[str, Any]:
+    if field_record is None:
+        return {
+            **FIELD_CONTEXT_DEFAULTS,
+            "related_field_ids": [],
+            "reviewer_roles": [],
+            "owner_persons": [],
+            "reviewer_persons": [],
+        }
+
+    field_id = field_record.get("field_id")
+    return {
+        "field_id": field_id,
+        "related_field_ids": [field_id] if field_id else [],
+        "section": field_record.get("section", ""),
+        "field_label_uk": field_record.get("label_uk"),
+        "current_value": field_record.get("value"),
+        "status": field_record.get("status"),
+        "strictness": field_record.get("strictness"),
+        "owner_role": field_record.get("owner_role"),
+        "reviewer_roles": list(field_record.get("reviewer_roles", [])),
+        "owner_persons": list(field_record.get("owner_persons", [])),
+        "reviewer_persons": list(field_record.get("reviewer_persons", [])),
+        "comment": field_record.get("comment"),
+        "source_ref": field_record.get("source_ref"),
+    }
+
+
+def _make_review_item(
+    *,
+    object_id: str,
+    source_kind: str,
+    source_key: str,
+    target_role: str,
+    routing: dict[str, Any],
+    review_reasons: list[str],
+    field_record: dict[str, Any] | None = None,
+    related_field_ids: list[str] | None = None,
+    field_context_overrides: dict[str, Any] | None = None,
+    severity: str | None = None,
+    validator: str | None = None,
+    message: str | None = None,
+) -> dict[str, Any]:
+    missing_routing_keys = REQUIRED_ROUTING_KEYS - set(routing)
+    if missing_routing_keys:
+        missing = ", ".join(sorted(missing_routing_keys))
+        raise KeyError(f"Routing payload is missing required keys: {missing}")
+
+    field_context = _field_context_from_record(field_record)
+    if related_field_ids is not None:
+        field_context["related_field_ids"] = list(related_field_ids)
+    if field_context_overrides:
+        field_context.update(field_context_overrides)
+
+    return {
+        "review_item_id": _stable_item_id(
+            object_id,
+            source_kind,
+            source_key,
+            target_role,
+        ),
+        "source_kind": source_kind,
+        "source_key": source_key,
+        "object_id": object_id,
+        **field_context,
+        "priority": _derive_priority(
+            source_kind=source_kind,
+            routing_state=routing["routing_state"],
+            strictness=field_context.get("strictness"),
+            severity=severity,
+        ),
+        "next_action": _derive_next_action(source_kind, routing["routing_state"]),
+        "primary_role": routing["primary_role"],
+        "primary_person": routing["primary_person"],
+        "secondary_roles": routing["secondary_roles"],
+        "secondary_persons": routing["secondary_persons"],
+        "routing_state": routing["routing_state"],
+        "escalation_reason": routing["escalation_reason"],
+        "review_reasons": review_reasons,
+        "validator": validator,
+        "severity": severity,
+        "message": message,
+    }
 
 
 def _routing_from_field_record(field_record: dict[str, Any]) -> dict[str, Any]:
@@ -201,47 +307,17 @@ def _build_field_review_items(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     for field_record in snapshot["fields"]["unresolved"]:
         routing = _routing_from_field_record(field_record)
-        item = {
-            "review_item_id": _stable_item_id(
-                snapshot["object_id"],
-                "field",
-                field_record["field_id"],
-                routing["target_role"],
-            ),
-            "source_kind": "field",
-            "source_key": field_record["field_id"],
-            "object_id": snapshot["object_id"],
-            "field_id": field_record["field_id"],
-            "related_field_ids": [field_record["field_id"]],
-            "section": field_record["section"],
-            "field_label_uk": field_record.get("label_uk"),
-            "current_value": field_record.get("value"),
-            "status": field_record["status"],
-            "strictness": field_record.get("strictness"),
-            "owner_role": field_record.get("owner_role"),
-            "reviewer_roles": list(field_record.get("reviewer_roles", [])),
-            "owner_persons": list(field_record.get("owner_persons", [])),
-            "reviewer_persons": list(field_record.get("reviewer_persons", [])),
-            "priority": _derive_priority(
+        items.append(
+            _make_review_item(
+                object_id=snapshot["object_id"],
                 source_kind="field",
-                routing_state=routing["routing_state"],
-                strictness=field_record.get("strictness"),
-            ),
-            "next_action": _derive_next_action("field", routing["routing_state"]),
-            "primary_role": routing["primary_role"],
-            "primary_person": routing["primary_person"],
-            "secondary_roles": routing["secondary_roles"],
-            "secondary_persons": routing["secondary_persons"],
-            "routing_state": routing["routing_state"],
-            "escalation_reason": routing["escalation_reason"],
-            "review_reasons": _reason_list_for_field(field_record),
-            "validator": None,
-            "severity": None,
-            "message": None,
-            "comment": field_record.get("comment"),
-            "source_ref": field_record.get("source_ref"),
-        }
-        items.append(item)
+                source_key=field_record["field_id"],
+                target_role=routing["target_role"],
+                routing=routing,
+                review_reasons=_reason_list_for_field(field_record),
+                field_record=field_record,
+            )
+        )
     return items
 
 
@@ -258,13 +334,20 @@ def _match_validator_rule(
     issue: dict[str, Any],
     validator_spec: dict[str, Any],
 ) -> dict[str, Any] | None:
-    for rule in validator_spec.get("rules", []):
-        if _message_matches(rule, issue["message"]):
-            return rule
-    return None
+    matches = [
+        rule
+        for rule in validator_spec.get("rules", [])
+        if _message_matches(rule, issue["message"])
+    ]
+    if len(matches) > 1:
+        raise ValueError(
+            f"Validator routing for '{issue['validator']}' is ambiguous: "
+            f"multiple rules matched message {issue['message']!r}."
+        )
+    return matches[0] if matches else None
 
 
-def _routing_from_validator_issue(
+def _route_validator_issue(
     issue: dict[str, Any],
     *,
     snapshot: dict[str, Any],
@@ -277,58 +360,24 @@ def _routing_from_validator_issue(
     issue_code = rule.get("issue_code") or _slugify(issue["message"])
     source_key = f"{validator_name}:{issue_code}"
     field_ids = list(rule.get("field_ids", []))
-    related_field_ids = field_ids[:]
+    related_field_ids = list(field_ids)
 
     if len(field_ids) == 1 and field_ids[0] in field_records:
         field_record = field_records[field_ids[0]]
-        routing = _routing_from_field_record(field_record)
         review_reasons = ["pipeline validator finding"]
         if field_record.get("strictness") == "S4":
             review_reasons.append("stage-gate critical field")
         return {
-            "review_item_id": _stable_item_id(
-                snapshot["object_id"],
-                "validator_issue",
-                source_key,
-                routing["target_role"],
-            ),
-            "source_kind": "validator_issue",
             "source_key": source_key,
-            "object_id": snapshot["object_id"],
-            "field_id": field_record["field_id"],
+            "routing": _routing_from_field_record(field_record),
+            "field_record": field_record,
             "related_field_ids": related_field_ids,
-            "section": field_record["section"],
-            "field_label_uk": field_record.get("label_uk"),
-            "current_value": field_record.get("value"),
-            "status": field_record["status"],
-            "strictness": field_record.get("strictness"),
-            "owner_role": field_record.get("owner_role"),
-            "reviewer_roles": list(field_record.get("reviewer_roles", [])),
-            "owner_persons": list(field_record.get("owner_persons", [])),
-            "reviewer_persons": list(field_record.get("reviewer_persons", [])),
-            "priority": _derive_priority(
-                source_kind="validator_issue",
-                routing_state=routing["routing_state"],
-                strictness=field_record.get("strictness"),
-                severity=issue["severity"],
-            ),
-            "next_action": _derive_next_action("validator_issue", routing["routing_state"]),
-            "primary_role": routing["primary_role"],
-            "primary_person": routing["primary_person"],
-            "secondary_roles": routing["secondary_roles"],
-            "secondary_persons": routing["secondary_persons"],
-            "routing_state": routing["routing_state"],
-            "escalation_reason": routing["escalation_reason"],
             "review_reasons": review_reasons,
-            "validator": validator_name,
-            "severity": issue["severity"],
-            "message": issue["message"],
-            "comment": field_record.get("comment"),
-            "source_ref": field_record.get("source_ref"),
+            "field_context_overrides": None,
         }
 
     if len(field_ids) > 1:
-        primary_field = field_records.get(field_ids[0], {})
+        primary_field = field_records.get(field_ids[0])
         owner_roles = sorted(
             {
                 field_records[field_id]["owner_role"]
@@ -345,49 +394,25 @@ def _routing_from_validator_issue(
             secondary_persons.update(field_record.get("reviewer_persons", []))
 
         return {
-            "review_item_id": _stable_item_id(
-                snapshot["object_id"],
-                "validator_issue",
-                source_key,
-                "coordinator",
-            ),
-            "source_kind": "validator_issue",
             "source_key": source_key,
-            "object_id": snapshot["object_id"],
-            "field_id": primary_field.get("field_id"),
+            "routing": {
+                "target_role": "coordinator",
+                "primary_role": "coordinator",
+                "primary_person": None,
+                "secondary_roles": owner_roles,
+                "secondary_persons": sorted(secondary_persons),
+                "routing_state": "coordinator_escalation",
+                "escalation_reason": (
+                    f"Validator finding implicates multiple fields: {related_field_ids}."
+                ),
+            },
+            "field_record": primary_field,
             "related_field_ids": related_field_ids,
-            "section": primary_field.get("section", ""),
-            "field_label_uk": primary_field.get("label_uk"),
-            "current_value": primary_field.get("value"),
-            "status": primary_field.get("status"),
-            "strictness": primary_field.get("strictness"),
-            "owner_role": primary_field.get("owner_role"),
-            "reviewer_roles": list(primary_field.get("reviewer_roles", [])),
-            "owner_persons": list(primary_field.get("owner_persons", [])),
-            "reviewer_persons": list(primary_field.get("reviewer_persons", [])),
-            "priority": _derive_priority(
-                source_kind="validator_issue",
-                routing_state="coordinator_escalation",
-                strictness=primary_field.get("strictness"),
-                severity=issue["severity"],
-            ),
-            "next_action": _derive_next_action(
-                "validator_issue", "coordinator_escalation"
-            ),
-            "primary_role": "coordinator",
-            "primary_person": None,
-            "secondary_roles": owner_roles,
-            "secondary_persons": sorted(secondary_persons),
-            "routing_state": "coordinator_escalation",
-            "escalation_reason": (
-                f"Validator finding implicates multiple fields: {related_field_ids}."
-            ),
             "review_reasons": ["pipeline validator finding"],
-            "validator": validator_name,
-            "severity": issue["severity"],
-            "message": issue["message"],
-            "comment": None,
-            "source_ref": None,
+            "field_context_overrides": {
+                "comment": None,
+                "source_ref": None,
+            },
         }
 
     fallback_roles = list(rule.get("fallback_owner_roles", [])) or list(
@@ -427,44 +452,20 @@ def _routing_from_validator_issue(
         primary_person = next(iter(resolved_persons))
 
     return {
-        "review_item_id": _stable_item_id(
-            snapshot["object_id"],
-            "validator_issue",
-            source_key,
-            target_role,
-        ),
-        "source_kind": "validator_issue",
         "source_key": source_key,
-        "object_id": snapshot["object_id"],
-        "field_id": None,
+        "routing": {
+            "target_role": target_role,
+            "primary_role": primary_role,
+            "primary_person": primary_person,
+            "secondary_roles": fallback_roles,
+            "secondary_persons": sorted(resolved_persons),
+            "routing_state": routing_state,
+            "escalation_reason": escalation_reason,
+        },
+        "field_record": None,
         "related_field_ids": related_field_ids,
-        "section": "",
-        "field_label_uk": None,
-        "current_value": None,
-        "status": None,
-        "strictness": None,
-        "owner_role": None,
-        "reviewer_roles": [],
-        "owner_persons": [],
-        "reviewer_persons": [],
-        "priority": _derive_priority(
-            source_kind="validator_issue",
-            routing_state=routing_state,
-            severity=issue["severity"],
-        ),
-        "next_action": _derive_next_action("validator_issue", routing_state),
-        "primary_role": primary_role,
-        "primary_person": primary_person,
-        "secondary_roles": fallback_roles,
-        "secondary_persons": sorted(resolved_persons),
-        "routing_state": routing_state,
-        "escalation_reason": escalation_reason,
         "review_reasons": ["pipeline validator finding"],
-        "validator": validator_name,
-        "severity": issue["severity"],
-        "message": issue["message"],
-        "comment": None,
-        "source_ref": None,
+        "field_context_overrides": None,
     }
 
 
@@ -476,13 +477,29 @@ def _build_validator_review_items(
     routing_spec = _load_validator_routing(project_root)
     items: list[dict[str, Any]] = []
     for issue in snapshot["pipeline"]["issues"]:
-        if issue["validator"] == "role_assignments":
+        # Role-assignment collapse is already represented directly via field routing
+        # states, so the raw validator issue would only duplicate the same operator action.
+        if issue["validator"] in SKIPPED_VALIDATORS:
             continue
+        routed_issue = _route_validator_issue(
+            issue,
+            snapshot=snapshot,
+            routing_spec=routing_spec,
+        )
         items.append(
-            _routing_from_validator_issue(
-                issue,
-                snapshot=snapshot,
-                routing_spec=routing_spec,
+            _make_review_item(
+                object_id=snapshot["object_id"],
+                source_kind="validator_issue",
+                source_key=routed_issue["source_key"],
+                target_role=routed_issue["routing"]["target_role"],
+                routing=routed_issue["routing"],
+                review_reasons=routed_issue["review_reasons"],
+                field_record=routed_issue["field_record"],
+                related_field_ids=routed_issue["related_field_ids"],
+                field_context_overrides=routed_issue["field_context_overrides"],
+                validator=issue["validator"],
+                severity=issue["severity"],
+                message=issue["message"],
             )
         )
     return items
@@ -496,24 +513,34 @@ def _build_evidence_gap_items(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
 
 def _group_items_by_person(
     items: list[dict[str, Any]],
-    person_id: str,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    primary_items = [item for item in items if item.get("primary_person") == person_id]
-    secondary_items = [
-        item
-        for item in items
-        if person_id in item.get("secondary_persons", []) and item.get("primary_person") != person_id
-    ]
-    return primary_items, secondary_items
+    person_ids: list[str],
+) -> dict[str, dict[str, list[dict[str, Any]]]]:
+    grouped = {
+        person_id: {"primary_items": [], "secondary_items": []}
+        for person_id in person_ids
+    }
+    for item in items:
+        primary_person = item.get("primary_person")
+        if primary_person in grouped:
+            grouped[primary_person]["primary_items"].append(item)
+        for secondary_person in item.get("secondary_persons", []):
+            if secondary_person == primary_person:
+                continue
+            if secondary_person in grouped:
+                grouped[secondary_person]["secondary_items"].append(item)
+    return grouped
 
 
 def _build_registry(
     snapshot: dict[str, Any],
     items: list[dict[str, Any]],
+    grouped_items: dict[str, dict[str, list[dict[str, Any]]]],
+    coordinator_items: list[dict[str, Any]],
 ) -> dict[str, Any]:
     reviewers: list[dict[str, Any]] = []
     for person_id, roles in snapshot["roles"]["person_to_roles"].items():
-        primary_items, secondary_items = _group_items_by_person(items, person_id)
+        primary_items = grouped_items[person_id]["primary_items"]
+        secondary_items = grouped_items[person_id]["secondary_items"]
         packet_path = None
         if primary_items or secondary_items:
             packet_path = f"reports/review_packet.{person_id}.md"
@@ -549,11 +576,7 @@ def _build_registry(
         "reviewers": reviewers,
         "coordinator": {
             "packet_path": "reports/review_packet._coordinator.md",
-            "item_ids": [
-                item["review_item_id"]
-                for item in items
-                if item["routing_state"] != "assigned"
-            ],
+            "item_ids": [item["review_item_id"] for item in coordinator_items],
         },
         "review_items": items,
     }
@@ -698,24 +721,26 @@ def _write_person_packet(
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def _write_coordinator_packet(path: Path, *, registry: dict[str, Any]) -> None:
-    escalations = [
-        item for item in registry["review_items"] if item["routing_state"] != "assigned"
-    ]
+def _write_coordinator_packet(
+    path: Path,
+    *,
+    registry: dict[str, Any],
+    coordinator_items: list[dict[str, Any]],
+) -> None:
     lines = [
         f"# Coordinator Review Packet — {registry['object_id']}",
         "",
         f"- Review date: {registry['review_at']}",
         f"- Workspace: {registry['workspace']}",
         f"- Total review items: {registry['summary']['total_review_items']}",
-        f"- Coordinator queue: {len(escalations)}",
+        f"- Coordinator queue: {len(coordinator_items)}",
         "",
         "## Coordinator Queue",
         "",
     ]
 
-    if escalations:
-        for item in escalations:
+    if coordinator_items:
+        for item in coordinator_items:
             lines.extend(_render_item_block(item))
     else:
         lines.append("- none")
@@ -760,8 +785,20 @@ def review_workspace(
         *_build_evidence_gap_items(snapshot),
     ]
     review_items = sorted(review_items, key=_item_sort_key)
+    coordinator_items = [
+        item for item in review_items if item["routing_state"] != "assigned"
+    ]
+    grouped_items = _group_items_by_person(
+        review_items,
+        list(snapshot["roles"]["person_to_roles"]),
+    )
 
-    registry = _build_registry(snapshot, review_items)
+    registry = _build_registry(
+        snapshot,
+        review_items,
+        grouped_items,
+        coordinator_items,
+    )
     reports_dir = Path(snapshot["workspace"]) / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
 
@@ -770,21 +807,18 @@ def review_workspace(
     _write_coordinator_packet(
         reports_dir / "review_packet._coordinator.md",
         registry=registry,
+        coordinator_items=coordinator_items,
     )
 
     for reviewer in registry["reviewers"]:
         if not reviewer["packet_path"]:
             continue
-        primary_items, secondary_items = _group_items_by_person(
-            review_items,
-            reviewer["person_id"],
-        )
         _write_person_packet(
             reports_dir / f"review_packet.{reviewer['person_id']}.md",
             person_id=reviewer["person_id"],
             roles=reviewer["roles"],
-            primary_items=primary_items,
-            secondary_items=secondary_items,
+            primary_items=grouped_items[reviewer["person_id"]]["primary_items"],
+            secondary_items=grouped_items[reviewer["person_id"]]["secondary_items"],
             registry=registry,
         )
 
