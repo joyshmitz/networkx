@@ -1,5 +1,8 @@
 # Claude Review Brief — Slice 3 Blocking Evidence Enforcement
 
+> **ARCHIVAL STATUS:** historical review brief.  
+> Slice 3 review is complete; this document remains as prompt/context traceability, not as an active execution plan.
+
 **Дата:** 2026-04-03  
 **Гілка:** `research/methodology-foundation-clean`  
 **Repo:** `/Users/sd/projects/networkx-3.6.1-fork`  
