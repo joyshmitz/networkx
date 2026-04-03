@@ -18,7 +18,7 @@ if str(SRC_ROOT) not in sys.path:
 from intake.workspace_snapshot import build_workspace_snapshot
 from model_utils import load_yaml, resolve_project_root, write_yaml
 
-EVIDENCE_SCHEMA_VERSION = "0.1.0"
+EVIDENCE_SCHEMA_VERSION = "0.2.0"
 EVIDENCE_STRENGTH_ORDER = {
     "none": 0,
     "reference_only": 1,
@@ -51,6 +51,26 @@ def _load_evidence_policy(project_root: Path) -> dict[str, Any]:
 
 def _strength_rank(strength: str) -> int:
     return EVIDENCE_STRENGTH_ORDER[strength]
+
+
+def _evidence_gap_reason(
+    *,
+    evidence_strength: str,
+    minimum_strength: str,
+) -> str:
+    if evidence_strength == "none":
+        return "missing evidence"
+    return f"weak evidence: {evidence_strength} < {minimum_strength}"
+
+
+def _blocking_gap_reason(
+    *,
+    evidence_strength: str,
+    minimum_strength: str,
+) -> str:
+    if evidence_strength == "none":
+        return "blocking evidence gap: missing evidence"
+    return f"blocking evidence gap: {evidence_strength} < {minimum_strength}"
 
 
 def _split_source_ref(source_ref: str) -> list[str]:
@@ -182,19 +202,41 @@ def build_evidence_status_from_snapshot(
             _strength_rank(signal["evidence_strength"])
             < _strength_rank(advisory_minimum_strength)
         )
-        blocking_eligible = project_stage in set(field_policy.get("blocking_allowed_stages", []))
+        blocking_stage_allowed = project_stage in set(
+            field_policy.get("blocking_allowed_stages", [])
+        )
+        blocking_allowlisted = bool(field_policy.get("blocking_enforced", False))
+        blocking_minimum_strength = (
+            field_policy.get("blocking_minimum_strength")
+            if blocking_allowlisted
+            else None
+        )
+        blocking_eligible = blocking_stage_allowed and blocking_allowlisted
+        blocking_gap = False
+        blocking_reason = None
+        if blocking_eligible:
+            minimum_strength = blocking_minimum_strength or advisory_minimum_strength
+            blocking_gap = (
+                _strength_rank(signal["evidence_strength"])
+                < _strength_rank(minimum_strength)
+            )
+            if blocking_gap:
+                blocking_reason = _blocking_gap_reason(
+                    evidence_strength=signal["evidence_strength"],
+                    minimum_strength=minimum_strength,
+                )
         review_routing_required = advisory_gap and (
-            field_policy.get("review_route_always", False)
+            blocking_gap
+            or field_policy.get("review_route_always", False)
             or field_record["status"] in set(field_policy.get("review_route_statuses", []))
         )
 
         if not advisory_gap:
             gap_reason = None
-        elif signal["evidence_strength"] == "none":
-            gap_reason = "missing evidence"
         else:
-            gap_reason = (
-                f"weak evidence: {signal['evidence_strength']} < {advisory_minimum_strength}"
+            gap_reason = _evidence_gap_reason(
+                evidence_strength=signal["evidence_strength"],
+                minimum_strength=advisory_minimum_strength,
             )
 
         fields.append(
@@ -208,7 +250,12 @@ def build_evidence_status_from_snapshot(
                 "evidence_required": field_record.get("evidence_required"),
                 "evidence_strength": signal["evidence_strength"],
                 "advisory_minimum_strength": advisory_minimum_strength,
+                "blocking_stage_allowed": blocking_stage_allowed,
+                "blocking_allowlisted": blocking_allowlisted,
+                "blocking_minimum_strength": blocking_minimum_strength,
                 "blocking_eligible": blocking_eligible,
+                "blocking_gap": blocking_gap,
+                "blocking_reason": blocking_reason,
                 "review_routing_required": review_routing_required,
                 "advisory_gap": advisory_gap,
                 "gap_reason": gap_reason,
@@ -228,7 +275,16 @@ def build_evidence_status_from_snapshot(
 
     advisory_gap_count = sum(1 for field in fields if field["advisory_gap"])
     review_routing_count = sum(1 for field in fields if field["review_routing_required"])
+    blocking_stage_allowed_count = sum(1 for field in fields if field["blocking_stage_allowed"])
+    blocking_allowlisted_count = sum(1 for field in fields if field["blocking_allowlisted"])
     blocking_eligible_count = sum(1 for field in fields if field["blocking_eligible"])
+    blocking_gap_count = sum(1 for field in fields if field["blocking_gap"])
+    blocking_eligible_field_ids = [
+        field["field_id"] for field in fields if field["blocking_eligible"]
+    ]
+    blocking_gap_field_ids = [field["field_id"] for field in fields if field["blocking_gap"]]
+    gate_mode = "blocking" if blocking_eligible_field_ids else "advisory_only"
+    gate_status = "failed" if blocking_gap_field_ids else "passed"
 
     return {
         "schema_version": EVIDENCE_SCHEMA_VERSION,
@@ -238,11 +294,20 @@ def build_evidence_status_from_snapshot(
         "workspace": snapshot["workspace"],
         "questionnaire_path": snapshot["questionnaire_path"],
         "metadata": snapshot.get("metadata", {}),
+        "gate": {
+            "mode": gate_mode,
+            "status": gate_status,
+            "blocking_eligible_field_ids": blocking_eligible_field_ids,
+            "blocking_gap_field_ids": blocking_gap_field_ids,
+        },
         "summary": {
             "selected_field_count": len(fields),
             "advisory_gap_count": advisory_gap_count,
             "review_routing_required_count": review_routing_count,
+            "blocking_stage_allowed_count": blocking_stage_allowed_count,
+            "blocking_allowlisted_count": blocking_allowlisted_count,
             "blocking_eligible_count": blocking_eligible_count,
+            "blocking_gap_count": blocking_gap_count,
             "by_strength": by_strength,
         },
         "fields": fields,
@@ -251,6 +316,7 @@ def build_evidence_status_from_snapshot(
 
 def _write_evidence_status_md(path: Path, payload: dict[str, Any]) -> None:
     summary = payload["summary"]
+    gate = payload["gate"]
     lines = [
         f"# Evidence Status — {payload['object_id']}",
         "",
@@ -258,10 +324,13 @@ def _write_evidence_status_md(path: Path, payload: dict[str, Any]) -> None:
         f"- Workspace: {payload['workspace']}",
         f"- Questionnaire: {payload['questionnaire_path']}",
         f"- Project stage: {payload['metadata'].get('project_stage') or 'unknown'}",
+        f"- Evidence gate mode: `{gate['mode']}`",
+        f"- Evidence gate status: `{gate['status']}`",
         f"- Selected fields: {summary['selected_field_count']}",
         f"- Advisory gaps: {summary['advisory_gap_count']}",
         f"- Review-routing gaps: {summary['review_routing_required_count']}",
         f"- Blocking-eligible fields: {summary['blocking_eligible_count']}",
+        f"- Blocking gaps: {summary['blocking_gap_count']}",
         "",
         "## Evidence Strength",
         "",
@@ -275,8 +344,8 @@ def _write_evidence_status_md(path: Path, payload: dict[str, Any]) -> None:
         [
             "## Field Status",
             "",
-            "| Field | Status | Strength | Advisory Min | Gap | Review Route | Blocking Eligible |",
-            "|-------|--------|----------|--------------|-----|--------------|-------------------|",
+            "| Field | Status | Strength | Advisory Min | Gap | Review Route | Blocking Stage | Blocking Eligible | Blocking Gap |",
+            "|-------|--------|----------|--------------|-----|--------------|----------------|-------------------|--------------|",
         ]
     )
     for field in payload["fields"]:
@@ -285,7 +354,9 @@ def _write_evidence_status_md(path: Path, payload: dict[str, Any]) -> None:
             f"`{field['advisory_minimum_strength']}` | "
             f"{'yes' if field['advisory_gap'] else 'no'} | "
             f"{'yes' if field['review_routing_required'] else 'no'} | "
-            f"{'yes' if field['blocking_eligible'] else 'no'} |"
+            f"{'yes' if field['blocking_stage_allowed'] else 'no'} | "
+            f"{'yes' if field['blocking_eligible'] else 'no'} | "
+            f"{'yes' if field['blocking_gap'] else 'no'} |"
         )
 
     lines.extend(
@@ -306,12 +377,25 @@ def _write_evidence_status_md(path: Path, payload: dict[str, Any]) -> None:
                     f"- Evidence required: `{field['evidence_required']}`",
                     f"- Evidence strength: `{field['evidence_strength']}`",
                     f"- Advisory minimum: `{field['advisory_minimum_strength']}`",
+                    (
+                        f"- Blocking minimum: `{field['blocking_minimum_strength']}`"
+                        if field.get("blocking_minimum_strength")
+                        else "- Blocking minimum: none"
+                    ),
                     f"- Gap reason: {field['gap_reason']}",
                     f"- Source ref: `{field['source_ref']}`" if field.get("source_ref") else "- Source ref: none",
                     (
                         f"- Workspace artifacts: {', '.join(f'`{artifact}`' for artifact in field['workspace_artifacts'])}"
                         if field["workspace_artifacts"]
                         else "- Workspace artifacts: none"
+                    ),
+                    f"- Blocking stage allowed: {'yes' if field['blocking_stage_allowed'] else 'no'}",
+                    f"- Blocking eligible: {'yes' if field['blocking_eligible'] else 'no'}",
+                    f"- Blocking gap: {'yes' if field['blocking_gap'] else 'no'}",
+                    (
+                        f"- Blocking reason: {field['blocking_reason']}"
+                        if field.get("blocking_reason")
+                        else "- Blocking reason: none"
                     ),
                     f"- Review routing required: {'yes' if field['review_routing_required'] else 'no'}",
                     "",
@@ -368,9 +452,12 @@ def main() -> None:
             {
                 "object_id": result["object_id"],
                 "evidence_at": result["evidence_at"],
+                "gate_mode": result["gate"]["mode"],
+                "gate_status": result["gate"]["status"],
                 "selected_field_count": result["summary"]["selected_field_count"],
                 "advisory_gap_count": result["summary"]["advisory_gap_count"],
                 "review_routing_required_count": result["summary"]["review_routing_required_count"],
+                "blocking_gap_count": result["summary"]["blocking_gap_count"],
                 "reports": {
                     "yaml": "reports/evidence_status.yaml",
                     "markdown": "reports/evidence_status.md",
@@ -380,6 +467,8 @@ def main() -> None:
             allow_unicode=True,
         )
     )
+    if result["gate"]["status"] == "failed":
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

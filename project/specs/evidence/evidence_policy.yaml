@@ -8,6 +8,8 @@ defaults:
   monitored_strictness:
     - S4
   advisory_minimum_strength: structured_ref
+  # Blocking is opt-in per field. Stage allowance alone must not create a blanket gate.
+  blocking_minimum_strength: workspace_artifact
   blocking_allowed_stages:
     - detailed_design
     - build_commission
@@ -23,5 +25,7 @@ defaults:
 field_overrides:
   fat_required:
     advisory_minimum_strength: workspace_artifact
+    blocking_enforced: true
   sat_required:
     advisory_minimum_strength: workspace_artifact
+    blocking_enforced: true

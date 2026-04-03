@@ -19,7 +19,7 @@ from intake.evidence_status import build_evidence_status_from_snapshot
 from intake.workspace_snapshot import build_workspace_snapshot
 from model_utils import load_yaml, resolve_project_root, write_yaml
 
-REVIEW_SCHEMA_VERSION = "0.1.0"
+REVIEW_SCHEMA_VERSION = "0.2.0"
 PRIORITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 SOURCE_KIND_ORDER = {"field": 0, "validator_issue": 1, "evidence_gap": 2}
 SKIPPED_VALIDATORS = {"role_assignments"}
@@ -103,11 +103,12 @@ def _derive_priority(
     routing_state: str,
     strictness: str | None = None,
     severity: str | None = None,
+    blocking_gap: bool = False,
 ) -> str:
     if source_kind == "validator_issue":
         priority = "critical" if severity in {"error", "critical"} else "high"
     elif source_kind == "evidence_gap":
-        priority = "medium"
+        priority = "critical" if blocking_gap else "medium"
     else:
         priority = _priority_from_strictness(strictness)
 
@@ -117,7 +118,12 @@ def _derive_priority(
     return priority
 
 
-def _derive_next_action(source_kind: str, routing_state: str) -> str:
+def _derive_next_action(
+    source_kind: str,
+    routing_state: str,
+    *,
+    blocking_gap: bool = False,
+) -> str:
     if routing_state == "unassigned_owner":
         return "Assign the owner role in role_assignments.yaml before review can proceed."
     if routing_state == "second_reviewer_required":
@@ -127,6 +133,8 @@ def _derive_next_action(source_kind: str, routing_state: str) -> str:
     if source_kind == "validator_issue":
         return "Review the validator finding and update the implicated field or design assumption."
     if source_kind == "evidence_gap":
+        if blocking_gap:
+            return "Attach the required workspace artifact evidence before the stage gate can pass."
         return "Attach or reference supporting evidence in the workspace sources."
     return "Answer the field in intake inputs and regenerate the derived workspace outputs."
 
@@ -183,6 +191,7 @@ def _make_review_item(
     severity: str | None = None,
     validator: str | None = None,
     message: str | None = None,
+    item_overrides: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     missing_routing_keys = REQUIRED_ROUTING_KEYS - set(routing)
     if missing_routing_keys:
@@ -194,8 +203,9 @@ def _make_review_item(
         field_context["related_field_ids"] = list(related_field_ids)
     if field_context_overrides:
         field_context.update(field_context_overrides)
+    blocking_gap = bool(item_overrides and item_overrides.get("blocking_gap"))
 
-    return {
+    item = {
         "review_item_id": _stable_item_id(
             object_id,
             source_kind,
@@ -211,8 +221,13 @@ def _make_review_item(
             routing_state=routing["routing_state"],
             strictness=field_context.get("strictness"),
             severity=severity,
+            blocking_gap=blocking_gap,
         ),
-        "next_action": _derive_next_action(source_kind, routing["routing_state"]),
+        "next_action": _derive_next_action(
+            source_kind,
+            routing["routing_state"],
+            blocking_gap=blocking_gap,
+        ),
         "primary_role": routing["primary_role"],
         "primary_person": routing["primary_person"],
         "secondary_roles": routing["secondary_roles"],
@@ -224,6 +239,9 @@ def _make_review_item(
         "severity": severity,
         "message": message,
     }
+    if item_overrides:
+        item.update(item_overrides)
+    return item
 
 
 def _routing_from_field_record(field_record: dict[str, Any]) -> dict[str, Any]:
@@ -524,6 +542,8 @@ def _build_evidence_gap_items(
         field_record = field_records[evidence_field["field_id"]]
         routing = _routing_from_field_record(field_record)
         review_reasons = [evidence_field["gap_reason"] or "missing evidence"]
+        if evidence_field["blocking_gap"]:
+            review_reasons.insert(0, "blocking evidence gap")
         if field_record.get("strictness") == "S4":
             review_reasons.append("stage-gate critical field")
 
@@ -539,6 +559,16 @@ def _build_evidence_gap_items(
                 field_context_overrides={
                     "comment": field_record.get("comment"),
                     "source_ref": evidence_field.get("source_ref"),
+                },
+                item_overrides={
+                    "evidence_strength": evidence_field["evidence_strength"],
+                    "advisory_minimum_strength": evidence_field["advisory_minimum_strength"],
+                    "blocking_stage_allowed": evidence_field["blocking_stage_allowed"],
+                    "blocking_allowlisted": evidence_field["blocking_allowlisted"],
+                    "blocking_minimum_strength": evidence_field["blocking_minimum_strength"],
+                    "blocking_eligible": evidence_field["blocking_eligible"],
+                    "blocking_gap": evidence_field["blocking_gap"],
+                    "blocking_reason": evidence_field["blocking_reason"],
                 },
             )
         )
@@ -659,6 +689,33 @@ def _render_item_block(item: dict[str, Any]) -> list[str]:
             f"- Validator: `{item['validator']}` / `{item['severity']}`"
         )
         lines.append(f"- Validator message: {item['message']}")
+
+    if item["source_kind"] == "evidence_gap":
+        lines.extend(
+            [
+                (
+                    f"- Evidence strength: `{item['evidence_strength']}`"
+                    if item.get("evidence_strength")
+                    else "- Evidence strength: none"
+                ),
+                (
+                    f"- Advisory minimum: `{item['advisory_minimum_strength']}`"
+                    if item.get("advisory_minimum_strength")
+                    else "- Advisory minimum: none"
+                ),
+                (
+                    f"- Blocking minimum: `{item['blocking_minimum_strength']}`"
+                    if item.get("blocking_minimum_strength")
+                    else "- Blocking minimum: none"
+                ),
+                f"- Blocking stage allowed: {'yes' if item.get('blocking_stage_allowed') else 'no'}",
+                f"- Blocking allowlisted: {'yes' if item.get('blocking_allowlisted') else 'no'}",
+                f"- Blocking eligible: {'yes' if item.get('blocking_eligible') else 'no'}",
+                f"- Blocking gap: {'yes' if item.get('blocking_gap') else 'no'}",
+            ]
+        )
+        if item.get("blocking_reason"):
+            lines.append(f"- Blocking reason: {item['blocking_reason']}")
 
     if item.get("source_ref"):
         lines.append(f"- Source ref: `{item['source_ref']}`")
