@@ -45,6 +45,16 @@
 - `review` показує, кому належить наступна дія;
 - `evidence` показує, чи достатньо підтверджень для пізньої стадії.
 
+Є ще одна важлива практична деталь на старті. Поточний `v1` не вміє створювати новий workspace "з нуля" лише за назвою папки. Команда `generate` працює всередині вже існуючої робочої папки й очікує, що в ній уже є щонайменше `role_assignments.yaml`.
+
+Якщо ви починаєте новий об'єкт, спочатку потрібно:
+
+- створити папку workspace;
+- покласти туди `role_assignments.yaml`;
+- тільки після цього запускати `project/intake generate ...`.
+
+Якщо цього файлу або самої папки немає, команда не зможе почати генерацію workbook-ів.
+
 ## Що Зазвичай Вважається Підтвердженням
 
 У цьому workflow підтвердженням може бути не лише текстове пояснення, а й конкретний файл або документ, який лежить у workspace чи на який є структуроване посилання.
@@ -91,7 +101,7 @@
 
 | Команда | Коли запускати | Що вона робить | Що записує |
 | --- | --- | --- | --- |
-| `project/intake generate <workspace> [--date ...] [--preserve-responses]` | коли створюєте workspace або перебудовуєте workbook layout | генерує role-based workbooks і guide files | `intake/generated/*.guide.md`, `intake/responses/*.xlsx` |
+| `project/intake generate <workspace> [--date ...] [--preserve-responses]` | коли workspace уже існує і треба згенерувати або перебудувати role-based workbooks | генерує role-based workbooks і guide files | `intake/generated/*.guide.md`, `intake/responses/*.xlsx` |
 | `project/intake compile <workspace> [--date ...]` | коли відповіді вже внесені і треба отримати canonical payload | компілює workbook answers у canonical questionnaire і compile status | `questionnaire.yaml`, `intake/responses/*.response.yaml`, `reports/intake_status.*`, manifest |
 | `project/intake preview <workspace> [--date ...]` | коли треба зрозуміти, чи workspace baseline-ready | перевиконує compile + pipeline через shared snapshot і дає короткий readiness summary | pipeline reports, `reports/preview_status.*`, manifest |
 | `project/intake review <workspace> [--date ...]` | коли треба роздати unresolved fields, validator findings і evidence gaps по ролях і людях | будує reviewer registry та routed review packets | `reports/reviewer_registry.*`, `reports/review_packet.*`, manifest |
@@ -103,11 +113,21 @@
 
 ### 1. Підготуйте або оновіть workbooks
 
+Перед першим запуском `generate` переконайтеся, що робоча папка об'єкта вже створена і в ній є `role_assignments.yaml`.
+
+Поточний `v1` не bootstrap-ить порожній workspace автоматично. Тобто `generate` не створює нову папку об'єкта сам і не вигадує початковий `role_assignments.yaml` без вашої участі.
+
 Якщо workspace новий:
 
 ```bash
 project/intake generate project/examples/my_object --date 2026-04-02
 ```
+
+На практиці для нового workspace послідовність зараз така:
+
+1. створити папку об'єкта;
+2. покласти в неї `role_assignments.yaml`;
+3. після цього запускати `generate`.
 
 Якщо структура questionnaire змінилася, але вже є заповнені таблиці:
 
