@@ -53,3 +53,16 @@ def test_execute_pipeline_requires_manifest_date_source(tmp_path):
         execute_pipeline(workspace / "questionnaire.yaml")
 
     assert not (workspace / "reports" / "workspace.manifest.yaml").exists()
+
+
+def test_execute_pipeline_skips_manifest_contract_when_write_outputs_disabled(tmp_path):
+    workspace = copy_workspace(tmp_path, HAPPY_PATH)
+    (workspace / "reports" / "intake_status.yaml").unlink()
+
+    result = execute_pipeline(
+        workspace / "questionnaire.yaml",
+        write_outputs=False,
+    )
+
+    assert result["validation"]["status"] == "ok"
+    assert not (workspace / "reports" / "workspace.manifest.yaml").exists()

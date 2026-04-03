@@ -1,3 +1,4 @@
+"""Maintain a workspace-local manifest for generated intake artifacts."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,8 +15,10 @@ def _relative_manifest_path(path: Path, workspace: Path) -> str:
     resolved_workspace = workspace.resolve()
     try:
         return str(resolved_path.relative_to(resolved_workspace))
-    except ValueError:
-        return str(resolved_path)
+    except ValueError as exc:
+        raise ValueError(
+            f"Workspace manifest artifacts must stay under workspace: {resolved_path}"
+        ) from exc
 
 
 def _artifact_path_exists(workspace: Path, path_str: str) -> bool:
@@ -40,6 +43,12 @@ def _normalize_artifact(
         "format": artifact["format"],
         "path": _relative_manifest_path(Path(artifact["path"]), workspace),
     }
+    if normalized["path"] == "reports/workspace.manifest.yaml":
+        raise ValueError("Workspace manifest artifacts must not register workspace.manifest.yaml")
+    if not _artifact_path_exists(workspace, normalized["path"]):
+        raise FileNotFoundError(
+            f"Workspace manifest artifact path does not exist: {normalized['path']}"
+        )
 
     for key in sorted(set(artifact) - {"path"}):
         if key in normalized:

@@ -172,8 +172,8 @@ def execute_pipeline(
         ]
 
     resolved_output_dir = output_dir or default_output_dir(questionnaire_path)
-    manifest_date_used = _resolve_manifest_date_used(questionnaire_path, questionnaire)
     if write_outputs:
+        manifest_date_used = _resolve_manifest_date_used(questionnaire_path, questionnaire)
         resolved_output_dir.mkdir(parents=True, exist_ok=True)
 
         compiled_output = dict(requirements)

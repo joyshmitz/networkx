@@ -276,3 +276,53 @@ def test_workspace_manifest_artifact_requires_core_keys(tmp_path):
             workspace,
             {"path": workspace / "questionnaire.yaml"},
         )
+
+
+def test_workspace_manifest_rejects_artifacts_outside_workspace(tmp_path):
+    workspace = copy_workspace(tmp_path, HAPPY_PATH)
+    external_path = tmp_path / "outside.md"
+    external_path.write_text("# external\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must stay under workspace"):
+        _normalize_artifact(
+            workspace,
+            {
+                "producer": "review",
+                "artifact_type": "review_packet_person",
+                "format": "markdown",
+                "path": external_path,
+            },
+        )
+
+
+def test_workspace_manifest_requires_new_artifacts_to_exist(tmp_path):
+    workspace = copy_workspace(tmp_path, HAPPY_PATH)
+
+    with pytest.raises(FileNotFoundError, match="does not exist"):
+        _normalize_artifact(
+            workspace,
+            {
+                "producer": "review",
+                "artifact_type": "review_packet_person",
+                "format": "markdown",
+                "path": workspace / "reports" / "review_packet.missing.md",
+            },
+        )
+
+
+def test_workspace_manifest_rejects_self_referential_artifact(tmp_path):
+    workspace = copy_workspace(tmp_path, HAPPY_PATH)
+    manifest_path = workspace / "reports" / "workspace.manifest.yaml"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text("schema_version: 0.1.0\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must not register workspace.manifest.yaml"):
+        _normalize_artifact(
+            workspace,
+            {
+                "producer": "compile",
+                "artifact_type": "workspace_manifest",
+                "format": "yaml",
+                "path": manifest_path,
+            },
+        )
