@@ -28,8 +28,9 @@
 ## Структура
 
 - `docs/methodology/` — правила, boundaries, handoff contracts;
+- `docs/plans/PLAN_HUMAN_INTAKE_LAYER_V1.md` — active forward plan for remaining intake v1 work;
 - `docs/decisions/` — decision log;
-- `docs/reviews/` — зовнішні architecture reviews і corrective feedback;
+- `docs/reviews/` — archival external reviews, release notes, and corrective feedback history;
 - `specs/` — декларативні YAML inputs;
 - `src/` — compiler / validators / reports;
 - `examples/` — sample objects.
@@ -77,6 +78,7 @@ Canonical intake/runtime commands:
 ```bash
 PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py project/examples/sample_object_01 --date 2026-04-02
 PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py project/examples/sample_object_01 --date 2026-04-02
+PYTHONPATH=. .venv/bin/python project/src/intake/preview_status.py project/examples/sample_object_01 --date 2026-04-02
 PYTHONPATH=. .venv/bin/python project/src/run_pipeline.py project/examples/sample_object_01/questionnaire.yaml
 ```
 
@@ -85,6 +87,7 @@ Canonical operator-facing surface:
 ```bash
 project/intake generate project/examples/my_object --date 2026-04-02
 project/intake compile project/examples/my_object --date 2026-04-02
+project/intake preview project/examples/my_object --date 2026-04-02
 project/intake verify
 project/intake demo happy
 project/intake demo stress
@@ -94,6 +97,7 @@ Operator surface rules:
 
 - prefer `project/intake ...` for coordinator/operator usage;
 - raw `PYTHONPATH=. .venv/bin/python ...` commands remain the execution contract underneath;
+- `preview` recompiles the workspace, reruns pipeline outputs into `reports/`, and writes `reports/preview_status.yaml` + `reports/preview_status.md`;
 - `demo` replays checked-in exemplars in a temporary copy, so it does not rewrite tracked files;
 - `demo happy` must succeed;
 - `demo stress` must end in the expected domain validation failure profile.
