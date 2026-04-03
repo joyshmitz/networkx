@@ -15,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from intake.workspace_snapshot import build_workspace_snapshot
+from intake.workspace_manifest import refresh_workspace_manifest
 from model_utils import write_yaml
 
 
@@ -162,6 +163,25 @@ def preview_workspace(
     reports_dir.mkdir(parents=True, exist_ok=True)
     write_yaml(reports_dir / "preview_status.yaml", payload)
     _write_preview_status_md(reports_dir / "preview_status.md", payload)
+    refresh_workspace_manifest(
+        Path(snapshot["workspace"]),
+        object_id=snapshot["object_id"],
+        date_used=snapshot["date_used"],
+        artifacts=[
+            {
+                "producer": "preview",
+                "artifact_type": "preview_status",
+                "format": "yaml",
+                "path": reports_dir / "preview_status.yaml",
+            },
+            {
+                "producer": "preview",
+                "artifact_type": "preview_status",
+                "format": "markdown",
+                "path": reports_dir / "preview_status.md",
+            },
+        ],
+    )
     return payload
 
 

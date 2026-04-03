@@ -16,6 +16,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from intake.workspace_snapshot import build_workspace_snapshot
+from intake.workspace_manifest import refresh_workspace_manifest
 from model_utils import load_yaml, resolve_project_root, write_yaml
 
 EVIDENCE_SCHEMA_VERSION = "0.2.0"
@@ -448,6 +449,25 @@ def evidence_workspace(
     reports_dir.mkdir(parents=True, exist_ok=True)
     write_yaml(reports_dir / "evidence_status.yaml", payload)
     _write_evidence_status_md(reports_dir / "evidence_status.md", payload)
+    refresh_workspace_manifest(
+        Path(snapshot["workspace"]),
+        object_id=snapshot["object_id"],
+        date_used=snapshot["date_used"],
+        artifacts=[
+            {
+                "producer": "evidence",
+                "artifact_type": "evidence_status",
+                "format": "yaml",
+                "path": reports_dir / "evidence_status.yaml",
+            },
+            {
+                "producer": "evidence",
+                "artifact_type": "evidence_status",
+                "format": "markdown",
+                "path": reports_dir / "evidence_status.md",
+            },
+        ],
+    )
     return payload
 
 

@@ -11,6 +11,7 @@ from compiler.build_requirements_model import (
     default_requirements_schema_path,
     validate_requirements_model,
 )
+from intake.workspace_manifest import refresh_workspace_manifest
 from compiler.compile_graphs import compile_all_graphs, summarize_graph_bundle
 from model_utils import load_yaml, write_yaml
 from reports.generate_handoff_matrix import generate_handoff_matrix
@@ -165,6 +166,50 @@ def execute_pipeline(
         )
         (resolved_output_dir / "handoff_matrix.md").write_text(
             generate_handoff_matrix(requirements), encoding="utf-8"
+        )
+
+        refresh_workspace_manifest(
+            questionnaire_path.parent,
+            object_id=requirements.get("metadata", {}).get("object_id") or questionnaire_path.parent.name,
+            date_used=str(questionnaire.get("metadata", {}).get("compiled_on") or "unknown"),
+            artifacts=[
+                {
+                    "producer": "pipeline",
+                    "artifact_type": "requirements_compiled",
+                    "format": "yaml",
+                    "path": resolved_output_dir / "requirements.compiled.yaml",
+                },
+                {
+                    "producer": "pipeline",
+                    "artifact_type": "graphs_summary",
+                    "format": "yaml",
+                    "path": resolved_output_dir / "graphs.summary.yaml",
+                },
+                {
+                    "producer": "pipeline",
+                    "artifact_type": "validation_summary",
+                    "format": "yaml",
+                    "path": resolved_output_dir / "validation.summary.yaml",
+                },
+                {
+                    "producer": "pipeline",
+                    "artifact_type": "pipeline_manifest",
+                    "format": "yaml",
+                    "path": resolved_output_dir / "pipeline.manifest.yaml",
+                },
+                {
+                    "producer": "pipeline",
+                    "artifact_type": "network_volume_summary",
+                    "format": "markdown",
+                    "path": resolved_output_dir / "network_volume_summary.md",
+                },
+                {
+                    "producer": "pipeline",
+                    "artifact_type": "handoff_matrix",
+                    "format": "markdown",
+                    "path": resolved_output_dir / "handoff_matrix.md",
+                },
+            ],
         )
 
     return {

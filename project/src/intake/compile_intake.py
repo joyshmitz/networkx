@@ -16,6 +16,8 @@ from typing import Any
 import yaml
 from openpyxl import load_workbook
 
+from intake.workspace_manifest import refresh_workspace_manifest
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -611,6 +613,32 @@ def compile_intake(
         workspace_path / "reports" / "intake_status.md",
         object_id, all_fields, person_fields,
         role_data, field_index, field_to_section, compiled_on,
+    )
+
+    refresh_workspace_manifest(
+        workspace_path,
+        object_id=object_id,
+        date_used=compiled_on.isoformat(),
+        artifacts=[
+            {
+                "producer": "compile",
+                "artifact_type": "questionnaire",
+                "format": "yaml",
+                "path": workspace_path / "questionnaire.yaml",
+            },
+            {
+                "producer": "compile",
+                "artifact_type": "intake_status",
+                "format": "yaml",
+                "path": workspace_path / "reports" / "intake_status.yaml",
+            },
+            {
+                "producer": "compile",
+                "artifact_type": "intake_status",
+                "format": "markdown",
+                "path": workspace_path / "reports" / "intake_status.md",
+            },
+        ],
     )
 
     # --- 7. Print warnings ---

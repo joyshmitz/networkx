@@ -16,6 +16,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from intake.evidence_status import build_evidence_status_from_snapshot
+from intake.workspace_manifest import refresh_workspace_manifest
 from intake.workspace_snapshot import build_workspace_snapshot
 from model_utils import load_yaml, resolve_project_root, write_yaml
 
@@ -928,6 +929,46 @@ def review_workspace(
             secondary_items=grouped_items[reviewer["person_id"]]["secondary_items"],
             registry=registry,
         )
+
+    review_artifacts: list[dict[str, Any]] = [
+        {
+            "producer": "review",
+            "artifact_type": "reviewer_registry",
+            "format": "yaml",
+            "path": reports_dir / "reviewer_registry.yaml",
+        },
+        {
+            "producer": "review",
+            "artifact_type": "reviewer_registry",
+            "format": "markdown",
+            "path": reports_dir / "reviewer_registry.md",
+        },
+        {
+            "producer": "review",
+            "artifact_type": "review_packet_coordinator",
+            "format": "markdown",
+            "path": reports_dir / "review_packet._coordinator.md",
+        },
+    ]
+    for reviewer in registry["reviewers"]:
+        if not reviewer["packet_path"]:
+            continue
+        review_artifacts.append(
+            {
+                "producer": "review",
+                "artifact_type": "review_packet_person",
+                "format": "markdown",
+                "path": reports_dir / f"review_packet.{reviewer['person_id']}.md",
+                "person_id": reviewer["person_id"],
+            }
+        )
+
+    refresh_workspace_manifest(
+        Path(snapshot["workspace"]),
+        object_id=snapshot["object_id"],
+        date_used=snapshot["date_used"],
+        artifacts=review_artifacts,
+    )
 
     return registry
 
