@@ -1,26 +1,48 @@
 # Human-Facing Intake Layer v1
 
+> **ARCHIVAL STATUS:** fulfilled execution plan.  
+> `v1` exit condition was satisfied on `2026-04-03`.  
+> Current operator guidance lives in `project/docs/methodology/INTAKE_OPERATOR_GUIDE.md`.  
+> Formal milestone summary lives in `project/docs/reviews/V1_CLOSEOUT_2026-04-03.md`.
+
 **Дата:** 2026-04-02  
 **Гілка:** `research/methodology-foundation-clean`  
-**Статус:** active forward plan  
-**Supersedes as active plan:** `project/docs/plans/PLAN_HUMAN_INTAKE_LAYER.md`  
+**Статус:** fulfilled; historical execution record  
+**Fulfilled on:** 2026-04-03  
+**Superseded prior active plan:** `project/docs/plans/PLAN_HUMAN_INTAKE_LAYER.md`  
 **Historical release baseline:** `project/docs/reviews/V0_RELEASE_2026-04-02.md`
 
 ## Призначення
 
-Цей документ є активним forward plan для наступної хвилі розвитку human-facing intake layer після формального `v0` release і після materialized `v1` slices:
+Цей документ був активним forward plan для наступної хвилі розвитку human-facing intake layer після формального `v0` release і після materialized `v1` slices:
 
 - `--preserve-responses`
 - `preview / baseline_ready`
 
-План існує для того, щоб:
+Він збережений у repo для traceability і показує, у якій послідовності був виконаний `v1`.
+
+План існував для того, щоб:
 
 - зафіксувати точний порядок наступних `v1` slice-ів;
 - прибрати двозначність між backlog і execution order;
 - задати спільний architectural contract перед новими human-workflow features;
 - не допустити scope creep у notifications / external automation / нові intake modes.
 
-## Поточний Baseline
+## Close-Out Summary
+
+На момент close-out цей план вважається виконаним у повному обсязі.
+
+Підсумковий `v1` baseline включає:
+
+- shared workspace snapshot як один authoritative upstream layer;
+- operator-facing `preview`, `review`, і `evidence` поверх спільного snapshot;
+- derived review packets і routed reviewer registry;
+- advisory evidence status;
+- narrow blocking evidence enforcement у `project/intake evidence`;
+- deterministic generated artifact index у `reports/workspace.manifest.yaml`;
+- останній verify baseline: `project/intake verify` -> `284 passed`.
+
+## Baseline at Plan Start
 
 На цій гілці вже існує executable workflow з такими властивостями:
 
@@ -468,3 +490,5 @@ This `v1` plan is considered fulfilled when:
 - initial blocking evidence enforcement exists in narrow tested scope;
 - full branch verify remains green;
 - generated artifact contract remains deterministic and discoverable, and boundaries remain intact.
+
+Status at close-out: satisfied on `2026-04-03`.
