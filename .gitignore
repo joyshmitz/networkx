@@ -59,8 +59,9 @@ networkx.egg-info/
 networkx-dev/
 
 # uv lockfile
-# This repository is maintained as a library with generated requirements files,
-# not as a uv-managed application or workspace.
+# This repository now has both the root library package and the project/ tooling
+# app, but the root uv lockfile only reflects the root pyproject.toml. Until the
+# app is modeled as its own uv project or workspace member, uv.lock is partial.
 uv.lock
 
 # Benchmark products
