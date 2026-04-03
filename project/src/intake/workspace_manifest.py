@@ -85,6 +85,12 @@ def refresh_workspace_manifest(
     existing_payload: dict[str, Any] = {}
     if manifest_path.exists():
         existing_payload = load_yaml(manifest_path)
+        existing_object_id = existing_payload.get("object_id")
+        if existing_object_id and existing_object_id != object_id:
+            raise ValueError(
+                f"Workspace manifest object_id mismatch: existing={existing_object_id!r} "
+                f"new={object_id!r}"
+            )
 
     normalized_artifacts = [
         _normalize_artifact(workspace, artifact)

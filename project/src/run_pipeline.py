@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -94,6 +95,42 @@ def resolve_role_assignments(
     return None
 
 
+def _resolve_manifest_date_used(
+    questionnaire_path: Path,
+    questionnaire: dict[str, Any],
+) -> str:
+    intake_status_path = questionnaire_path.parent / "reports" / "intake_status.yaml"
+    candidate_values: list[Any] = []
+    if intake_status_path.exists():
+        intake_status = load_yaml(intake_status_path) or {}
+        candidate_values.append(intake_status.get("compiled_at"))
+
+    metadata = questionnaire.get("metadata", {}) if isinstance(questionnaire, dict) else {}
+    candidate_values.extend(
+        [
+            metadata.get("compiled_at"),
+            metadata.get("compiled_on"),
+        ]
+    )
+
+    for candidate in candidate_values:
+        if candidate in {None, ""}:
+            continue
+        date_used = str(candidate)
+        try:
+            date.fromisoformat(date_used)
+        except ValueError as exc:
+            raise ValueError(
+                f"Pipeline manifest date_used must be an ISO date, got {date_used!r}."
+            ) from exc
+        return date_used
+
+    raise ValueError(
+        "Pipeline manifest date_used requires reports/intake_status.yaml compiled_at "
+        "or questionnaire metadata compiled_at/compiled_on."
+    )
+
+
 def execute_pipeline(
     questionnaire_path: Path,
     schema: Path | None = None,
@@ -135,6 +172,7 @@ def execute_pipeline(
         ]
 
     resolved_output_dir = output_dir or default_output_dir(questionnaire_path)
+    manifest_date_used = _resolve_manifest_date_used(questionnaire_path, questionnaire)
     if write_outputs:
         resolved_output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -171,7 +209,7 @@ def execute_pipeline(
         refresh_workspace_manifest(
             questionnaire_path.parent,
             object_id=requirements.get("metadata", {}).get("object_id") or questionnaire_path.parent.name,
-            date_used=str(questionnaire.get("metadata", {}).get("compiled_on") or "unknown"),
+            date_used=manifest_date_used,
             artifacts=[
                 {
                     "producer": "pipeline",
