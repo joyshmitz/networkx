@@ -1,64 +1,99 @@
 # Network Methodology Sandbox
 
-Цей каталог ізолює methodology + tooling шар від core коду `networkx`.
+`project/` ізолює human-facing intake workflow, methodology contracts і NetworkX-backed analysis tooling від upstream коду `networkx`. Саме тут role-based questionnaire intake перетворюється на compiled object profile, normalized requirements model, routed review packets, evidence status і derived reports для handoff.
 
-## Призначення
+## Поточний Стан
 
-- зафіксувати object-first методологію;
-- описати декларативні inputs;
-- підготувати compile -> validate -> report loop поверх NetworkX;
-- не змішувати requirements model із final configs.
+Human-facing intake layer `v1` завершений на гілці `research/methodology-foundation-clean`.
 
-## Canonical Model
+Поточний baseline включає:
 
-- `v2` questionnaire/dictionary/mapping є canonical contract для нового skeleton;
-- `v1` файли збережені лише як deprecated migration reference;
-- `NetworkX` тут analysis engine, а не source of truth;
-- source of truth живе у YAML / Markdown contracts.
+- стабільну operator surface через `project/intake`;
+- детерміновану поведінку `generate`, `compile` і `preview` з fixed-date support;
+- routed review packets для координаторів і specialist reviewers;
+- advisory evidence status плюс narrow blocking evidence gate;
+- generated artifact index у `reports/workspace.manifest.yaml`;
+- останній verification baseline: `project/intake verify` -> `284 passed`.
 
-## Поточний фокус
+## З Чого Почати
 
-Фаза 1:
+| Якщо вам потрібно... | Почніть із цього документа |
+| --- | --- |
+| щоденно вести intake workspace | `docs/methodology/INTAKE_OPERATOR_GUIDE.md` |
+| зрозуміти workflow між ролями та stages | `docs/methodology/QUESTIONNAIRE_WORKFLOW.md` |
+| зрозуміти ownership і review responsibilities | `docs/methodology/ROLE_MAP.md` |
+| зрозуміти methodology boundaries і human interaction rules | `docs/methodology/HUMAN_INTERACTION_MODEL.md` |
+| подивитися, що саме доставив `v1` і що лишилося поза scope | `docs/reviews/V1_CLOSEOUT_2026-04-03.md` |
+| переглянути historical plans і review history | `docs/plans/` і `docs/reviews/` |
 
-- зафіксувати markdown-ядро методології;
-- закласти YAML dictionary / schema foundation;
-- підготувати skeleton Python pipeline;
-- дати один sample object для end-to-end проходу.
+## Що Є В Каталозі
 
-## Структура
+| Розділ | Призначення |
+| --- | --- |
+| `docs/methodology/` | human workflow, role model, module boundaries, operator guidance |
+| `docs/plans/` | historical execution plans і planning records |
+| `docs/reviews/` | historical release notes, review briefs, corrective follow-ups, close-out records |
+| `specs/` | declarative questionnaire, dictionary, evidence, review і requirements contracts |
+| `src/` | compilers, validators, report generators, intake commands і shared data layers |
+| `examples/` | checked-in example workspaces для happy-path і stress-path verification |
 
-- `docs/methodology/` — правила, boundaries, handoff contracts;
-- `docs/plans/PLAN_HUMAN_INTAKE_LAYER_V1.md` — active forward plan for remaining intake v1 work;
-- `docs/decisions/` — decision log;
-- `docs/reviews/` — archival external reviews, release notes, and corrective feedback history;
-- `specs/` — декларативні YAML inputs;
-- `src/` — compiler / validators / reports;
-- `examples/` — sample objects.
+## Операторська Поверхня
 
-## Нові шари skeleton
+Канонічна operator-facing поверхня проходить через shell wrapper `project/intake`.
 
-- `docs/methodology/HUMAN_INTERACTION_MODEL.md` — як questionnaire живе між ролями;
-- `docs/methodology/ROLE_MAP.md` — хто власник яких відповідей і хто що рев'ює;
-- `docs/methodology/QUESTIONNAIRE_WORKFLOW.md` — stage-gated workflow від intake до as-built;
-- `docs/methodology/IMPLEMENTATION_MAPPING.md` — як поля переходять у downstream packs;
-- `specs/questionnaire/core_questionnaire_v2.yaml` — object-first core questionnaire v2;
-- `specs/questionnaire/role_views.yaml` — role-based views поверх canonical question bank;
-- `specs/questionnaire/role_assignments.template.yaml` — як кілька ролей агрегуються по реальних людях;
-- `specs/dictionary/questionnaire_v2_fields.yaml` — v2 field contract;
-- `specs/dictionary/questionnaire_v2_values.yaml` — controlled vocabulary для v2;
-- `specs/questionnaire/annex_*.yaml` — optional annexes з explicit relaxed contract;
-- `specs/mappings/implementation_mapping.yaml` — machine-readable mapping field -> artifact.
+| Команда | Коли зазвичай використовується | Основні outputs |
+| --- | --- | --- |
+| `project/intake generate <workspace> [--date ...] [--preserve-responses]` | підготувати або оновити role-based workbooks і guides | `intake/generated/*.guide.md`, `intake/responses/*.xlsx` |
+| `project/intake compile <workspace> [--date ...]` | скомпілювати workbook answers у canonical artifacts | `questionnaire.yaml`, `intake/responses/*.response.yaml`, `reports/intake_status.*` |
+| `project/intake preview <workspace> [--date ...]` | вирішити, чи workspace уже baseline-ready | pipeline reports під `reports/`, `reports/preview_status.*`, `reports/workspace.manifest.yaml` |
+| `project/intake review <workspace> [--date ...]` | розкласти unresolved items і findings по ролях та людях | `reports/reviewer_registry.*`, `reports/review_packet.*`, `reports/workspace.manifest.yaml` |
+| `project/intake evidence <workspace> [--date ...]` | оцінити evidence strength і, де це дозволено policy, застосувати narrow stage gate | `reports/evidence_status.*`, `reports/workspace.manifest.yaml` |
+| `project/intake verify [pytest args...]` | прогнати regression suite | лише test output |
+| `project/intake demo happy|stress [--date ...]` | відтворити checked-in exemplars у temporary copy | лише temporary workspace |
 
-## Робочий принцип
+На практиці важливі два правила:
 
-NetworkX тут використовується як analysis engine.
-Source of truth живе у YAML / Markdown.
+- `preview` відповідає за readiness summary і перезаписує generated reports, але не застосовує blocking evidence gate.
+- `evidence` є єдиною operator command, яка може завершитися non-zero через missing evidence, і навіть це відбувається лише в narrow, tested blocking scope, описаному в operator guide.
+
+## Модель Workspace
+
+Один workspace містить три типи артефактів.
+
+### 1. Людські input-артефакти
+
+- `role_assignments.yaml`
+- `intake/responses/*.xlsx`
+
+Це матеріали, які люди справді заповнюють і підтримують під час intake.
+
+### 2. Compiled canonical artifacts
+
+- `questionnaire.yaml`
+- `intake/responses/*.response.yaml`
+- `reports/intake_status.yaml`
+- `reports/intake_status.md`
+
+Ці файли фіксують normalized, machine-readable стан зібраних відповідей.
+
+### 3. Derived reports
+
+- pipeline reports such as `requirements.compiled.yaml`, `graphs.summary.yaml`, and `validation.summary.yaml`
+- `reports/preview_status.yaml` and `reports/preview_status.md`
+- `reports/reviewer_registry.yaml`, `reports/reviewer_registry.md`, and `reports/review_packet.*.md`
+- `reports/evidence_status.yaml` and `reports/evidence_status.md`
+- `reports/workspace.manifest.yaml`
+
+Derived reports потрібні для review, coordination і downstream work. Це generated artifacts, а не ще один editable source of truth.
 
 ## Execution Contract
 
-- working directory: repository root;
-- interpreter: `.venv/bin/python`;
-- `PYTHONPATH=.` для тестів і CLI.
+Команди слід запускати з кореня репозиторію.
+
+- interpreter: `.venv/bin/python`
+- test/runtime import contract: `PYTHONPATH=.`
+- coordinator-facing surface: `project/intake ...`
+- raw Python commands лишаються underlying execution contract для maintainers і debugging
 
 Bootstrap:
 
@@ -67,97 +102,29 @@ python3 -m venv .venv
 .venv/bin/pip install -r project/requirements.txt jsonschema pytest
 ```
 
-Verify:
+Canonical verify:
 
 ```bash
-PYTHONPATH=. .venv/bin/python -m pytest project/tests -q
+project/intake verify
 ```
 
-Canonical intake/runtime commands:
+Raw command examples:
 
 ```bash
 PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py project/examples/sample_object_01 --date 2026-04-02
 PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py project/examples/sample_object_01 --date 2026-04-02
 PYTHONPATH=. .venv/bin/python project/src/intake/preview_status.py project/examples/sample_object_01 --date 2026-04-02
-PYTHONPATH=. .venv/bin/python project/src/run_pipeline.py project/examples/sample_object_01/questionnaire.yaml
+PYTHONPATH=. .venv/bin/python project/src/intake/review_packets.py project/examples/sample_object_01 --date 2026-04-02
+PYTHONPATH=. .venv/bin/python project/src/intake/evidence_status.py project/examples/sample_object_01 --date 2026-04-02
 ```
 
-Canonical operator-facing surface:
+## Правила Регенерації Та Overwrite
 
-```bash
-project/intake generate project/examples/my_object --date 2026-04-02
-project/intake compile project/examples/my_object --date 2026-04-02
-project/intake preview project/examples/my_object --date 2026-04-02
-project/intake verify
-project/intake demo happy
-project/intake demo stress
-```
+- використовуйте explicit `--date YYYY-MM-DD`, коли потрібна deterministic exemplar regeneration;
+- `generate --preserve-responses` оновлює workbook structure без втрати вже заповнених `E/F/G/H` cells;
+- `preview`, `review` і `evidence` можуть безпечно overwrite-ити власні generated outputs під `reports/`;
+- `demo happy` і `demo stress` працюють у temporary copy й не повинні переписувати tracked example workspaces.
 
-Operator surface rules:
+## Історичний Контекст
 
-- prefer `project/intake ...` for coordinator/operator usage;
-- raw `PYTHONPATH=. .venv/bin/python ...` commands remain the execution contract underneath;
-- `preview` recompiles the workspace, reruns pipeline outputs into `reports/`, and writes `reports/preview_status.yaml` + `reports/preview_status.md`;
-- `demo` replays checked-in exemplars in a temporary copy, so it does not rewrite tracked files;
-- `demo happy` must succeed;
-- `demo stress` must end in the expected domain validation failure profile.
-
-Regenerate without losing filled workbook cells:
-
-```bash
-project/intake generate project/examples/sample_object_01 --date 2026-04-02 --preserve-responses
-```
-
-`--preserve-responses` reuses existing workbook columns `E/F/G/H` by `field_id`, so answers survive regenerate even if a field moves to another person's sheet.
-
-## Intake Artifact Policy
-
-Tracked source-of-truth artifacts:
-
-- `role_assignments.yaml`
-- filled `*.response.yaml`
-- compiled `questionnaire.yaml`
-- `reports/intake_status.yaml`
-- `reports/intake_status.md`
-
-Demo artifacts:
-
-- `intake/responses/*.xlsx`
-- `intake/generated/*.guide.md`
-
-Golden/regression artifacts:
-
-- only stable, machine-comparable outputs used for regenerate-and-compare checks
-
-Deterministic regeneration rule:
-
-- checked-in intake exemplars and golden checks must pass explicit fixed `--date YYYY-MM-DD`;
-- date-only drift in tracked exemplars is not allowed;
-- regeneration drift is allowed only when source/spec/code changed intentionally.
-
-## Happy-Path Golden Contract
-
-Approved golden target: `project/examples/sample_object_01`
-
-Golden files for regenerate-and-compare:
-
-- `questionnaire.yaml`
-- `intake/generated/*.guide.md`
-- `intake/responses/*.xlsx`
-- `intake/responses/*.response.yaml`
-- `reports/intake_status.yaml`
-- `reports/intake_status.md`
-
-Regenerate procedure for Gate B:
-
-```bash
-PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py project/examples/sample_object_01 --date 2026-04-02
-PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py project/examples/sample_object_01 --date 2026-04-02
-```
-
-Golden comparison rules:
-
-- compare the approved golden files byte-for-byte;
-- no normalization is applied within the golden set;
-- `role_assignments.yaml` is a source input, not a regenerated golden output;
-- pipeline reports in `reports/requirements.compiled.yaml`, `graphs.summary.yaml`, `validation.summary.yaml`, `network_volume_summary.md`, `handoff_matrix.md`, and `pipeline.manifest.yaml` are excluded from Gate B and covered by roundtrip/pipeline verification instead.
+`v0` і `v1` plans лишаються в repository для traceability. Їх тепер слід читати як historical execution records, а не як active implementation backlog. Поточний operator-facing reference: `docs/methodology/INTAKE_OPERATOR_GUIDE.md`. Поточний milestone summary: `docs/reviews/V1_CLOSEOUT_2026-04-03.md`.
