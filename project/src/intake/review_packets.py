@@ -47,6 +47,16 @@ REQUIRED_ROUTING_KEYS = {
     "routing_state",
     "escalation_reason",
 }
+ALLOWED_ITEM_OVERRIDE_KEYS = {
+    "evidence_strength",
+    "advisory_minimum_strength",
+    "blocking_stage_allowed",
+    "blocking_allowlisted",
+    "blocking_minimum_strength",
+    "blocking_eligible",
+    "blocking_gap",
+    "blocking_reason",
+}
 
 
 def _parse_cli_date(raw: str) -> date:
@@ -204,6 +214,11 @@ def _make_review_item(
     if field_context_overrides:
         field_context.update(field_context_overrides)
     blocking_gap = bool(item_overrides and item_overrides.get("blocking_gap"))
+    if item_overrides:
+        unexpected_keys = set(item_overrides) - ALLOWED_ITEM_OVERRIDE_KEYS
+        if unexpected_keys:
+            unexpected = ", ".join(sorted(unexpected_keys))
+            raise KeyError(f"Unexpected review item override keys: {unexpected}")
 
     item = {
         "review_item_id": _stable_item_id(
@@ -240,7 +255,8 @@ def _make_review_item(
         "message": message,
     }
     if item_overrides:
-        item.update(item_overrides)
+        for key in sorted(item_overrides):
+            item[key] = item_overrides[key]
     return item
 
 

@@ -46,7 +46,28 @@ def _field_sort_key(field: dict[str, Any]) -> tuple[str, str]:
 
 
 def _load_evidence_policy(project_root: Path) -> dict[str, Any]:
-    return load_yaml(project_root / "specs" / "evidence" / "evidence_policy.yaml")
+    policy = load_yaml(project_root / "specs" / "evidence" / "evidence_policy.yaml")
+    defaults = dict(policy.get("defaults", {}))
+    if "blocking_enforced" in defaults:
+        raise ValueError(
+            "Evidence policy defaults must not define 'blocking_enforced'; "
+            "blocking must stay opt-in per field override."
+        )
+
+    for field_id, overrides in sorted(policy.get("field_overrides", {}).items()):
+        if not overrides.get("blocking_enforced"):
+            continue
+        merged = dict(defaults)
+        merged.update(overrides)
+        advisory_minimum = merged["advisory_minimum_strength"]
+        blocking_minimum = merged.get("blocking_minimum_strength", advisory_minimum)
+        if _strength_rank(advisory_minimum) < _strength_rank(blocking_minimum):
+            raise ValueError(
+                f"Field '{field_id}' has advisory_minimum_strength={advisory_minimum!r} "
+                f"weaker than blocking_minimum_strength={blocking_minimum!r}."
+            )
+
+    return policy
 
 
 def _strength_rank(strength: str) -> int:

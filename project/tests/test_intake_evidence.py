@@ -1,12 +1,20 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
 from openpyxl import load_workbook
 
-from intake.evidence_status import EVIDENCE_SCHEMA_VERSION, evidence_workspace
+from intake.evidence_status import (
+    EVIDENCE_SCHEMA_VERSION,
+    _load_evidence_policy,
+    build_evidence_status_from_snapshot,
+    evidence_workspace,
+    main as evidence_status_main,
+)
 from intake.review_packets import review_workspace
+from intake.workspace_snapshot import build_workspace_snapshot
 from model_utils import load_yaml
 
 from conftest import GOLDEN_DATE, copy_workspace, find_evidence_field, find_review_item
@@ -29,7 +37,7 @@ def _set_source_ref(workspace: Path, field_id: str, source_ref: str) -> None:
     raise AssertionError(f"Field {field_id!r} not found in any intake workbook")
 
 
-def _set_field_raw_value(workspace: Path, field_id: str, raw_value: str) -> None:
+def _set_field_raw_value(workspace: Path, field_id: str, raw_value: str | None) -> None:
     responses_dir = workspace / "intake" / "responses"
     for workbook_path in sorted(responses_dir.glob("*.xlsx")):
         workbook = load_workbook(workbook_path)
@@ -106,6 +114,53 @@ def test_evidence_status_blocking_applies_only_to_allowlisted_fields(tmp_path):
     assert set(result["gate"]["blocking_eligible_field_ids"]) == {"fat_required", "sat_required"}
 
 
+def test_evidence_policy_rejects_blocking_default_flag(tmp_path):
+    policy_dir = tmp_path / "specs" / "evidence"
+    policy_dir.mkdir(parents=True, exist_ok=True)
+    (policy_dir / "evidence_policy.yaml").write_text(
+        "\n".join(
+            [
+                "schema_version: 0.1.0",
+                "defaults:",
+                "  advisory_minimum_strength: structured_ref",
+                "  blocking_minimum_strength: workspace_artifact",
+                "  blocking_enforced: true",
+                "field_overrides: {}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="blocking_enforced"):
+        _load_evidence_policy(tmp_path)
+
+
+def test_evidence_policy_rejects_blocking_fields_with_weaker_advisory_threshold(tmp_path):
+    policy_dir = tmp_path / "specs" / "evidence"
+    policy_dir.mkdir(parents=True, exist_ok=True)
+    (policy_dir / "evidence_policy.yaml").write_text(
+        "\n".join(
+            [
+                "schema_version: 0.1.0",
+                "defaults:",
+                "  advisory_minimum_strength: structured_ref",
+                "  blocking_minimum_strength: workspace_artifact",
+                "  blocking_allowed_stages:",
+                "    - detailed_design",
+                "field_overrides:",
+                "  fat_required:",
+                "    blocking_enforced: true",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="fat_required"):
+        _load_evidence_policy(tmp_path)
+
+
 def test_evidence_status_derives_reference_structured_and_workspace_artifact(tmp_path):
     workspace = copy_workspace(tmp_path, HAPPY_PATH)
     _set_source_ref(workspace, "control_required", "site survey notebook 2026-04-02")
@@ -137,6 +192,34 @@ def test_evidence_status_derives_reference_structured_and_workspace_artifact(tmp
     assert sat_required["evidence_strength"] == "workspace_artifact"
     assert sat_required["advisory_gap"] is False
     assert sat_required["workspace_artifacts"] == ["evidence/sat_basis.md"]
+
+
+@pytest.mark.parametrize("project_stage", ["basic_design", "unexpected_stage", None])
+def test_evidence_status_stays_advisory_outside_blocking_stage_matrix(tmp_path, project_stage):
+    workspace = copy_workspace(tmp_path, HAPPY_PATH)
+    snapshot = build_workspace_snapshot(
+        workspace,
+        project_root=PROJECT_ROOT,
+        snapshot_on=GOLDEN_DATE,
+        write_pipeline_outputs=False,
+    )
+    snapshot["metadata"]["project_stage"] = project_stage
+
+    result = build_evidence_status_from_snapshot(
+        snapshot,
+        project_root=PROJECT_ROOT,
+    )
+
+    fat_required = find_evidence_field(result, "fat_required")
+    sat_required = find_evidence_field(result, "sat_required")
+
+    assert result["gate"]["mode"] == "advisory_only"
+    assert result["gate"]["status"] == "passed"
+    assert result["summary"]["blocking_eligible_count"] == 0
+    assert result["summary"]["blocking_gap_count"] == 0
+    assert result["gate"]["blocking_eligible_field_ids"] == []
+    assert fat_required["blocking_stage_allowed"] is False
+    assert sat_required["blocking_stage_allowed"] is False
 
 
 def test_review_packets_include_evidence_gap_for_unresolved_selected_field(tmp_path):
@@ -220,6 +303,34 @@ def test_evidence_status_enforces_workspace_artifact_as_minimum_blocking_strengt
     assert result["gate"]["blocking_gap_field_ids"] == ["fat_required"]
 
 
+def test_evidence_status_gate_passes_when_all_blocking_evidence_is_present(tmp_path):
+    workspace = copy_workspace(tmp_path, HAPPY_PATH)
+    _set_field_raw_value(workspace, "project_stage", "detailed_design")
+    _set_source_ref(workspace, "fat_required", "path=evidence/fat_basis.md")
+    _set_source_ref(workspace, "sat_required", "path=evidence/sat_basis.md")
+    artifact_dir = workspace / "evidence"
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    (artifact_dir / "fat_basis.md").write_text("FAT basis\n", encoding="utf-8")
+    (artifact_dir / "sat_basis.md").write_text("SAT basis\n", encoding="utf-8")
+
+    result = evidence_workspace(
+        workspace,
+        project_root=PROJECT_ROOT,
+        evidence_on=GOLDEN_DATE,
+    )
+
+    fat_required = find_evidence_field(result, "fat_required")
+    sat_required = find_evidence_field(result, "sat_required")
+
+    assert result["gate"]["mode"] == "blocking"
+    assert result["gate"]["status"] == "passed"
+    assert result["summary"]["blocking_eligible_count"] == 2
+    assert result["summary"]["blocking_gap_count"] == 0
+    assert result["gate"]["blocking_gap_field_ids"] == []
+    assert fat_required["blocking_gap"] is False
+    assert sat_required["blocking_gap"] is False
+
+
 def test_review_packets_mark_blocking_evidence_gaps_in_reviewer_packet(tmp_path):
     workspace = copy_workspace(tmp_path, HAPPY_PATH)
     _set_field_raw_value(workspace, "project_stage", "detailed_design")
@@ -246,3 +357,32 @@ def test_review_packets_mark_blocking_evidence_gaps_in_reviewer_packet(tmp_path)
     ).read_text(encoding="utf-8")
     assert "Blocking gap: yes" in packet_text
     assert "Blocking reason: blocking evidence gap: missing evidence" in packet_text
+
+
+def test_evidence_cli_exits_non_zero_after_writing_blocking_reports(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    workspace = copy_workspace(tmp_path, HAPPY_PATH)
+    _set_field_raw_value(workspace, "project_stage", "detailed_design")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "evidence_status.py",
+            str(workspace),
+            "--date",
+            GOLDEN_DATE.isoformat(),
+        ],
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        evidence_status_main()
+
+    assert exc.value.code == 1
+    assert (workspace / "reports" / "evidence_status.yaml").exists()
+    assert (workspace / "reports" / "evidence_status.md").exists()
+    payload = load_yaml(workspace / "reports" / "evidence_status.yaml")
+    assert payload["gate"]["status"] == "failed"
+    assert "gate_status: failed" in capsys.readouterr().out
