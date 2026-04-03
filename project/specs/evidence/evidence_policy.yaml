@@ -1,0 +1,27 @@
+schema_version: 0.1.0
+
+# `source_ref` segments use `;` or a newline as separators.
+# Example: `path=evidence/sat.md; note=derived from FAT`.
+# List-type keys in field_overrides replace defaults; they are not merged.
+
+defaults:
+  monitored_strictness:
+    - S4
+  advisory_minimum_strength: structured_ref
+  blocking_allowed_stages:
+    - detailed_design
+    - build_commission
+  review_route_statuses:
+    - tbd
+    - unanswered
+    - not_applicable
+  # When true, advisory gaps route into review packets regardless of field status.
+  review_route_always: false
+  include_fields: []
+  exclude_fields: []
+
+field_overrides:
+  fat_required:
+    advisory_minimum_strength: workspace_artifact
+  sat_required:
+    advisory_minimum_strength: workspace_artifact

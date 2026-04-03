@@ -243,6 +243,9 @@ def build_workspace_snapshot(
     pipeline_errors = pipeline_error_records(pipeline_result["issues"])
     unresolved_s4_fields = unresolved_by_strictness.get("S4", [])
     baseline_ready = not pipeline_errors and not unresolved_s4_fields
+    questionnaire = compile_result.get("questionnaire", {})
+    metadata_section = questionnaire.get("metadata", {}) if isinstance(questionnaire, dict) else {}
+    governance_section = questionnaire.get("governance", {}) if isinstance(questionnaire, dict) else {}
 
     return {
         "schema_version": SNAPSHOT_SCHEMA_VERSION,
@@ -251,6 +254,11 @@ def build_workspace_snapshot(
         "object_id": compile_result["object_id"],
         "workspace": str(resolved_workspace),
         "questionnaire_path": str(resolved_workspace / "questionnaire.yaml"),
+        "metadata": {
+            "project_stage": metadata_section.get("project_stage"),
+            "criticality_class": metadata_section.get("criticality_class"),
+            "evidence_maturity_class": governance_section.get("evidence_maturity_class"),
+        },
         "compile": {
             "totals": compile_totals,
             "warnings": list(compile_result["warnings"]),

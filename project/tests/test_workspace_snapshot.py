@@ -22,6 +22,8 @@ def test_snapshot_sample01_summary_and_role_resolution(tmp_path):
 
     assert snapshot["schema_version"] == SNAPSHOT_SCHEMA_VERSION
     assert snapshot["object_id"] == "sample_object_01"
+    assert snapshot["metadata"]["project_stage"] == "concept"
+    assert snapshot["metadata"]["criticality_class"] == "high"
     assert snapshot["baseline_ready"] is True
     assert snapshot["compile"]["totals"] == {
         "answered": 41,
@@ -51,6 +53,8 @@ def test_snapshot_sample02_tracks_sorted_unresolved_fields_and_person_resolution
 
     unresolved = snapshot["fields"]["unresolved"]
     assert unresolved == sorted(unresolved, key=lambda item: (item["section"], item["field_id"]))
+    assert snapshot["metadata"]["project_stage"] == "concept"
+    assert snapshot["metadata"]["criticality_class"] == "high"
 
     unresolved_s4 = snapshot["fields"]["unresolved_by_strictness"]["S4"]
     assert [field["field_id"] for field in unresolved_s4] == [

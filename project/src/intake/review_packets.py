@@ -15,6 +15,7 @@ SRC_ROOT = Path(__file__).resolve().parents[1]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
+from intake.evidence_status import build_evidence_status_from_snapshot
 from intake.workspace_snapshot import build_workspace_snapshot
 from model_utils import load_yaml, resolve_project_root, write_yaml
 
@@ -505,10 +506,43 @@ def _build_validator_review_items(
     return items
 
 
-def _build_evidence_gap_items(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
-    # Slice 1 keeps evidence advisory only. The routing contract already supports
-    # evidence_gap items so Slice 2 can plug into the same packet generator.
-    return []
+def _build_evidence_gap_items(
+    snapshot: dict[str, Any],
+    *,
+    project_root: Path,
+) -> list[dict[str, Any]]:
+    evidence_status = build_evidence_status_from_snapshot(snapshot, project_root=project_root)
+    field_records = snapshot["fields"]["records"]
+    items: list[dict[str, Any]] = []
+
+    for evidence_field in evidence_status["fields"]:
+        if not evidence_field["advisory_gap"]:
+            continue
+        if not evidence_field["review_routing_required"]:
+            continue
+
+        field_record = field_records[evidence_field["field_id"]]
+        routing = _routing_from_field_record(field_record)
+        review_reasons = [evidence_field["gap_reason"] or "missing evidence"]
+        if field_record.get("strictness") == "S4":
+            review_reasons.append("stage-gate critical field")
+
+        items.append(
+            _make_review_item(
+                object_id=snapshot["object_id"],
+                source_kind="evidence_gap",
+                source_key=evidence_field["field_id"],
+                target_role=routing["target_role"],
+                routing=routing,
+                review_reasons=review_reasons,
+                field_record=field_record,
+                field_context_overrides={
+                    "comment": field_record.get("comment"),
+                    "source_ref": evidence_field.get("source_ref"),
+                },
+            )
+        )
+    return items
 
 
 def _group_items_by_person(
@@ -782,7 +816,7 @@ def review_workspace(
     review_items = [
         *_build_field_review_items(snapshot),
         *_build_validator_review_items(snapshot, project_root=project_root),
-        *_build_evidence_gap_items(snapshot),
+        *_build_evidence_gap_items(snapshot, project_root=project_root),
     ]
     review_items = sorted(review_items, key=_item_sort_key)
     coordinator_items = [

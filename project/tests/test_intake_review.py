@@ -7,24 +7,11 @@ import yaml
 from intake.review_packets import review_workspace
 from model_utils import load_yaml
 
-from conftest import GOLDEN_DATE, copy_workspace
+from conftest import GOLDEN_DATE, copy_workspace, find_review_item
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 HAPPY_PATH = PROJECT_ROOT / "examples" / "sample_object_01"
 STRESS_PATH = PROJECT_ROOT / "examples" / "sample_object_02"
-
-
-def _review_item(
-    result: dict[str, object],
-    *,
-    source_kind: str,
-    source_key: str,
-) -> dict[str, object]:
-    for item in result["review_items"]:  # type: ignore[index]
-        if item["source_kind"] == source_kind and item["source_key"] == source_key:
-            return item
-    raise AssertionError(f"Missing review item for {source_kind=} {source_key=}")
-
 
 def _rewrite_roles_for_second_reviewer_case(workspace: Path) -> None:
     payload = load_yaml(workspace / "role_assignments.yaml")
@@ -63,7 +50,7 @@ def test_review_routes_assigned_field_items_to_primary_and_secondary_people(tmp_
     assert registry_md.exists()
     assert coordinator_packet.exists()
 
-    item = _review_item(result, source_kind="field", source_key="oob_required")
+    item = find_review_item(result, source_kind="field", source_key="oob_required")
     assert item["routing_state"] == "assigned"
     assert item["primary_role"] == "operations_engineer"
     assert item["primary_person"] == "sample2_ops_sec"
@@ -101,6 +88,7 @@ def test_review_happy_path_covers_existing_advisory_findings(tmp_path):
     assert {item["routing_state"] for item in result["review_items"]} == {
         "coordinator_escalation"
     }
+    assert not any(item["source_kind"] == "evidence_gap" for item in result["review_items"])
     assert registry["summary"]["total_review_items"] == 4
     assert len(registry["coordinator"]["item_ids"]) == 4
     assert "Coordinator queue: 4" in coordinator_text
@@ -120,7 +108,7 @@ def test_review_sends_ambiguous_validator_issue_to_coordinator(tmp_path):
         review_on=GOLDEN_DATE,
     )
 
-    item = _review_item(
+    item = find_review_item(
         result,
         source_kind="validator_issue",
         source_key="time:ptp_required_for_timing_accuracy",
@@ -148,7 +136,7 @@ def test_review_marks_second_reviewer_required_when_s4_owner_and_reviewers_colla
         review_on=GOLDEN_DATE,
     )
 
-    item = _review_item(result, source_kind="field", source_key="sat_required")
+    item = find_review_item(result, source_kind="field", source_key="sat_required")
     assert item["routing_state"] == "second_reviewer_required"
     assert item["primary_role"] == "commissioning_engineer"
     assert item["primary_person"] == "sample2_iiot_commissioning"
