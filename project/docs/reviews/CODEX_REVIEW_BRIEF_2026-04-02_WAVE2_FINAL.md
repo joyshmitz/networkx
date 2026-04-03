@@ -1,5 +1,8 @@
 # Codex Review Brief — Wave 2 Final
 
+> **ARCHIVAL STATUS:** historical review brief.  
+> This document remains as review context, not as an active execution plan.
+
 **Branch:** `research/methodology-foundation`
 **Commits under review:** `70e4c6b5e` → `1b171bee6` (4 commits)
 **Run tests:** `source .venv/bin/activate && python -m pytest project/tests/ -v`

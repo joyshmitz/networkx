@@ -1,5 +1,9 @@
 # Human-Facing Intake Layer v0
 
+> **ARCHIVAL STATUS:** historical `v0` current-state contract.  
+> This file remains in the repo for auditability and release traceability.  
+> Active forward plan now lives in `project/docs/plans/PLAN_HUMAN_INTAKE_LAYER_V1.md`.
+
 **Дата:** 2026-04-02  
 **Гілка:** `research/methodology-foundation-clean`  
 **Статус:** v0 formally released; operational current-state contract after Stage 0-8  

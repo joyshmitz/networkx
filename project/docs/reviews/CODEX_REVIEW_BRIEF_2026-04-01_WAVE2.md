@@ -1,5 +1,8 @@
 # Codex Review Brief — Wave 2 (test suite + corrective pass)
 
+> **ARCHIVAL STATUS:** historical review brief.  
+> This document remains as review context, not as an active execution plan.
+
 **Branch:** `research/methodology-foundation`
 **Commits:** `4639832de` (foundation + corrective pass), `86a4e2cbb` (test suite)
 **Run tests:** `source .venv/bin/activate && python -m pytest project/tests/ -v`

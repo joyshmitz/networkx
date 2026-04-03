@@ -1,5 +1,8 @@
 # Claude Review Brief — Wave 1 Follow-Up
 
+> **ARCHIVAL STATUS:** historical review brief.  
+> This document remains as review context, not as an active execution plan.
+
 **Дата:** 2026-04-01  
 **Гілка:** `research/methodology-foundation`  
 **Repo:** `/Users/sd/projects/networkx-3.6.1`  

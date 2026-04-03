@@ -1,5 +1,8 @@
 # Session Handoff — Wave 1
 
+> **ARCHIVAL STATUS:** historical session handoff.  
+> Kept for traceability and context recovery, not as an active execution plan.
+
 **Workspace:** `/Users/sd/projects/networkx-3.6.1`  
 **Branch:** `research/methodology-foundation`  
 **Date:** `2026-04-01`

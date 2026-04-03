@@ -1,5 +1,8 @@
 # Architecture / Methodology Review — Skeleton "Network Volume"
 
+> **ARCHIVAL STATUS:** historical review input.  
+> Findings from this document are retained for traceability, not as an active execution plan.
+
 **Дата:** 2026-04-01
 **Гілка:** `research/methodology-foundation`
 **Рев'юер:** Claude (за запитом)
