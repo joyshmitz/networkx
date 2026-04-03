@@ -30,6 +30,7 @@ Human-facing intake layer `v1` завершений на гілці `research/me
 
 | Розділ | Призначення |
 | --- | --- |
+| `docs/decisions/` | decision log і architectural rationale |
 | `docs/methodology/` | human workflow, role model, module boundaries, operator guidance |
 | `docs/plans/` | historical execution plans і planning records |
 | `docs/reviews/` | historical release notes, review briefs, corrective follow-ups, close-out records |
@@ -44,7 +45,7 @@ Human-facing intake layer `v1` завершений на гілці `research/me
 | Команда | Коли зазвичай використовується | Основні outputs |
 | --- | --- | --- |
 | `project/intake generate <workspace> [--date ...] [--preserve-responses]` | підготувати або оновити role-based workbooks і guides | `intake/generated/*.guide.md`, `intake/responses/*.xlsx` |
-| `project/intake compile <workspace> [--date ...]` | скомпілювати workbook answers у canonical artifacts | `questionnaire.yaml`, `intake/responses/*.response.yaml`, `reports/intake_status.*` |
+| `project/intake compile <workspace> [--date ...]` | скомпілювати workbook answers у canonical artifacts | `questionnaire.yaml`, `intake/responses/*.response.yaml`, `reports/intake_status.*`, `reports/workspace.manifest.yaml` |
 | `project/intake preview <workspace> [--date ...]` | вирішити, чи workspace уже baseline-ready | pipeline reports під `reports/`, `reports/preview_status.*`, `reports/workspace.manifest.yaml` |
 | `project/intake review <workspace> [--date ...]` | розкласти unresolved items і findings по ролях та людях | `reports/reviewer_registry.*`, `reports/review_packet.*`, `reports/workspace.manifest.yaml` |
 | `project/intake evidence <workspace> [--date ...]` | оцінити evidence strength і, де це дозволено policy, застосувати narrow stage gate | `reports/evidence_status.*`, `reports/workspace.manifest.yaml` |
