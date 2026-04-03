@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | Human Interaction Model | Role-based intake, ownership, review flow | `docs/methodology/HUMAN_INTERACTION_MODEL.md` + `docs/methodology/ROLE_MAP.md` + `docs/methodology/QUESTIONNAIRE_WORKFLOW.md` |
 | Operator Runtime | Day-to-day command surface, generated reports, gate semantics | `docs/methodology/INTAKE_OPERATOR_GUIDE.md` + `project/intake` |
+| Planning & Rehearsal | Post-baseline verification and next-phase planning | `docs/methodology/INTAKE_MASTER_NOTE.md` |
 | Core Questionnaire | Збір первинних вимог | `specs/questionnaire/` |
 | Role Views | Людські представлення canonical questionnaire | `specs/questionnaire/role_views.yaml` |
 | Field & Value Dictionary | Controlled vocabulary і трактування | `specs/dictionary/` |

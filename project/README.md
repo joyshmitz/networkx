@@ -20,6 +20,7 @@ Human-facing intake layer `v1` завершений на гілці `research/me
 | Якщо вам потрібно... | Почніть із цього документа |
 | --- | --- |
 | щоденно вести intake workspace | `docs/methodology/INTAKE_OPERATOR_GUIDE.md` |
+| перевірити current baseline або спланувати наступну фазу | `docs/methodology/INTAKE_MASTER_NOTE.md` |
 | зрозуміти workflow між ролями та stages | `docs/methodology/QUESTIONNAIRE_WORKFLOW.md` |
 | зрозуміти ownership і review responsibilities | `docs/methodology/ROLE_MAP.md` |
 | зрозуміти methodology boundaries і human interaction rules | `docs/methodology/HUMAN_INTERACTION_MODEL.md` |
