@@ -58,6 +58,11 @@ networkx.egg-info/
 # Virtual environment directory
 networkx-dev/
 
+# uv lockfile
+# This repository is maintained as a library with generated requirements files,
+# not as a uv-managed application or workspace.
+uv.lock
+
 # Benchmark products
 benchmarks/env
 benchmarks/results
