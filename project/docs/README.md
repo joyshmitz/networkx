@@ -14,9 +14,10 @@
 | --- | --- |
 | зрозуміти, що це вже не бібліотечний fork, а продуктовий repo | [REPO_STRATEGY.md](../../REPO_STRATEGY.md) |
 | зрозуміти, як влаштований сам продукт і куди далі дивитися | [project/README.md](../README.md) |
+| зрозуміти стратегічний напрямок: коли і як продукт відокремиться від бібліотечного форка | [PLAN_APP_REPO_EXTRACTION.md](plans/PLAN_APP_REPO_EXTRACTION.md) |
+| виконувати поточну фазу розриву залежностей без розмивання scope | [PLAN_APP_DEPENDENCY_DECOUPLING.md](plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) |
 | щоденно працювати з workspace об'єкта | [INTAKE_OPERATOR_GUIDE.md](methodology/INTAKE_OPERATOR_GUIDE.md) |
 | зрозуміти, що саме зафіксовано в baseline `v1` і де його межі | [V1_CLOSEOUT_2026-04-03.md](reviews/V1_CLOSEOUT_2026-04-03.md) |
-| зрозуміти наступну стратегічну фазу: коли і як продукт відокремиться від бібліотечного форка | [PLAN_APP_REPO_EXTRACTION.md](plans/PLAN_APP_REPO_EXTRACTION.md) |
 
 ## Що Вважати Історичними Документами
 
@@ -34,9 +35,10 @@
 
 1. [REPO_STRATEGY.md](../../REPO_STRATEGY.md)
 2. [project/README.md](../README.md)
-3. [INTAKE_OPERATOR_GUIDE.md](methodology/INTAKE_OPERATOR_GUIDE.md)
-4. [V1_CLOSEOUT_2026-04-03.md](reviews/V1_CLOSEOUT_2026-04-03.md)
-5. [PLAN_APP_REPO_EXTRACTION.md](plans/PLAN_APP_REPO_EXTRACTION.md)
+3. [PLAN_APP_REPO_EXTRACTION.md](plans/PLAN_APP_REPO_EXTRACTION.md)
+4. [PLAN_APP_DEPENDENCY_DECOUPLING.md](plans/PLAN_APP_DEPENDENCY_DECOUPLING.md)
+5. [INTAKE_OPERATOR_GUIDE.md](methodology/INTAKE_OPERATOR_GUIDE.md)
+6. [V1_CLOSEOUT_2026-04-03.md](reviews/V1_CLOSEOUT_2026-04-03.md)
 
 ## Документаційна Дисципліна
 

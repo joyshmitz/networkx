@@ -17,7 +17,7 @@
 - індекс згенерованих артефактів у `reports/workspace.manifest.yaml`;
 - останній підтверджений результат перевірки: `project/intake verify` -> `321 passed`.
 
-Є ще одна неприємна, але важлива правда. Продукт уже живе в `project/`, а не в бібліотечному коді `networkx/`. Тому репозиторій більше не слід читати як "форк бібліотеки з якоюсь додатковою папкою". Поточна стратегія репозиторію і наступний план відділення описані в [REPO_STRATEGY.md](../REPO_STRATEGY.md) та [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md).
+Є ще одна неприємна, але важлива правда. Продукт уже живе в `project/`, а не в бібліотечному коді `networkx/`. Тому репозиторій більше не слід читати як "форк бібліотеки з якоюсь додатковою папкою". Поточна стратегія репозиторію описана в [REPO_STRATEGY.md](../REPO_STRATEGY.md), стратегічний план відділення описаний у [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md), а поточний план виконання для наступного кроку винесено в [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 ## З Чого Почати
 
@@ -27,6 +27,7 @@
 | щоденно вести intake по робочій папці | [INTAKE_OPERATOR_GUIDE.md](docs/methodology/INTAKE_OPERATOR_GUIDE.md) |
 | зрозуміти repo-рішення і чому `project/` уже є продуктом | [REPO_STRATEGY.md](../REPO_STRATEGY.md) |
 | зрозуміти наступну стратегічну фазу після стабілізації `v1` | [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md) |
+| виконувати поточний технічний крок перед майбутнім repo split | [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) |
 | зрозуміти послідовність роботи між ролями та етапами | [QUESTIONNAIRE_WORKFLOW.md](docs/methodology/QUESTIONNAIRE_WORKFLOW.md) |
 | зрозуміти зони відповідальності та правила перевірки | [ROLE_MAP.md](docs/methodology/ROLE_MAP.md) |
 | зрозуміти межі методології та правила людської взаємодії | [HUMAN_INTERACTION_MODEL.md](docs/methodology/HUMAN_INTERACTION_MODEL.md) |
@@ -40,7 +41,7 @@
 | `docs/decisions/` | журнал рішень та архітектурні пояснення |
 | `docs/README.md` | карта активних і історичних документів |
 | `docs/methodology/` | опис робочого процесу, ролей, меж модулів і користувацьких правил |
-| `docs/plans/` | поточний стратегічний план відділення репозиторію плюс історичні плани виконання |
+| `docs/plans/` | поточний стратегічний план відділення, поточний план виконання і історичні плани |
 | `docs/reviews/` | підсумки релізів, матеріали перевірок і коригувальні нотатки |
 | `specs/` | декларативні контракти анкети, словника, підтверджень, перевірки та вимог |
 | `src/` | компілятори, перевірки, генератори звітів, intake-команди та спільні шари даних |
@@ -138,4 +139,4 @@ PYTHONPATH=. .venv/bin/python project/src/intake/evidence_status.py project/exam
 
 ## Історичний Контекст
 
-Плани `v0`, `v1`, bootstrap-етап і review briefs лишаються в репозиторії для простежуваності. Їх слід читати як історичні записи виконання, а не як поточний робочий перелік. Основний користувацький довідник зараз: [INTAKE_OPERATOR_GUIDE.md](docs/methodology/INTAKE_OPERATOR_GUIDE.md). Підсумок зафіксованого baseline `v1`: [V1_CLOSEOUT_2026-04-03.md](docs/reviews/V1_CLOSEOUT_2026-04-03.md). Поточний стратегічний рух уперед: [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md).
+Плани `v0`, `v1`, bootstrap-етап і review briefs лишаються в репозиторії для простежуваності. Їх слід читати як історичні записи виконання, а не як поточний робочий перелік. Основний користувацький довідник зараз: [INTAKE_OPERATOR_GUIDE.md](docs/methodology/INTAKE_OPERATOR_GUIDE.md). Підсумок зафіксованого baseline `v1`: [V1_CLOSEOUT_2026-04-03.md](docs/reviews/V1_CLOSEOUT_2026-04-03.md). Поточний стратегічний рух уперед: [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md). Поточний execution plan: [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).

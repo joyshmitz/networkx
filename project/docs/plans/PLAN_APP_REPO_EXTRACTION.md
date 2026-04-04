@@ -6,6 +6,7 @@
 **Пов'язана політика репозиторію:** [REPO_STRATEGY.md](../../../REPO_STRATEGY.md)  
 **Поточна точка входу в продукт:** [project/README.md](../../README.md)  
 **Поточний операторський контракт:** [INTAKE_OPERATOR_GUIDE.md](../methodology/INTAKE_OPERATOR_GUIDE.md)  
+**Поточний план виконання для фази 1:** [PLAN_APP_DEPENDENCY_DECOUPLING.md](PLAN_APP_DEPENDENCY_DECOUPLING.md)  
 **Історичний контекст планування, який тепер вважається архівним:**  
 - `project/docs/methodology/INTAKE_MASTER_NOTE.md`
 - `project/docs/plans/PLAN_CF2_BOOTSTRAP_FINAL.md`
@@ -97,6 +98,8 @@
 - перестати покладатися на кореневий editable package;
 - зафіксувати окремий шлях встановлення й тестування для продукту;
 - перевірити, що всі продуктові тести проходять у такому режимі.
+
+Поточний виконавчий контур для цього етапу вже винесений окремо в [PLAN_APP_DEPENDENCY_DECOUPLING.md](PLAN_APP_DEPENDENCY_DECOUPLING.md). Нові зміни в цій фазі мають іти через нього, а не через розмиті доповнення до цього стратегічного документа.
 
 ### Фаза 2. Продуктова Межа Пакування
 

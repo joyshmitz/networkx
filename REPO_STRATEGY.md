@@ -20,6 +20,7 @@
 - `main` лишається спадком бібліотечного форка, а не робочою віссю продукту.
 - `upstream` розглядається як зовнішнє джерело коду, а не як ціль повсякденної розробки.
 - Поточний активний план відділення описано в [PLAN_APP_REPO_EXTRACTION.md](project/docs/plans/PLAN_APP_REPO_EXTRACTION.md).
+- Поточний план виконання для фази розриву залежностей описано в [PLAN_APP_DEPENDENCY_DECOUPLING.md](project/docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 ## Правила Роботи
 
