@@ -76,4 +76,4 @@ def test_preview_sample02_reports_blockers_without_failing_preview(tmp_path):
     assert unresolved_s4_ids == {"control_required", "oob_required", "sat_required"}
 
     error_validators = {issue["validator"] for issue in result["pipeline"]["errors"]}
-    assert error_validators == {"resilience", "time"}
+    assert error_validators == {"semantic_consistency"}

@@ -111,7 +111,7 @@ def test_review_sends_ambiguous_validator_issue_to_coordinator(tmp_path):
     item = find_review_item(
         result,
         source_kind="validator_issue",
-        source_key="time:ptp_required_for_timing_accuracy",
+        source_key="semantic_consistency:timing_accuracy_requires_ptp",
     )
     assert item["routing_state"] == "coordinator_escalation"
     assert item["primary_role"] == "coordinator"

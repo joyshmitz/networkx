@@ -1,0 +1,195 @@
+schema_version: 0.1.0
+rules:
+  - rule_id: high_criticality_requires_resilience
+    mode: infer_if_tbd
+    target_section: resilience
+    target_field: redundancy_target
+    inferred_value: n_plus_1
+    reason: High-criticality objects should default to a resilient redundancy posture.
+    source_fields:
+      - metadata.criticality_class
+    when:
+      all_of:
+        - field: metadata.criticality_class
+          op: in
+          values: [high, mission_critical]
+
+  - rule_id: remote_ops_requires_oob
+    mode: infer_if_tbd
+    target_section: security_access
+    target_field: oob_required
+    inferred_value: 'yes'
+    reason: Remote-operations staffing implies out-of-band access for recovery and support.
+    source_fields:
+      - object_profile.staffing_model
+    when:
+      all_of:
+        - field: object_profile.staffing_model
+          op: eq
+          value: remote_ops
+
+  - rule_id: video_requires_poe
+    mode: infer_if_tbd
+    target_section: power_environment
+    target_field: poe_required
+    inferred_value: 'yes'
+    reason: Video service normally requires PoE-capable access equipment.
+    source_fields:
+      - critical_services.video_required
+    when:
+      all_of:
+        - field: critical_services.video_required
+          op: is_yes
+
+  - rule_id: iiot_and_video_require_heavy_poe_budget
+    mode: infer_if_tbd
+    target_section: power_environment
+    target_field: poe_budget_class
+    inferred_value: heavy
+    reason: Combined IIoT and video workloads imply a heavy PoE budget.
+    source_fields:
+      - critical_services.iiot_required
+      - critical_services.video_required
+    when:
+      all_of:
+        - field: critical_services.iiot_required
+          op: is_yes
+        - field: critical_services.video_required
+          op: is_yes
+
+  - rule_id: precise_timing_requires_ptp
+    mode: infer_if_tbd
+    target_section: time_sync
+    target_field: sync_protocol
+    inferred_value: ptp
+    reason: Tens-of-microseconds or sub-millisecond timing targets require PTP.
+    source_fields:
+      - time_sync.timing_required
+      - time_sync.timing_accuracy_class
+    when:
+      all_of:
+        - field: time_sync.timing_required
+          op: is_yes
+        - field: time_sync.timing_accuracy_class
+          op: in
+          values: [tens_of_us, sub_us]
+
+  - rule_id: relaxed_timing_defaults_to_ntp
+    mode: infer_if_tbd
+    target_section: time_sync
+    target_field: sync_protocol
+    inferred_value: ntp
+    reason: Timing requirements outside the precise classes normally default to NTP.
+    source_fields:
+      - time_sync.timing_required
+      - time_sync.timing_accuracy_class
+    when:
+      all_of:
+        - field: time_sync.timing_required
+          op: is_yes
+        - field: time_sync.timing_accuracy_class
+          op: not_in
+          values: [tens_of_us, sub_us, tbd, null]
+
+  - rule_id: strict_zones_require_audit_logging
+    mode: infer_if_tbd
+    target_section: security_access
+    target_field: audit_logging_required
+    inferred_value: 'yes'
+    reason: DMZ-centric and strict-isolation zone models require audit logging.
+    source_fields:
+      - security_access.security_zone_model
+    when:
+      all_of:
+        - field: security_access.security_zone_model
+          op: in
+          values: [strict_isolation, dmz_centric]
+
+  - rule_id: control_requires_timing
+    mode: infer_if_tbd
+    target_section: time_sync
+    target_field: timing_required
+    inferred_value: 'yes'
+    reason: Control workloads require an explicit timing service expectation.
+    source_fields:
+      - critical_services.control_required
+    when:
+      all_of:
+        - field: critical_services.control_required
+          op: is_yes
+
+  - rule_id: remote_ops_conflicts_with_oob_disabled
+    mode: flag_if_conflicts
+    target_section: security_access
+    target_field: oob_required
+    severity: warning
+    message: Remote-ops staffing without OOB creates weak recovery assumptions.
+    reason: Remote-operations staffing is inconsistent with oob_required='no'.
+    source_fields:
+      - object_profile.staffing_model
+      - security_access.oob_required
+    when:
+      all_of:
+        - field: object_profile.staffing_model
+          op: eq
+          value: remote_ops
+        - field: security_access.oob_required
+          op: eq
+          value: 'no'
+
+  - rule_id: timing_accuracy_requires_ptp
+    mode: flag_if_conflicts
+    target_section: time_sync
+    target_field: sync_protocol
+    severity: error
+    message: Tens-of-microseconds accuracy requires PTP.
+    reason: Precise timing targets are inconsistent with sync_protocol other than ptp.
+    source_fields:
+      - time_sync.timing_accuracy_class
+      - time_sync.sync_protocol
+    when:
+      all_of:
+        - field: time_sync.timing_accuracy_class
+          op: in
+          values: [tens_of_us, sub_us]
+        - field: time_sync.sync_protocol
+          op: not_in
+          values: [ptp, tbd, null]
+
+  - rule_id: high_criticality_conflicts_with_no_redundancy
+    mode: flag_if_conflicts
+    target_section: resilience
+    target_field: redundancy_target
+    severity: error
+    message: High-criticality objects cannot keep redundancy_target='none'.
+    reason: High-criticality objects are inconsistent with redundancy_target='none'.
+    source_fields:
+      - metadata.criticality_class
+      - resilience.redundancy_target
+    when:
+      all_of:
+        - field: metadata.criticality_class
+          op: in
+          values: [high, mission_critical]
+        - field: resilience.redundancy_target
+          op: eq
+          value: none
+
+  - rule_id: strict_zones_conflict_with_audit_logging_disabled
+    mode: flag_if_conflicts
+    target_section: security_access
+    target_field: audit_logging_required
+    severity: warning
+    message: DMZ-centric and strict-isolation zone models require audit_logging_required='yes'.
+    reason: Strong segmentation models are inconsistent with audit_logging_required='no'.
+    source_fields:
+      - security_access.security_zone_model
+      - security_access.audit_logging_required
+    when:
+      all_of:
+        - field: security_access.security_zone_model
+          op: in
+          values: [dmz_centric, strict_isolation]
+        - field: security_access.audit_logging_required
+          op: eq
+          value: 'no'

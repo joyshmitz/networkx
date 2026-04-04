@@ -48,6 +48,7 @@ def merge_missing_values_tracked(
         if not present or current in ("", None):
             merged[key] = default_value
             assumed.append({
+                "kind": "archetype_default",
                 "field_id": key,
                 "section": section,
                 "original_value": "__missing__" if not present else current,
@@ -76,4 +77,3 @@ def enabled_services(requirements: dict[str, Any]) -> list[str]:
         "local_archiving_required": "local_archiving",
     }
     return [name for field_id, name in service_map.items() if is_yes(services.get(field_id))]
-

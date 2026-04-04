@@ -36,6 +36,27 @@ HIGH_ASSUMPTION_THRESHOLD = 5
 HIGH_TBD_THRESHOLD = 3
 
 
+def summarize_assumptions(assumptions: list[dict[str, str | Any]]) -> dict[str, int]:
+    archetype_default_count = 0
+    inference_count = 0
+    other_count = 0
+    for item in assumptions:
+        kind = item.get("kind")
+        source = str(item.get("source", ""))
+        if kind == "inference" or source.startswith("inference:"):
+            inference_count += 1
+        elif kind == "archetype_default" or source.startswith("archetype:") or not kind:
+            archetype_default_count += 1
+        else:
+            other_count += 1
+    return {
+        "total": len(assumptions),
+        "archetype_default_count": archetype_default_count,
+        "inference_count": inference_count,
+        "other_count": other_count,
+    }
+
+
 def derive_confidence_level(requirements: dict[str, Any]) -> str:
     stage = requirements.get("metadata", {}).get("project_stage", "concept")
     maturity = requirements.get("governance", {}).get("evidence_maturity_class", "assumption_heavy")
@@ -60,7 +81,8 @@ def validate_stage_confidence(
     issues: list[dict[str, Any]] = []
     stage = requirements.get("metadata", {}).get("project_stage", "concept")
     maturity = requirements.get("governance", {}).get("evidence_maturity_class", "assumption_heavy")
-    assumed_count = len(assumptions)
+    assumption_summary = summarize_assumptions(assumptions)
+    assumed_count = assumption_summary["total"]
     confidence = derive_confidence_level(requirements)
     tbd_fields = count_tbd_fields(requirements)
     tbd_count = len(tbd_fields)
@@ -110,7 +132,9 @@ def validate_stage_confidence(
             "validator": "stage_confidence",
             "severity": "warning",
             "message": (
-                f"{assumed_count} fields were filled from archetype defaults, not from questionnaire answers. "
+                f"{assumed_count} fields were filled from assumptions, not from confirmed questionnaire answers "
+                f"(archetype defaults: {assumption_summary['archetype_default_count']}, "
+                f"cross-field inferences: {assumption_summary['inference_count']}). "
                 f"Validation is operating on assumptions, not on confirmed data."
             ),
         })
@@ -120,7 +144,9 @@ def validate_stage_confidence(
             "validator": "stage_confidence",
             "severity": "error",
             "message": (
-                f"{assumed_count} assumed fields remain at stage '{stage}'. "
+                f"{assumed_count} assumed fields remain at stage '{stage}' "
+                f"(archetype defaults: {assumption_summary['archetype_default_count']}, "
+                f"cross-field inferences: {assumption_summary['inference_count']}). "
                 f"All fields must be explicitly answered before this stage."
             ),
         })

@@ -73,7 +73,7 @@ def test_snapshot_sample02_tracks_sorted_unresolved_fields_and_person_resolution
     ]
 
     error_validators = {issue["validator"] for issue in snapshot["pipeline"]["errors"]}
-    assert error_validators == {"resilience", "time"}
+    assert error_validators == {"semantic_consistency"}
     assert any(blocker["kind"] == "pipeline_error" for blocker in snapshot["blockers"])
     assert any(blocker["kind"] == "unresolved_s4" for blocker in snapshot["blockers"])
 

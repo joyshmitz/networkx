@@ -21,7 +21,7 @@
 | remote_access_profile | oob_only | baseline | network_volume, firewall_policy_intent_pack, operations_handoff_pack | cybersecurity_engineer, operations_engineer |
 | contractor_access_policy | tbd | unresolved | network_volume, firewall_policy_intent_pack, operations_handoff_pack, commissioning_pack | cybersecurity_engineer, operations_engineer, project_manager |
 | audit_logging_required | tbd | unresolved | network_volume, firewall_policy_intent_pack, operations_handoff_pack, commissioning_pack | cybersecurity_engineer, operations_engineer, commissioning_engineer |
-| oob_required | tbd | unresolved | network_volume, addressing_framework_pack, operations_handoff_pack, commissioning_pack | network_engineer, operations_engineer, commissioning_engineer |
+| oob_required | yes | required | network_volume, addressing_framework_pack, operations_handoff_pack, commissioning_pack | network_engineer, operations_engineer, commissioning_engineer |
 | timing_required | yes | required | network_volume, telemetry_transport_pack, commissioning_pack, operations_handoff_pack | telemetry_engineer, network_engineer, operations_engineer |
 | sync_protocol | ntp | baseline | network_volume, telemetry_transport_pack, commissioning_pack, operations_handoff_pack | network_engineer, telemetry_engineer, operations_engineer |
 | timing_accuracy_class | tens_of_us | baseline | network_volume, telemetry_transport_pack, commissioning_pack | network_engineer, telemetry_engineer, commissioning_engineer |

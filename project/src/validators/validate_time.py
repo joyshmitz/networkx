@@ -18,15 +18,6 @@ def validate_time(requirements: dict[str, Any], physical_graph: nx.Graph) -> lis
             }
         )
 
-    if timing.get("timing_accuracy_class") == "tens_of_us" and timing.get("sync_protocol") != "ptp":
-        issues.append(
-            {
-                "validator": "time",
-                "severity": "error",
-                "message": "Tens-of-microseconds accuracy requires PTP.",
-            }
-        )
-
     if timing.get("sync_protocol") == "ptp":
         if not any(attrs.get("timing_capability") == "ptp" for _, attrs in physical_graph.nodes(data=True)):
             issues.append(

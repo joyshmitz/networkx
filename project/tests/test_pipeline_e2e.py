@@ -108,12 +108,13 @@ class TestSample02:
             "asbuilt_package_required",
             "fat_required",
             "sat_required",
+            "oob_required",
         }
 
     def test_remaining_tbd_fields_preserved(self):
         reqs = self.result["requirements"]
         assert reqs["critical_services"]["control_required"] == "tbd"
-        assert reqs["security_access"]["oob_required"] == "tbd"
+        assert reqs["security_access"]["oob_required"] == "yes"
         assert reqs["power_environment"]["poe_budget_class"] == "tbd"
 
     def test_unanswered_fields_are_filled_from_archetype_defaults(self):
@@ -127,6 +128,13 @@ class TestSample02:
     def test_resolved_archetype_is_resilient(self):
         assert self.result["requirements"]["metadata"]["resolved_archetype"] == "resilient_telemetry_site"
 
+    def test_inferred_oob_requirement_is_marked_as_inference(self):
+        oob_assumption = next(
+            item for item in self.result["assumptions"] if item["field_id"] == "oob_required"
+        )
+        assert oob_assumption["kind"] == "inference"
+        assert oob_assumption["source"] == "inference:remote_ops_requires_oob"
+
     def test_criticality_redundancy_conflict_caught(self):
         errors = [i for i in self.result["issues"] if i["severity"] == "error"]
         assert any("redundancy_target" in i["message"] for i in errors)
@@ -139,11 +147,6 @@ class TestSample02:
         """poe_budget_class=tbd should NOT trigger 'budget is none' error."""
         errors = [i for i in self.result["issues"] if i["severity"] == "error"]
         assert not any("poe_budget_class is set to none" in i["message"] for i in errors)
-
-    def test_oob_warning_visible(self):
-        """remote_ops + oob_required=tbd should trigger OOB warning."""
-        warnings = [i for i in self.result["issues"] if i["severity"] == "warning"]
-        assert any("OOB" in i["message"] for i in warnings)
 
     def test_stage_confidence_present(self):
         warnings = [i for i in self.result["issues"] if i["severity"] == "warning"

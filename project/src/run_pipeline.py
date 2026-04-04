@@ -24,7 +24,13 @@ from validators.validate_power_ports import validate_power_ports
 from validators.validate_resilience import validate_resilience
 from validators.validate_role_assignments import validate_role_assignments
 from validators.validate_segmentation import validate_segmentation
-from validators.validate_stage_confidence import count_tbd_fields, derive_confidence_level, validate_stage_confidence
+from validators.validate_semantic_consistency import validate_semantic_consistency
+from validators.validate_stage_confidence import (
+    count_tbd_fields,
+    derive_confidence_level,
+    summarize_assumptions,
+    validate_stage_confidence,
+)
 from validators.validate_time import validate_time
 
 
@@ -37,6 +43,7 @@ def run_validators(
 ) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     issues.extend(validate_stage_confidence(requirements, assumptions))
+    issues.extend(validate_semantic_consistency(requirements, assumptions))
     issues.extend(validate_connectivity(bundle.physical, requirements))
     issues.extend(validate_segmentation(bundle.logical, requirements))
     issues.extend(validate_resilience(bundle.physical, bundle.failure_domain, requirements))
@@ -161,9 +168,12 @@ def execute_pipeline(
     )
     validation_summary = summarize_validation(issues)
     tbd_fields = count_tbd_fields(requirements)
+    assumption_summary = summarize_assumptions(assumptions)
     validation_summary["confidence_level"] = derive_confidence_level(requirements)
     validation_summary["tbd_count"] = len(tbd_fields)
-    validation_summary["assumed_count"] = len(assumptions)
+    validation_summary["assumed_count"] = assumption_summary["total"]
+    validation_summary["archetype_default_count"] = assumption_summary["archetype_default_count"]
+    validation_summary["inference_count"] = assumption_summary["inference_count"]
     if tbd_fields:
         validation_summary["tbd_fields"] = tbd_fields
     if assumptions:
@@ -306,6 +316,8 @@ def main() -> None:
                 "error_count": validation_summary["error_count"],
                 "warning_count": validation_summary["warning_count"],
                 "assumed_count": len(assumptions),
+                "archetype_default_count": validation_summary.get("archetype_default_count", 0),
+                "inference_count": validation_summary.get("inference_count", 0),
             },
             sort_keys=False,
             allow_unicode=True,

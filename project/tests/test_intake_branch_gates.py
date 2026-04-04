@@ -191,7 +191,7 @@ def test_gate_d_stress_expected_failure_contract(tmp_path):
     errors = [issue for issue in pipeline_result["issues"] if issue["severity"] == "error"]
     error_validators = {issue["validator"] for issue in errors}
 
-    assert error_validators == {"resilience", "time"}
+    assert error_validators == {"semantic_consistency"}
     assert len(errors) == 2
     assert any("redundancy_target" in issue["message"] for issue in errors)
     assert any("PTP" in issue["message"] for issue in errors)

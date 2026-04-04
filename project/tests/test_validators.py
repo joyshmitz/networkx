@@ -8,8 +8,13 @@ from validators.validate_connectivity import validate_connectivity
 from validators.validate_segmentation import validate_segmentation
 from validators.validate_resilience import validate_resilience
 from validators.validate_power_ports import validate_power_ports
+from validators.validate_semantic_consistency import validate_semantic_consistency
 from validators.validate_time import validate_time
-from validators.validate_stage_confidence import validate_stage_confidence, derive_confidence_level
+from validators.validate_stage_confidence import (
+    derive_confidence_level,
+    summarize_assumptions,
+    validate_stage_confidence,
+)
 
 
 def _issues_by(issues, severity=None, validator=None):
@@ -155,31 +160,6 @@ class TestResilience:
         fg.add_node("carrier_a", domain_type="carrier_domain")
         return pg, fg
 
-    def test_high_crit_no_redundancy_error(self):
-        pg, fg = self._minimal_graphs()
-        reqs = {
-            "metadata": {"criticality_class": "high"},
-            "resilience": {"redundancy_target": "none", "degraded_mode_profile": "best_effort",
-                           "mttr_target_class": "four_hours"},
-            "object_profile": {"staffing_model": "local_ops"},
-            "security_access": {"oob_required": "yes"},
-            "external_transport": {"carrier_diversity_target": "single_path_allowed"},
-        }
-        issues = validate_resilience(pg, fg, reqs)
-        assert any("redundancy_target='none'" in i["message"] for i in _issues_by(issues, "error"))
-
-    def test_remote_ops_no_oob_warns(self):
-        pg, fg = self._minimal_graphs()
-        reqs = {
-            "metadata": {"criticality_class": "low"},
-            "resilience": {"redundancy_target": "none"},
-            "object_profile": {"staffing_model": "remote_ops"},
-            "security_access": {"oob_required": "no"},
-            "external_transport": {"carrier_diversity_target": "single_path_allowed"},
-        }
-        issues = validate_resilience(pg, fg, reqs)
-        assert any("OOB" in i["message"] for i in _issues_by(issues, "warning"))
-
     def test_remote_ops_tbd_oob_warns(self):
         pg, fg = self._minimal_graphs()
         reqs = {
@@ -190,7 +170,7 @@ class TestResilience:
             "external_transport": {"carrier_diversity_target": "single_path_allowed"},
         }
         issues = validate_resilience(pg, fg, reqs)
-        assert any("OOB" in i["message"] for i in _issues_by(issues, "warning"))
+        assert any("confirmed OOB access" in i["message"] for i in _issues_by(issues, "warning"))
 
     def test_high_crit_single_path_warns(self):
         pg, fg = self._minimal_graphs()
@@ -345,13 +325,6 @@ class TestTime:
         issues = validate_time(reqs, g)
         assert any("sync_protocol" in i["message"] for i in issues)
 
-    def test_tens_of_us_without_ptp(self):
-        g = nx.Graph()
-        reqs = {"time_sync": {"timing_required": "yes", "sync_protocol": "ntp",
-                               "timing_accuracy_class": "tens_of_us"}}
-        issues = validate_time(reqs, g)
-        assert any("PTP" in i["message"] for i in issues)
-
     def test_ptp_without_capable_node(self):
         g = nx.Graph()
         g.add_node("sw_a", timing_capability="ntp")
@@ -431,8 +404,60 @@ class TestStageConfidence:
         issues = validate_stage_confidence(reqs, assumptions)
         assert any("archetype defaults" in i["message"] for i in _issues_by(issues, "warning"))
 
+    def test_assumption_summary_distinguishes_inference_from_defaults(self):
+        assumptions = [
+            {"field_id": "a", "section": "s", "assumed_value": "x", "source": "archetype:test"},
+            {"field_id": "b", "section": "s", "assumed_value": "y", "source": "inference:test_rule"},
+        ]
+        summary = summarize_assumptions(assumptions)
+        assert summary == {
+            "total": 2,
+            "archetype_default_count": 1,
+            "inference_count": 1,
+            "other_count": 0,
+        }
+
     def test_clean_no_stage_issues(self):
         reqs = {"metadata": {"project_stage": "detailed_design"},
                 "governance": {"evidence_maturity_class": "field_verified"}}
         issues = validate_stage_confidence(reqs, [])
         assert len(issues) == 0
+
+
+# ---------------------------------------------------------------------------
+# Semantic consistency
+# ---------------------------------------------------------------------------
+
+class TestSemanticConsistency:
+    def test_high_crit_no_redundancy_error(self):
+        reqs = {
+            "metadata": {"criticality_class": "high"},
+            "resilience": {"redundancy_target": "none"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("redundancy_target='none'" in i["message"] for i in _issues_by(issues, "error"))
+
+    def test_remote_ops_no_oob_warns(self):
+        reqs = {
+            "object_profile": {"staffing_model": "remote_ops"},
+            "security_access": {"oob_required": "no"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("without OOB" in i["message"] for i in _issues_by(issues, "warning"))
+
+    def test_tens_of_us_without_ptp_errors(self):
+        reqs = {
+            "time_sync": {"sync_protocol": "ntp", "timing_accuracy_class": "tens_of_us"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("requires PTP" in i["message"] for i in _issues_by(issues, "error"))
+
+    def test_strict_zone_without_audit_logging_warns(self):
+        reqs = {
+            "security_access": {
+                "security_zone_model": "strict_isolation",
+                "audit_logging_required": "no",
+            }
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("audit_logging_required='yes'" in i["message"] for i in _issues_by(issues, "warning"))

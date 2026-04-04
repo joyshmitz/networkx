@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator
+from compiler.cross_field_inference import apply_cross_field_inferences
 from model_utils import is_yes, load_yaml, merge_missing_values_tracked, resolve_project_root
 
 
@@ -205,6 +206,8 @@ def build_requirements_model(
     resolved_archetype = resolve_archetype_id(questionnaire)
     archetype = archetypes[resolved_archetype]
     normalized, assumptions = apply_archetype_defaults(questionnaire, archetype)
+    normalized, inferred = apply_cross_field_inferences(normalized)
+    assumptions.extend(inferred)
     normalized = normalize_boolish_enums(normalized)
 
     metadata = dict(normalized["metadata"])

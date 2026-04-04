@@ -24,7 +24,7 @@ security_access:
   remote_access_profile: oob_only
   contractor_access_policy: tbd
   audit_logging_required: tbd
-  oob_required: tbd
+  oob_required: 'yes'
 time_sync:
   timing_required: 'yes'
   sync_protocol: ntp
@@ -54,28 +54,45 @@ governance:
   waiver_policy_class: provisional
 known_unknowns: {}
 _assumptions:
-- field_id: support_model
+- kind: archetype_default
+  field_id: support_model
   section: operations
   original_value: __missing__
   assumed_value: hybrid
   source: archetype:resilient_telemetry_site
-- field_id: maintenance_window_model
+- kind: archetype_default
+  field_id: maintenance_window_model
   section: operations
   original_value: __missing__
   assumed_value: planned_only
   source: archetype:resilient_telemetry_site
-- field_id: asbuilt_package_required
+- kind: archetype_default
+  field_id: asbuilt_package_required
   section: operations
   original_value: __missing__
   assumed_value: 'yes'
   source: archetype:resilient_telemetry_site
-- field_id: fat_required
+- kind: archetype_default
+  field_id: fat_required
   section: acceptance_criteria
   original_value: __missing__
   assumed_value: 'yes'
   source: archetype:resilient_telemetry_site
-- field_id: sat_required
+- kind: archetype_default
+  field_id: sat_required
   section: acceptance_criteria
   original_value: __missing__
   assumed_value: 'yes'
   source: archetype:resilient_telemetry_site
+- kind: inference
+  field_id: oob_required
+  section: security_access
+  original_value: tbd
+  assumed_value: 'yes'
+  source: inference:remote_ops_requires_oob
+  rule_id: remote_ops_requires_oob
+  source_fields:
+  - object_profile.staffing_model
+  reason: Remote-operations staffing implies out-of-band access for recovery and support.
+  pass_index: 1
+  review_required: true

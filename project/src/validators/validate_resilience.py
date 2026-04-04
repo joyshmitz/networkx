@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import networkx as nx
-from model_utils import is_yes
+from model_utils import is_tbd, is_yes
 
 
 def validate_resilience(
@@ -25,21 +25,16 @@ def validate_resilience(
     criticality_class = requirements.get("metadata", {}).get("criticality_class")
     staffing_model = requirements.get("object_profile", {}).get("staffing_model")
 
-    if criticality_class in {"high", "mission_critical"} and redundancy_target == "none":
-        issues.append(
-            {
-                "validator": "resilience",
-                "severity": "error",
-                "message": "High-criticality objects cannot keep redundancy_target='none'.",
-            }
-        )
-
-    if staffing_model == "remote_ops" and not is_yes(requirements.get("security_access", {}).get("oob_required")):
+    oob_required = requirements.get("security_access", {}).get("oob_required")
+    # Cross-field inference normally upgrades remote_ops + tbd OOB into an
+    # explicit inferred "yes" earlier in the build path. Keep this warning as
+    # a fallback if that inference rule is disabled, removed, or bypassed.
+    if staffing_model == "remote_ops" and is_tbd(oob_required):
         issues.append(
             {
                 "validator": "resilience",
                 "severity": "warning",
-                "message": "Remote-ops staffing without OOB creates weak recovery assumptions.",
+                "message": "Remote-ops staffing without confirmed OOB access creates weak recovery assumptions.",
             }
         )
 

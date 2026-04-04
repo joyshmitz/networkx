@@ -280,6 +280,8 @@ def build_workspace_snapshot(
             "warning_count": pipeline_result["validation"]["warning_count"],
             "confidence_level": pipeline_result["validation"]["confidence_level"],
             "assumed_count": pipeline_result["validation"]["assumed_count"],
+            "archetype_default_count": pipeline_result["validation"].get("archetype_default_count", 0),
+            "inference_count": pipeline_result["validation"].get("inference_count", 0),
             "errors": pipeline_errors,
             "issues": list(pipeline_result["issues"]),
         },

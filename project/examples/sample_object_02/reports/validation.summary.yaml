@@ -8,19 +8,26 @@ issues:
     results are indicative, not binding (confidence_level=indicative).
 - validator: stage_confidence
   severity: warning
-  message: '7 fields remain ''tbd'': control_required, local_archiving_required, contractor_access_policy,
-    audit_logging_required, oob_required, poe_budget_class, common_cause_separation_required.
-    Validators cannot fully evaluate design with unresolved inputs.'
+  message: '6 fields remain ''tbd'': control_required, local_archiving_required, contractor_access_policy,
+    audit_logging_required, poe_budget_class, common_cause_separation_required. Validators
+    cannot fully evaluate design with unresolved inputs.'
+- validator: stage_confidence
+  severity: warning
+  message: '6 fields were filled from assumptions, not from confirmed questionnaire
+    answers (archetype defaults: 5, cross-field inferences: 1). Validation is operating
+    on assumptions, not on confirmed data.'
+- validator: semantic_consistency
+  severity: error
+  message: Tens-of-microseconds accuracy requires PTP.
+  issue_code: timing_accuracy_requires_ptp
+- validator: semantic_consistency
+  severity: error
+  message: High-criticality objects cannot keep redundancy_target='none'.
+  issue_code: high_criticality_conflicts_with_no_redundancy
 - validator: segmentation
   severity: warning
   message: High-criticality object with shared_ok transport separation — may violate
     isolation expectations.
-- validator: resilience
-  severity: error
-  message: High-criticality objects cannot keep redundancy_target='none'.
-- validator: resilience
-  severity: warning
-  message: Remote-ops staffing without OOB creates weak recovery assumptions.
 - validator: resilience
   severity: warning
   message: High-criticality object with single_path_allowed carrier diversity — weak
@@ -33,42 +40,56 @@ issues:
   severity: warning
   message: High-criticality object with same_day MTTR — may be too slow for critical
     operations.
-- validator: time
-  severity: error
-  message: Tens-of-microseconds accuracy requires PTP.
 - validator: annex_activation
   severity: warning
   message: Annex 'time' activation conditions are met, but annex data is not present
     in pipeline input.
 confidence_level: indicative
-tbd_count: 7
-assumed_count: 5
+tbd_count: 6
+assumed_count: 6
+archetype_default_count: 5
+inference_count: 1
 tbd_fields:
 - control_required
 - local_archiving_required
 - contractor_access_policy
 - audit_logging_required
-- oob_required
 - poe_budget_class
 - common_cause_separation_required
 assumed_fields:
-- field_id: support_model
+- kind: archetype_default
+  field_id: support_model
   original_value: __missing__
   assumed_value: hybrid
   source: archetype:resilient_telemetry_site
-- field_id: maintenance_window_model
+- kind: archetype_default
+  field_id: maintenance_window_model
   original_value: __missing__
   assumed_value: planned_only
   source: archetype:resilient_telemetry_site
-- field_id: asbuilt_package_required
+- kind: archetype_default
+  field_id: asbuilt_package_required
   original_value: __missing__
   assumed_value: 'yes'
   source: archetype:resilient_telemetry_site
-- field_id: fat_required
+- kind: archetype_default
+  field_id: fat_required
   original_value: __missing__
   assumed_value: 'yes'
   source: archetype:resilient_telemetry_site
-- field_id: sat_required
+- kind: archetype_default
+  field_id: sat_required
   original_value: __missing__
   assumed_value: 'yes'
   source: archetype:resilient_telemetry_site
+- kind: inference
+  field_id: oob_required
+  original_value: tbd
+  assumed_value: 'yes'
+  source: inference:remote_ops_requires_oob
+  rule_id: remote_ops_requires_oob
+  source_fields:
+  - object_profile.staffing_model
+  reason: Remote-operations staffing implies out-of-band access for recovery and support.
+  pass_index: 1
+  review_required: true
