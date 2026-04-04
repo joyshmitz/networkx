@@ -1,8 +1,12 @@
 # Post-v1 Intake Workspace Bootstrap
 
+> **ARCHIVAL STATUS:** superseded draft.  
+> This bootstrap skeleton is kept only for traceability.  
+> It was superseded by [PLAN_CF2_BOOTSTRAP_FINAL.md](PLAN_CF2_BOOTSTRAP_FINAL.md) and is no longer an active planning document.
+
 **Дата:** 2026-04-03  
-**Гілка:** `research/methodology-foundation-clean`  
-**Статус:** draft skeleton; not yet accepted as active execution plan  
+**Гілка на момент створення:** `research/methodology-foundation-clean`  
+**Статус:** superseded historical draft  
 **Related baseline:** `project/docs/reviews/V1_CLOSEOUT_2026-04-03.md`  
 **Related operator doc:** `project/docs/methodology/INTAKE_OPERATOR_GUIDE.md`  
 **Related planning context:** `project/docs/methodology/INTAKE_MASTER_NOTE.md`

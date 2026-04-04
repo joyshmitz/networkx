@@ -1,8 +1,26 @@
 # INTAKE_MASTER_NOTE
 
+> **ARCHIVAL STATUS:** historical post-`v1` planning note.  
+> Bootstrap gap, post-`v1` transition and early planning contours from this note are no longer active.  
+> Current active documents:
+> - [project/README.md](../../README.md)
+> - [Карта документації](../README.md)
+> - [REPO_STRATEGY.md](../../../REPO_STRATEGY.md)
+> - [PLAN_APP_REPO_EXTRACTION.md](../plans/PLAN_APP_REPO_EXTRACTION.md)
+
 > **Увага:** це внутрішній документ для планування, контрольних прогонів і прийняття рішень після `v1`.
 > Це не user manual і не робочий guide для щоденного проходження intake-процесу.
 > Якщо вам потрібно працювати з реальним workspace об'єкта, починайте з `INTAKE_OPERATOR_GUIDE.md`.
+
+## Для чого цей документ потрібен тепер
+
+Тепер цей документ потрібен лише як історичний слід того, як ми мислили відразу після `v1` close-out.
+
+Його не слід використовувати як current planning surface. Причина проста:
+
+- bootstrap gap, навколо якого тут побудована частина логіки, уже закритий;
+- post-`v1` planning contour уже змінився;
+- активна стратегічна задача тепер не "як добудувати bootstrap", а "як відокремити продукт від бібліотечного форка".
 
 ## Для чого потрібен цей документ
 

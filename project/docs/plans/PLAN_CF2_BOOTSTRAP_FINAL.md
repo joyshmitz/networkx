@@ -1,8 +1,12 @@
 # Final Plan: Close Remaining CF-2 and Bootstrap Gaps
 
+> **ARCHIVAL STATUS:** fulfilled execution plan.  
+> Bootstrap and CF-2 semantic slices from this plan are implemented.  
+> For current strategic direction, see [PLAN_APP_REPO_EXTRACTION.md](PLAN_APP_REPO_EXTRACTION.md).
+
 **Дата:** 2026-04-04  
-**Гілка:** `research/methodology-foundation-clean`  
-**Статус:** final adjudicated execution plan  
+**Гілка на момент виконання:** `research/methodology-foundation-clean`  
+**Статус:** fulfilled; historical execution record  
 **Related baseline:** `project/docs/reviews/V1_CLOSEOUT_2026-04-03.md`  
 **Supersedes for active execution:**  
 - `project/docs/plans/PLAN_CF2_BOOTSTRAP_CODEX_FOR_MULTI_MODEL_TRIANGULATION.md`
