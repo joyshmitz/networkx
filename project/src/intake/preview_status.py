@@ -14,10 +14,10 @@ SRC_ROOT = Path(__file__).resolve().parents[1]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from intake.workspace_snapshot import build_workspace_snapshot
-from intake.workspace_manifest import refresh_workspace_manifest
-from model_utils import write_yaml
-from intake.workspace_validation import IntakeCommandError
+from network_methodology_sandbox.intake.workspace_snapshot import build_workspace_snapshot
+from network_methodology_sandbox.intake.workspace_manifest import refresh_workspace_manifest
+from network_methodology_sandbox.model_utils import write_yaml
+from network_methodology_sandbox.intake.workspace_validation import IntakeCommandError
 
 
 def _parse_cli_date(raw: str) -> date:

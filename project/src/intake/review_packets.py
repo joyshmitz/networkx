@@ -15,11 +15,11 @@ SRC_ROOT = Path(__file__).resolve().parents[1]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from intake.evidence_status import build_evidence_status_from_snapshot
-from intake.workspace_manifest import refresh_workspace_manifest
-from intake.workspace_snapshot import build_workspace_snapshot
-from intake.workspace_validation import IntakeCommandError
-from model_utils import load_yaml, resolve_project_root, write_yaml
+from network_methodology_sandbox.intake.evidence_status import build_evidence_status_from_snapshot
+from network_methodology_sandbox.intake.workspace_manifest import refresh_workspace_manifest
+from network_methodology_sandbox.intake.workspace_snapshot import build_workspace_snapshot
+from network_methodology_sandbox.intake.workspace_validation import IntakeCommandError
+from network_methodology_sandbox.model_utils import load_yaml, resolve_project_root, write_yaml
 
 REVIEW_SCHEMA_VERSION = "0.2.0"
 PRIORITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}

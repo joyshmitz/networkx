@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from model_utils import load_yaml, write_yaml
+from network_methodology_sandbox.model_utils import load_yaml, write_yaml
 
 WORKSPACE_MANIFEST_SCHEMA_VERSION = "0.1.0"
 REQUIRED_ARTIFACT_KEYS = {"producer", "artifact_type", "format", "path"}

@@ -23,7 +23,7 @@ from openpyxl.styles import Font, PatternFill, Protection, numbers
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
-from intake.workspace_validation import (
+from network_methodology_sandbox.intake.workspace_validation import (
     IntakeCommandError,
     WorkspaceValidationError,
     ensure_workspace_initialized,

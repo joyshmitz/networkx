@@ -16,8 +16,8 @@ from typing import Any
 import yaml
 from openpyxl import load_workbook
 
-from intake.workspace_manifest import refresh_workspace_manifest
-from intake.workspace_validation import (
+from network_methodology_sandbox.intake.workspace_manifest import refresh_workspace_manifest
+from network_methodology_sandbox.intake.workspace_validation import (
     IntakeCommandError,
     ensure_compile_inputs,
 )

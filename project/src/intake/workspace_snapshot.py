@@ -9,11 +9,14 @@ SRC_ROOT = Path(__file__).resolve().parents[1]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from intake.compile_intake import _count_statuses, compile_intake
-from intake.workspace_validation import ensure_workspace_directory
-from model_utils import load_yaml, resolve_project_root
-from run_pipeline import execute_pipeline
-from validators.validate_role_assignments import build_person_to_roles, build_role_to_persons
+from network_methodology_sandbox.intake.compile_intake import _count_statuses, compile_intake
+from network_methodology_sandbox.intake.workspace_validation import ensure_workspace_directory
+from network_methodology_sandbox.model_utils import load_yaml, resolve_project_root
+from network_methodology_sandbox.run_pipeline import execute_pipeline
+from network_methodology_sandbox.validators.validate_role_assignments import (
+    build_person_to_roles,
+    build_role_to_persons,
+)
 
 SNAPSHOT_SCHEMA_VERSION = "0.1.0"
 UNRESOLVED_STATUSES = {"tbd", "unanswered", "not_applicable"}

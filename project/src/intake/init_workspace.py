@@ -13,12 +13,12 @@ SRC_ROOT = Path(__file__).resolve().parents[1]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from intake.workspace_validation import (
+from network_methodology_sandbox.intake.workspace_validation import (
     IntakeCommandError,
     ensure_init_target,
     resolve_object_id,
 )
-from model_utils import resolve_project_root
+from network_methodology_sandbox.model_utils import resolve_project_root
 
 TEMPLATE_PATH = Path("specs/questionnaire/role_assignments.template.yaml")
 TEMPLATE_METADATA_KEYS = (

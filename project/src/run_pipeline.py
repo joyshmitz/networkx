@@ -12,7 +12,7 @@ from network_methodology_sandbox.compiler.build_requirements_model import (
     default_requirements_schema_path,
     validate_requirements_model,
 )
-from intake.workspace_manifest import refresh_workspace_manifest
+from network_methodology_sandbox.intake.workspace_manifest import refresh_workspace_manifest
 from network_methodology_sandbox.compiler.compile_graphs import compile_all_graphs, summarize_graph_bundle
 from network_methodology_sandbox.model_utils import load_yaml, write_yaml
 from network_methodology_sandbox.reports.generate_handoff_matrix import generate_handoff_matrix
