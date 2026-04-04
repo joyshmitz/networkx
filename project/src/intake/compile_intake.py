@@ -2,7 +2,7 @@
 """Compile per-person intake Excel sheets into questionnaire.yaml.
 
 Usage:
-    PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py \
+    .venv/bin/python -m intake.compile_intake \
         project/examples/sample_object_01 --date 2026-04-02
 """
 from __future__ import annotations

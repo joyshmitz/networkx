@@ -19,8 +19,8 @@ Usage:
   project/intake demo stress [--date YYYY-MM-DD]
 
 Notes:
-  - Run commands from the repository root.
-  - The canonical interpreter is .venv/bin/python.
+  - The wrapper uses the repository's bundled .venv/bin/python.
+  - Canonical execution goes through installed modules, not project/src paths.
   - `demo` replays checked-in exemplars in a temporary copy and does not edit the repo.
   - `generate --preserve-responses` reuses existing E/F/G/H workbook cells by field_id.
 EOF
@@ -48,53 +48,46 @@ run_generate() {
     [ $# -ge 1 ] || fail "generate requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    cd "$ROOT_DIR"
-    PYTHONPATH=. "$PYTHON" project/src/intake/generate_intake_sheets.py "$workspace" "$@"
+    "$PYTHON" -m intake.generate_intake_sheets "$workspace" "$@"
 }
 
 run_init() {
     [ $# -ge 1 ] || fail "init requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    cd "$ROOT_DIR"
-    PYTHONPATH=. "$PYTHON" project/src/intake/init_workspace.py "$workspace" "$@"
+    "$PYTHON" -m intake.init_workspace "$workspace" "$@"
 }
 
 run_compile() {
     [ $# -ge 1 ] || fail "compile requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    cd "$ROOT_DIR"
-    PYTHONPATH=. "$PYTHON" project/src/intake/compile_intake.py "$workspace" "$@"
+    "$PYTHON" -m intake.compile_intake "$workspace" "$@"
 }
 
 run_preview() {
     [ $# -ge 1 ] || fail "preview requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    cd "$ROOT_DIR"
-    PYTHONPATH=. "$PYTHON" project/src/intake/preview_status.py "$workspace" "$@"
+    "$PYTHON" -m intake.preview_status "$workspace" "$@"
 }
 
 run_review() {
     [ $# -ge 1 ] || fail "review requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    cd "$ROOT_DIR"
-    PYTHONPATH=. "$PYTHON" project/src/intake/review_packets.py "$workspace" "$@"
+    "$PYTHON" -m intake.review_packets "$workspace" "$@"
 }
 
 run_evidence() {
     [ $# -ge 1 ] || fail "evidence requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    cd "$ROOT_DIR"
-    PYTHONPATH=. "$PYTHON" project/src/intake/evidence_status.py "$workspace" "$@"
+    "$PYTHON" -m intake.evidence_status "$workspace" "$@"
 }
 
 run_verify() {
-    cd "$ROOT_DIR"
-    PYTHONPATH=. "$PYTHON" -m pytest project/tests -q "$@"
+    "$PYTHON" -m pytest "$ROOT_DIR/project/tests" -q "$@"
 }
 
 run_demo() {
@@ -127,10 +120,9 @@ run_demo() {
     workspace="$tmp_dir/$(basename "$exemplar_dir")"
     cp -R "$exemplar_dir" "$workspace"
 
-    cd "$ROOT_DIR"
-    PYTHONPATH=. "$PYTHON" project/src/intake/compile_intake.py "$workspace" --date "$demo_date"
+    "$PYTHON" -m intake.compile_intake "$workspace" --date "$demo_date"
 
-    if PYTHONPATH=. "$PYTHON" project/src/run_pipeline.py "$workspace/questionnaire.yaml"; then
+    if "$PYTHON" -m run_pipeline "$workspace/questionnaire.yaml"; then
         pipeline_rc=0
     else
         pipeline_rc=$?

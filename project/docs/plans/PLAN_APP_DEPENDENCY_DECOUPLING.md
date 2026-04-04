@@ -28,7 +28,7 @@
 
 - На момент написання цього плану `project/requirements.txt` містив лише `pyyaml` і `openpyxl`, хоча код у `project/src/` реально використовував ще `jsonschema` і `networkx`. Цей конкретний розрив має бути закритий першим slice цього plan.
 - На момент написання цього плану [project/README.md](../../README.md) ще казав людині дописувати `jsonschema pytest` вручну після `-r project/requirements.txt`. Цю брехню теж треба прибрати першим slice цього plan.
-- [project/intake](../../intake) жорстко прибитий до `ROOT_DIR/.venv/bin/python`, до `cd "$ROOT_DIR"` і до `PYTHONPATH=.`. Це не продуктова командна поверхня, а shell-обхід довкола поточного layout.
+- На момент написання цього плану [project/intake](../../intake) був жорстко прибитий до `ROOT_DIR/.venv/bin/python`, до `cd "$ROOT_DIR"` і до `PYTHONPATH=.`. Після першого CLI-decoupling slice залежність від `PYTHONPATH=.` і `cd "$ROOT_DIR"` у канонічному wrapper execution має бути прибрана, але repo-bundled `.venv` ще лишається відкритим боргом цього plan.
 - `project/src/` не оформлений як окремий продуктовий пакет. У коді живуть загальні верхньорівневі назви на кшталт `compiler`, `validators`, `intake`, `reports` і `model_utils`. Як встановлюваний API це погана практика.
 - `git diff --name-only main..app-main -- networkx doc examples pyproject.toml README.rst requirements` зараз порожній. Тобто ми не ведемо продуктову роботу всередині бібліотеки. Залежність на бібліотечний корінь тримається не через необхідність, а через інерцію.
 - Поточний бібліотечний baseline у корені має `networkx/__init__.py` з версією `3.7rc0.dev0`. Робити вигляд, що продукт уже може без перевірки перейти на випадковий PyPI-реліз, було б безвідповідально.
@@ -45,7 +45,7 @@
    - `project/src/validators/validate_power_ports.py`
    - відповідні тести в `project/tests/`
 2. `project/src/compiler/build_requirements_model.py` імпортує `Draft202012Validator` з `jsonschema`.
-3. `project/intake` запускає код через:
+3. На момент створення цього плану `project/intake` запускав код через:
    - `.venv/bin/python`
    - `PYTHONPATH=.`
    - `cd "$ROOT_DIR"`

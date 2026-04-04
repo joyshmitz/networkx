@@ -99,10 +99,10 @@
 
 ## Виконання Команд
 
-Поки продукт ще не відв'язано від бібліотечного кореня, команди слід запускати з кореня репозиторію. Це поточний робочий контракт, але не цільовий стан. Залежність від `.venv/bin/python` і `PYTHONPATH=.` лишається відомим технічним боргом; він прямо зафіксований у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md). Водночас контракт залежностей для `project/` уже винесено в окремий [project/pyproject.toml](pyproject.toml), тому `networkx` більше не лишається неоголошеним шматком кореня.
+Продукт усе ще не відв'язано від бібліотечного checkout повністю, але канонічний запуск уже більше не повинен спиратися на `PYTHONPATH=.` або на прямий виклик `project/src/...`. Поточний перехідний контракт такий: wrapper [project/intake](intake) і далі використовує `.venv/bin/python` з цього repo, а прямі Python-команди мають іти через встановлені модулі `-m intake...` або `-m run_pipeline`. Залежність від repo-bundled `.venv` лишається відомим технічним боргом і прямо зафіксована у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 - interpreter: `.venv/bin/python`
-- правило для запуску тестів і скриптів: `PYTHONPATH=.`
+- правило для прямих Python-команд: `python -m ...`, а не `project/src/...`
 - основна командна поверхня для координатора: `project/intake ...`
 - прямі Python-команди лишаються службовим інтерфейсом для супроводу та налагодження
 
@@ -125,13 +125,15 @@ project/intake verify
 
 Приклади прямих команд:
 
+Наведені нижче прямі приклади використовують відносні шляхи `project/...`, тому їх слід запускати з кореня репозиторію. Це службовий шлях для супроводу та налагодження. Канонічний користувацький шлях лишається через `project/intake`, який уже може працювати і з іншого `cwd`.
+
 ```bash
-PYTHONPATH=. .venv/bin/python project/src/intake/init_workspace.py project/examples/my_object
-PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py project/examples/sample_object_01 --date 2026-04-02
-PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py project/examples/sample_object_01 --date 2026-04-02
-PYTHONPATH=. .venv/bin/python project/src/intake/preview_status.py project/examples/sample_object_01 --date 2026-04-02
-PYTHONPATH=. .venv/bin/python project/src/intake/review_packets.py project/examples/sample_object_01 --date 2026-04-02
-PYTHONPATH=. .venv/bin/python project/src/intake/evidence_status.py project/examples/sample_object_01 --date 2026-04-02
+.venv/bin/python -m intake.init_workspace project/examples/my_object
+.venv/bin/python -m intake.generate_intake_sheets project/examples/sample_object_01 --date 2026-04-02
+.venv/bin/python -m intake.compile_intake project/examples/sample_object_01 --date 2026-04-02
+.venv/bin/python -m intake.preview_status project/examples/sample_object_01 --date 2026-04-02
+.venv/bin/python -m intake.review_packets project/examples/sample_object_01 --date 2026-04-02
+.venv/bin/python -m intake.evidence_status project/examples/sample_object_01 --date 2026-04-02
 ```
 
 ## Правила Перегенерації Та Перезапису
