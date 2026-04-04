@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from intake.workspace_snapshot import SNAPSHOT_SCHEMA_VERSION, build_workspace_snapshot
+from intake.workspace_validation import WorkspaceValidationError
 
 from conftest import GOLDEN_DATE, copy_workspace
 
@@ -95,7 +96,7 @@ def test_snapshot_does_not_write_pipeline_outputs_by_default(tmp_path):
     assert not pipeline_summary.exists()
 
 
-def test_snapshot_missing_workspace_raises_file_not_found(tmp_path):
+def test_snapshot_missing_workspace_raises_clear_validation_error(tmp_path):
     missing_workspace = tmp_path / "missing_workspace"
 
     try:
@@ -104,13 +105,14 @@ def test_snapshot_missing_workspace_raises_file_not_found(tmp_path):
             project_root=PROJECT_ROOT,
             snapshot_on=GOLDEN_DATE,
         )
-    except FileNotFoundError as exc:
+    except WorkspaceValidationError as exc:
         assert "Workspace not found" in str(exc)
+        assert "project/intake init" in str(exc)
     else:
-        raise AssertionError("Expected FileNotFoundError for missing workspace")
+        raise AssertionError("Expected WorkspaceValidationError for missing workspace")
 
 
-def test_snapshot_file_path_raises_not_a_directory(tmp_path):
+def test_snapshot_file_path_raises_clear_validation_error(tmp_path):
     workspace_file = tmp_path / "workspace.txt"
     workspace_file.write_text("not a directory\n", encoding="utf-8")
 
@@ -120,7 +122,7 @@ def test_snapshot_file_path_raises_not_a_directory(tmp_path):
             project_root=PROJECT_ROOT,
             snapshot_on=GOLDEN_DATE,
         )
-    except NotADirectoryError as exc:
-        assert "Snapshot expects a workspace directory" in str(exc)
+    except WorkspaceValidationError as exc:
+        assert "expects a workspace directory" in str(exc)
     else:
-        raise AssertionError("Expected NotADirectoryError for file workspace path")
+        raise AssertionError("Expected WorkspaceValidationError for file workspace path")

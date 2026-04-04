@@ -18,6 +18,7 @@ if str(SRC_ROOT) not in sys.path:
 from intake.evidence_status import build_evidence_status_from_snapshot
 from intake.workspace_manifest import refresh_workspace_manifest
 from intake.workspace_snapshot import build_workspace_snapshot
+from intake.workspace_validation import IntakeCommandError
 from model_utils import load_yaml, resolve_project_root, write_yaml
 
 REVIEW_SCHEMA_VERSION = "0.2.0"
@@ -885,6 +886,7 @@ def review_workspace(
         project_root=project_root,
         snapshot_on=review_on,
         write_pipeline_outputs=False,
+        command_name="review",
     )
 
     review_items = [
@@ -986,10 +988,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    result = review_workspace(
-        Path(args.workspace_path),
-        review_on=args.review_on,
-    )
+    try:
+        result = review_workspace(
+            Path(args.workspace_path),
+            review_on=args.review_on,
+        )
+    except IntakeCommandError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(1) from exc
     print(
         yaml.safe_dump(
             {

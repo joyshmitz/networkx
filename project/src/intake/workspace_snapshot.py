@@ -10,6 +10,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from intake.compile_intake import _count_statuses, compile_intake
+from intake.workspace_validation import ensure_workspace_directory
 from model_utils import load_yaml, resolve_project_root
 from run_pipeline import execute_pipeline
 from validators.validate_role_assignments import build_person_to_roles, build_role_to_persons
@@ -200,14 +201,13 @@ def build_workspace_snapshot(
     project_root: Path | None = None,
     snapshot_on: date | None = None,
     write_pipeline_outputs: bool = False,
+    command_name: str = "snapshot",
 ) -> dict[str, Any]:
-    resolved_workspace = workspace_path.resolve()
-    if not resolved_workspace.exists():
-        raise FileNotFoundError(f"Workspace not found: {resolved_workspace}")
-    if not resolved_workspace.is_dir():
-        raise NotADirectoryError(
-            f"Snapshot expects a workspace directory, got: {resolved_workspace}"
-        )
+    resolved_workspace = ensure_workspace_directory(
+        workspace_path,
+        command_name=command_name,
+        suggest_init=True,
+    )
 
     project_root = project_root or resolve_project_root()
     snapshot_on = snapshot_on or date.today()

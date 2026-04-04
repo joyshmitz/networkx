@@ -17,6 +17,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from intake.workspace_snapshot import build_workspace_snapshot
 from intake.workspace_manifest import refresh_workspace_manifest
+from intake.workspace_validation import IntakeCommandError
 from model_utils import load_yaml, resolve_project_root, write_yaml
 
 EVIDENCE_SCHEMA_VERSION = "0.2.0"
@@ -442,6 +443,7 @@ def evidence_workspace(
         project_root=project_root,
         snapshot_on=evidence_on,
         write_pipeline_outputs=False,
+        command_name="evidence",
     )
     payload = build_evidence_status_from_snapshot(snapshot, project_root=project_root)
 
@@ -484,10 +486,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    result = evidence_workspace(
-        Path(args.workspace_path),
-        evidence_on=args.evidence_on,
-    )
+    try:
+        result = evidence_workspace(
+            Path(args.workspace_path),
+            evidence_on=args.evidence_on,
+        )
+    except IntakeCommandError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(1) from exc
     print(
         yaml.safe_dump(
             {

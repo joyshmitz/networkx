@@ -8,6 +8,7 @@ PYTHON="$ROOT_DIR/.venv/bin/python"
 usage() {
     cat <<'EOF'
 Usage:
+  project/intake init <workspace> [--object-id OBJECT_ID]
   project/intake generate <workspace> [--date YYYY-MM-DD] [--preserve-responses]
   project/intake compile <workspace> [--date YYYY-MM-DD]
   project/intake preview <workspace> [--date YYYY-MM-DD]
@@ -49,6 +50,14 @@ run_generate() {
     shift
     cd "$ROOT_DIR"
     PYTHONPATH=. "$PYTHON" project/src/intake/generate_intake_sheets.py "$workspace" "$@"
+}
+
+run_init() {
+    [ $# -ge 1 ] || fail "init requires <workspace>"
+    workspace=$(resolve_path "$1")
+    shift
+    cd "$ROOT_DIR"
+    PYTHONPATH=. "$PYTHON" project/src/intake/init_workspace.py "$workspace" "$@"
 }
 
 run_compile() {
@@ -151,6 +160,7 @@ main() {
     shift
 
     case "$command" in
+        init) run_init "$@" ;;
         generate) run_generate "$@" ;;
         compile) run_compile "$@" ;;
         preview) run_preview "$@" ;;

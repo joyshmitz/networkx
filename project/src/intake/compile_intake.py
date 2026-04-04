@@ -17,6 +17,10 @@ import yaml
 from openpyxl import load_workbook
 
 from intake.workspace_manifest import refresh_workspace_manifest
+from intake.workspace_validation import (
+    IntakeCommandError,
+    ensure_compile_inputs,
+)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -517,13 +521,15 @@ def compile_intake(
 ) -> dict[str, Any]:
     """Compile intake xlsx files into questionnaire.yaml + status reports.
 
-    Returns summary dict with keys: questionnaire, all_fields, warnings, errors.
-    Raises ValueError if validation errors are found.
+    Returns a summary dict with keys: object_id, questionnaire, all_fields,
+    person_fields, and warnings.
+    Raises IntakeCommandError if user-facing validation errors are found.
     """
     if project_root is None:
         project_root = Path(__file__).resolve().parents[2]
     if compiled_on is None:
         compiled_on = date.today()
+    workspace_path, xlsx_files = ensure_compile_inputs(workspace_path)
 
     # --- 1. Load specs ---
     fields_data = _load_yaml(
@@ -549,10 +555,6 @@ def compile_intake(
 
     # --- 2. Find and parse xlsx ---
     responses_dir = workspace_path / "intake" / "responses"
-    xlsx_files = sorted(responses_dir.glob("*.xlsx"))
-    if not xlsx_files:
-        raise FileNotFoundError(f"No .xlsx files in {responses_dir}")
-
     person_fields: dict[str, dict[str, dict]] = {}
     all_warnings: list[str] = []
 
@@ -585,7 +587,7 @@ def compile_intake(
     all_errors = conflicts + value_errors
 
     if all_errors:
-        raise ValueError(
+        raise IntakeCommandError(
             "Compile validation failed:\n" + "\n".join(f"  - {e}" for e in all_errors)
         )
 
@@ -667,12 +669,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    workspace = Path(args.workspace_path).resolve()
-    if not workspace.exists():
-        print(f"Workspace not found: {workspace}", file=sys.stderr)
+    try:
+        result = compile_intake(Path(args.workspace_path), compiled_on=args.compiled_on)
+    except IntakeCommandError as exc:
+        print(str(exc), file=sys.stderr)
         sys.exit(1)
-
-    result = compile_intake(workspace, compiled_on=args.compiled_on)
 
     counts = _count_statuses(result["all_fields"])
     total = len(result["all_fields"])

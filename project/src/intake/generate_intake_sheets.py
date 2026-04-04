@@ -23,6 +23,12 @@ from openpyxl.styles import Font, PatternFill, Protection, numbers
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
+from intake.workspace_validation import (
+    IntakeCommandError,
+    WorkspaceValidationError,
+    ensure_workspace_initialized,
+)
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -161,7 +167,7 @@ def _load_preserved_responses(workspace_path: Path) -> dict[str, dict[str, Any]]
 
             existing = preserved.get(fid)
             if existing is not None and existing != entry:
-                raise ValueError(
+                raise IntakeCommandError(
                     f"Field '{fid}' has conflicting preserved responses in "
                     f"{origins[fid]} and {xlsx_path.name}"
                 )
@@ -229,7 +235,7 @@ def assign_fields_to_persons(
     for pid, info in person_roles.items():
         for role in info["roles"]:
             if role in role_to_person:
-                raise ValueError(
+                raise IntakeCommandError(
                     f"Role '{role}' assigned to both "
                     f"'{role_to_person[role]}' and '{pid}'."
                 )
@@ -672,6 +678,11 @@ def generate(
         project_root = Path(__file__).resolve().parents[2]
     if generated_on is None:
         generated_on = date.today()
+    workspace_path = ensure_workspace_initialized(
+        workspace_path,
+        command_name="generate",
+        suggest_init=True,
+    )
 
     fields_data = _load_yaml(
         project_root / "specs" / "dictionary" / "questionnaire_v2_fields.yaml"
@@ -683,6 +694,16 @@ def generate(
         project_root / "specs" / "questionnaire" / "core_questionnaire_v2.yaml"
     )
     role_data = _load_yaml(workspace_path / "role_assignments.yaml")
+    assignments = role_data.get("assignments")
+    if not isinstance(assignments, list):
+        raise WorkspaceValidationError(
+            "role_assignments.yaml must contain an 'assignments' list before generate can run."
+        )
+    if not assignments:
+        raise WorkspaceValidationError(
+            f"Workspace has no assignments in {workspace_path / 'role_assignments.yaml'}\n"
+            "Add at least one assignment to role_assignments.yaml before generating."
+        )
 
     field_index = build_field_index(fields_data)
     field_to_section, _ = build_section_maps(core_data)
@@ -769,16 +790,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    workspace = Path(args.workspace_path).resolve()
-    if not workspace.exists():
-        print(f"Workspace not found: {workspace}", file=sys.stderr)
+    try:
+        summary = generate(
+            Path(args.workspace_path),
+            generated_on=args.generated_on,
+            preserve_responses=args.preserve_responses,
+        )
+    except IntakeCommandError as exc:
+        print(str(exc), file=sys.stderr)
         sys.exit(1)
-
-    summary = generate(
-        workspace,
-        generated_on=args.generated_on,
-        preserve_responses=args.preserve_responses,
-    )
 
     print(f"Generated intake sheets for {summary['object_id']}:")
     for pid, info in summary["persons"].items():

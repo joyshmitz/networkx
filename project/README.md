@@ -1,118 +1,121 @@
 # Network Methodology Sandbox
 
-`project/` ізолює human-facing intake workflow, methodology contracts і NetworkX-backed analysis tooling від upstream коду `networkx`. Саме тут role-based questionnaire intake перетворюється на compiled object profile, normalized requirements model, routed review packets, evidence status і derived reports для handoff.
+Каталог `project/` відокремлює користувацький intake-процес, методологічні правила й допоміжні інструменти аналізу від основного коду `networkx`. Саме тут рольове анкетування по об'єкту перетворюється на зведений профіль, погоджену модель вимог, пакети на перевірку, звіти про підтвердження та інші робочі матеріали для подальшої інженерної роботи.
 
 ## Поточний Стан
 
-Human-facing intake layer `v1` завершений на гілці `research/methodology-foundation-clean`.
+Користувацький intake-шар `v1` завершений на гілці `research/methodology-foundation-clean`.
 
-Поточний baseline включає:
+Поточний базовий набір можливостей включає:
 
-- стабільну operator surface через `project/intake`;
-- детерміновану поведінку `generate`, `compile` і `preview` з fixed-date support;
-- routed review packets для координаторів і specialist reviewers;
-- advisory evidence status плюс narrow blocking evidence gate;
-- generated artifact index у `reports/workspace.manifest.yaml`;
-- останній verification baseline: `project/intake verify` -> `284 passed`.
+- стабільну командну поверхню через `project/intake`;
+- окрему команду `project/intake init` для створення нової робочої папки;
+- детерміновану поведінку `generate`, `compile` і `preview` з підтримкою фіксованої дати;
+- розкладені пакети на перевірку для координаторів і профільних перевіряльників;
+- попереджувальний звіт про підтвердження плюс вузьке блокувальне етапне обмеження;
+- індекс згенерованих артефактів у `reports/workspace.manifest.yaml`;
+- останній підтверджений результат перевірки: `project/intake verify` -> `296 passed`.
 
 ## З Чого Почати
 
 | Якщо вам потрібно... | Почніть із цього документа |
 | --- | --- |
-| щоденно вести intake workspace | `docs/methodology/INTAKE_OPERATOR_GUIDE.md` |
-| перевірити current baseline або спланувати наступну фазу | `docs/methodology/INTAKE_MASTER_NOTE.md` |
-| зрозуміти workflow між ролями та stages | `docs/methodology/QUESTIONNAIRE_WORKFLOW.md` |
-| зрозуміти ownership і review responsibilities | `docs/methodology/ROLE_MAP.md` |
-| зрозуміти methodology boundaries і human interaction rules | `docs/methodology/HUMAN_INTERACTION_MODEL.md` |
-| подивитися, що саме доставив `v1` і що лишилося поза scope | `docs/reviews/V1_CLOSEOUT_2026-04-03.md` |
-| переглянути historical plans і review history | `docs/plans/` і `docs/reviews/` |
+| щоденно вести intake по робочій папці | `docs/methodology/INTAKE_OPERATOR_GUIDE.md` |
+| перевірити поточний базовий стан або спланувати наступну фазу | `docs/methodology/INTAKE_MASTER_NOTE.md` |
+| зрозуміти послідовність роботи між ролями та етапами | `docs/methodology/QUESTIONNAIRE_WORKFLOW.md` |
+| зрозуміти зони відповідальності та правила перевірки | `docs/methodology/ROLE_MAP.md` |
+| зрозуміти межі методології та правила людської взаємодії | `docs/methodology/HUMAN_INTERACTION_MODEL.md` |
+| подивитися, що саме доставив `v1` і що лишилося поза межами цього етапу | `docs/reviews/V1_CLOSEOUT_2026-04-03.md` |
+| переглянути історичні плани й попередні підсумки перевірок | `docs/plans/` і `docs/reviews/` |
 
 ## Що Є В Каталозі
 
 | Розділ | Призначення |
 | --- | --- |
-| `docs/decisions/` | decision log і architectural rationale |
-| `docs/methodology/` | human workflow, role model, module boundaries, operator guidance |
-| `docs/plans/` | historical execution plans і planning records |
-| `docs/reviews/` | historical release notes, review briefs, corrective follow-ups, close-out records |
-| `specs/` | declarative questionnaire, dictionary, evidence, review і requirements contracts |
-| `src/` | compilers, validators, report generators, intake commands і shared data layers |
-| `examples/` | checked-in example workspaces для happy-path і stress-path verification |
+| `docs/decisions/` | журнал рішень та архітектурні пояснення |
+| `docs/methodology/` | опис робочого процесу, ролей, меж модулів і користувацьких правил |
+| `docs/plans/` | історичні плани виконання та планувальні записи |
+| `docs/reviews/` | підсумки релізів, матеріали перевірок і коригувальні нотатки |
+| `specs/` | декларативні контракти анкети, словника, підтверджень, перевірки та вимог |
+| `src/` | компілятори, перевірки, генератори звітів, intake-команди та спільні шари даних |
+| `examples/` | приклади робочих папок для звичайного й напруженого сценаріїв |
 
-## Операторська Поверхня
+## Командна Поверхня
 
-Канонічна operator-facing поверхня проходить через shell wrapper `project/intake`.
+Основний користувацький вхід проходить через shell-обгортку `project/intake`.
 
-| Команда | Коли зазвичай використовується | Основні outputs |
+| Команда | Коли зазвичай використовується | Основні результати |
 | --- | --- | --- |
-| `project/intake generate <workspace> [--date ...] [--preserve-responses]` | підготувати або оновити role-based workbooks і guides | `intake/generated/*.guide.md`, `intake/responses/*.xlsx` |
-| `project/intake compile <workspace> [--date ...]` | скомпілювати workbook answers у canonical artifacts | `questionnaire.yaml`, `intake/responses/*.response.yaml`, `reports/intake_status.*`, `reports/workspace.manifest.yaml` |
-| `project/intake preview <workspace> [--date ...]` | вирішити, чи workspace уже baseline-ready | pipeline reports під `reports/`, `reports/preview_status.*`, `reports/workspace.manifest.yaml` |
-| `project/intake review <workspace> [--date ...]` | розкласти unresolved items і findings по ролях та людях | `reports/reviewer_registry.*`, `reports/review_packet.*`, `reports/workspace.manifest.yaml` |
-| `project/intake evidence <workspace> [--date ...]` | оцінити evidence strength і, де це дозволено policy, застосувати narrow stage gate | `reports/evidence_status.*`, `reports/workspace.manifest.yaml` |
-| `project/intake verify [pytest args...]` | прогнати regression suite | лише test output |
-| `project/intake demo happy|stress [--date ...]` | відтворити checked-in exemplars у temporary copy | лише temporary workspace |
+| `project/intake init <workspace> [--object-id ...]` | почати новий об'єкт і створити стартову робочу папку | `role_assignments.yaml` |
+| `project/intake generate <workspace> [--date ...] [--preserve-responses]` | підготувати або оновити рольові таблиці та пояснювальні файли | `intake/generated/*.guide.md`, `intake/responses/*.xlsx` |
+| `project/intake compile <workspace> [--date ...]` | звести відповіді з таблиць у погоджені артефакти | `questionnaire.yaml`, `intake/responses/*.response.yaml`, `reports/intake_status.*`, `reports/workspace.manifest.yaml` |
+| `project/intake preview <workspace> [--date ...]` | вирішити, чи робоча папка вже придатна як базовий стан | технічні звіти під `reports/`, `reports/preview_status.*`, `reports/workspace.manifest.yaml` |
+| `project/intake review <workspace> [--date ...]` | розкласти незакриті питання та зауваження по ролях і людях | `reports/reviewer_registry.*`, `reports/review_packet.*`, `reports/workspace.manifest.yaml` |
+| `project/intake evidence <workspace> [--date ...]` | оцінити силу підтверджень і, де це дозволяє правило, застосувати вузьке етапне обмеження | `reports/evidence_status.*`, `reports/workspace.manifest.yaml` |
+| `project/intake verify [pytest args...]` | прогнати регресійну перевірку | лише вивід тестів |
+| `project/intake demo happy|stress [--date ...]` | відтворити приклади у тимчасовій копії | лише тимчасова робоча папка |
 
 На практиці важливі два правила:
 
-- `preview` відповідає за readiness summary і перезаписує generated reports, але не застосовує blocking evidence gate.
-- `evidence` є єдиною operator command, яка може завершитися non-zero через missing evidence, і навіть це відбувається лише в narrow, tested blocking scope, описаному в operator guide.
+- `preview` відповідає за коротке зведення готовності й перезаписує власні згенеровані звіти, але не застосовує блокувальне правило за підтвердженнями.
+- `evidence` є єдиною командою для користувача, яка може завершитися з ненульовим кодом через брак підтверджень, і навіть це відбувається лише у вузькому перевіреному обсязі, описаному в operator guide.
 
-## Модель Workspace
+## Модель Робочої Папки
 
-Один workspace містить три типи артефактів.
+Одна робоча папка містить три типи артефактів.
 
-### 1. Людські input-артефакти
+### 1. Людські вхідні артефакти
 
 - `role_assignments.yaml`
 - `intake/responses/*.xlsx`
 
 Це матеріали, які люди справді заповнюють і підтримують під час intake.
 
-### 2. Compiled canonical artifacts
+### 2. Зібрані погоджені артефакти
 
 - `questionnaire.yaml`
 - `intake/responses/*.response.yaml`
 - `reports/intake_status.yaml`
 - `reports/intake_status.md`
 
-Ці файли фіксують normalized, machine-readable стан зібраних відповідей.
+Ці файли фіксують нормалізований, машинозчитуваний стан зібраних відповідей.
 
-### 3. Derived reports
+### 3. Похідні звіти
 
-- pipeline reports such as `requirements.compiled.yaml`, `graphs.summary.yaml`, and `validation.summary.yaml`
-- `reports/preview_status.yaml` and `reports/preview_status.md`
-- `reports/reviewer_registry.yaml`, `reports/reviewer_registry.md`, and `reports/review_packet.*.md`
-- `reports/evidence_status.yaml` and `reports/evidence_status.md`
+- звіти технічного конвеєра, зокрема `requirements.compiled.yaml`, `graphs.summary.yaml` і `validation.summary.yaml`
+- `reports/preview_status.yaml` та `reports/preview_status.md`
+- `reports/reviewer_registry.yaml`, `reports/reviewer_registry.md` та `reports/review_packet.*.md`
+- `reports/evidence_status.yaml` та `reports/evidence_status.md`
 - `reports/workspace.manifest.yaml`
 
-Derived reports потрібні для review, coordination і downstream work. Це generated artifacts, а не ще один editable source of truth.
+Ці звіти потрібні для перевірки, координації та подальшої роботи. Це згенеровані артефакти, а не ще одне місце, де руками підтримується джерело істини.
 
-## Execution Contract
+## Виконання Команд
 
 Команди слід запускати з кореня репозиторію.
 
 - interpreter: `.venv/bin/python`
-- test/runtime import contract: `PYTHONPATH=.`
-- coordinator-facing surface: `project/intake ...`
-- raw Python commands лишаються underlying execution contract для maintainers і debugging
+- правило для запуску тестів і скриптів: `PYTHONPATH=.`
+- основна командна поверхня для координатора: `project/intake ...`
+- прямі Python-команди лишаються службовим інтерфейсом для супроводу та налагодження
 
-Bootstrap:
+Початкове налаштування:
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r project/requirements.txt jsonschema pytest
 ```
 
-Canonical verify:
+Канонічна перевірка:
 
 ```bash
 project/intake verify
 ```
 
-Raw command examples:
+Приклади прямих команд:
 
 ```bash
+PYTHONPATH=. .venv/bin/python project/src/intake/init_workspace.py project/examples/my_object
 PYTHONPATH=. .venv/bin/python project/src/intake/generate_intake_sheets.py project/examples/sample_object_01 --date 2026-04-02
 PYTHONPATH=. .venv/bin/python project/src/intake/compile_intake.py project/examples/sample_object_01 --date 2026-04-02
 PYTHONPATH=. .venv/bin/python project/src/intake/preview_status.py project/examples/sample_object_01 --date 2026-04-02
@@ -120,13 +123,13 @@ PYTHONPATH=. .venv/bin/python project/src/intake/review_packets.py project/examp
 PYTHONPATH=. .venv/bin/python project/src/intake/evidence_status.py project/examples/sample_object_01 --date 2026-04-02
 ```
 
-## Правила Регенерації Та Overwrite
+## Правила Перегенерації Та Перезапису
 
-- використовуйте explicit `--date YYYY-MM-DD`, коли потрібна deterministic exemplar regeneration;
-- `generate --preserve-responses` оновлює workbook structure без втрати вже заповнених `E/F/G/H` cells;
-- `preview`, `review` і `evidence` можуть безпечно overwrite-ити власні generated outputs під `reports/`;
-- `demo happy` і `demo stress` працюють у temporary copy й не повинні переписувати tracked example workspaces.
+- використовуйте явний `--date YYYY-MM-DD`, коли потрібне відтворюване оновлення прикладів;
+- `generate --preserve-responses` оновлює структуру робочих таблиць без втрати вже заповнених клітинок `E/F/G/H`;
+- `preview`, `review` і `evidence` можуть безпечно перезаписувати власні згенеровані результати під `reports/`;
+- `demo happy` і `demo stress` працюють у тимчасовій копії й не повинні переписувати приклади, що зберігаються в репозиторії.
 
 ## Історичний Контекст
 
-`v0` і `v1` plans лишаються в repository для traceability. Їх тепер слід читати як historical execution records, а не як active implementation backlog. Поточний operator-facing reference: `docs/methodology/INTAKE_OPERATOR_GUIDE.md`. Поточний milestone summary: `docs/reviews/V1_CLOSEOUT_2026-04-03.md`.
+Плани `v0` і `v1` лишаються в репозиторії для простежуваності. Їх слід читати як історичні записи виконання, а не як поточний робочий перелік. Основний користувацький довідник зараз: `docs/methodology/INTAKE_OPERATOR_GUIDE.md`. Поточний підсумок етапу: `docs/reviews/V1_CLOSEOUT_2026-04-03.md`.

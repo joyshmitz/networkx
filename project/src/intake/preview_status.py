@@ -17,6 +17,7 @@ if str(SRC_ROOT) not in sys.path:
 from intake.workspace_snapshot import build_workspace_snapshot
 from intake.workspace_manifest import refresh_workspace_manifest
 from model_utils import write_yaml
+from intake.workspace_validation import IntakeCommandError
 
 
 def _parse_cli_date(raw: str) -> date:
@@ -129,6 +130,7 @@ def preview_workspace(
         project_root=project_root,
         snapshot_on=preview_on,
         write_pipeline_outputs=True,
+        command_name="preview",
     )
     unresolved_s4_fields = snapshot["fields"]["unresolved_by_strictness"].get("S4", [])
     unresolved_non_s4_fields = [
@@ -198,10 +200,14 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    result = preview_workspace(
-        Path(args.workspace_path),
-        preview_on=args.preview_on,
-    )
+    try:
+        result = preview_workspace(
+            Path(args.workspace_path),
+            preview_on=args.preview_on,
+        )
+    except IntakeCommandError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(1) from exc
     print(
         yaml.safe_dump(
             {

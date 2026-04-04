@@ -24,6 +24,7 @@ from intake.compile_intake import (
     compile_intake,
     parse_xlsx,
 )
+from intake.workspace_validation import IntakeCommandError, WorkspaceValidationError
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -564,7 +565,7 @@ class TestEdgeCases:
                 ("wan_required", "INVALID_VALUE", None, None, None),
             ],
         })
-        with pytest.raises(ValueError, match="not in"):
+        with pytest.raises(IntakeCommandError, match="not in"):
             compile_intake(ws, project_root=PROJECT_ROOT)
 
     def test_compile_raises_on_conflict(self, tmp_path):
@@ -576,7 +577,7 @@ class TestEdgeCases:
                 ("wan_required", "no", None, None, None),
             ],
         })
-        with pytest.raises(ValueError, match="multiple persons"):
+        with pytest.raises(IntakeCommandError, match="multiple persons"):
             compile_intake(ws, project_root=PROJECT_ROOT)
 
     def test_partial_fill_produces_tbd_and_unanswered(self, tmp_path):
@@ -617,5 +618,5 @@ class TestEdgeCases:
             ws / "role_assignments.yaml",
         )
         (ws / "intake" / "responses").mkdir(parents=True)
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(WorkspaceValidationError, match="No \\.xlsx intake response files found"):
             compile_intake(ws, project_root=PROJECT_ROOT)
