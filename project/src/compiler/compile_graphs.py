@@ -7,7 +7,12 @@ from typing import Any
 
 import networkx as nx
 import yaml
-from model_utils import enabled_services, is_yes, load_yaml, resolve_project_root
+from network_methodology_sandbox.model_utils import (
+    enabled_services,
+    is_yes,
+    load_yaml,
+    resolve_project_root,
+)
 
 
 @dataclass

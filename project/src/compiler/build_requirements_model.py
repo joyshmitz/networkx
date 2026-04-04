@@ -5,8 +5,13 @@ from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator
-from compiler.cross_field_inference import apply_cross_field_inferences
-from model_utils import is_yes, load_yaml, merge_missing_values_tracked, resolve_project_root
+from network_methodology_sandbox.compiler.cross_field_inference import apply_cross_field_inferences
+from network_methodology_sandbox.model_utils import (
+    is_yes,
+    load_yaml,
+    merge_missing_values_tracked,
+    resolve_project_root,
+)
 
 
 class SchemaValidationError(ValueError):

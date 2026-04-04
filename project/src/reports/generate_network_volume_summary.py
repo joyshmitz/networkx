@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from model_utils import enabled_services
+from network_methodology_sandbox.model_utils import enabled_services
 
 
 def generate_network_volume_summary(requirements: dict[str, Any]) -> str:

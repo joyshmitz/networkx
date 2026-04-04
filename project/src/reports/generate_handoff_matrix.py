@@ -2,7 +2,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from model_utils import field_value_map, is_no, is_tbd, is_yes, load_yaml, resolve_project_root
+from network_methodology_sandbox.model_utils import (
+    field_value_map,
+    is_no,
+    is_tbd,
+    is_yes,
+    load_yaml,
+    resolve_project_root,
+)
 
 
 def default_mapping_path() -> Path:

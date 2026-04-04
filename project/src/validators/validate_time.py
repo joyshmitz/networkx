@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 import networkx as nx
-from model_utils import is_yes
+from network_methodology_sandbox.model_utils import is_yes
 
 
 def validate_time(requirements: dict[str, Any], physical_graph: nx.Graph) -> list[dict[str, Any]]:

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from compiler.cross_field_inference import (
+from network_methodology_sandbox.compiler.cross_field_inference import (
     collect_condition_field_refs,
     evaluate_condition,
     field_ref,
     get_field_value,
     load_cross_field_rules,
 )
-from model_utils import is_tbd
+from network_methodology_sandbox.model_utils import is_tbd
 
 
 def validate_semantic_consistency(

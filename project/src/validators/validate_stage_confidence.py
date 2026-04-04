@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from model_utils import is_tbd
+from network_methodology_sandbox.model_utils import is_tbd
 
 
 CONFIDENCE_MAP: dict[str, dict[str, str]] = {

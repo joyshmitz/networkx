@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import networkx as nx
+from network_methodology_sandbox.model_utils import enabled_services
 
 
 def validate_cross_graph(
@@ -30,7 +31,6 @@ def validate_cross_graph(
             })
 
     # Interface graph consumers should match enabled services
-    from model_utils import enabled_services
     active_services = set(enabled_services(requirements))
     interface_consumers = {
         n for n in interface.nodes

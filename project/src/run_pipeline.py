@@ -7,31 +7,35 @@ from typing import Any
 
 import yaml
 
-from compiler.build_requirements_model import (
+from network_methodology_sandbox.compiler.build_requirements_model import (
     build_requirements_model,
     default_requirements_schema_path,
     validate_requirements_model,
 )
 from intake.workspace_manifest import refresh_workspace_manifest
-from compiler.compile_graphs import compile_all_graphs, summarize_graph_bundle
-from model_utils import load_yaml, write_yaml
-from reports.generate_handoff_matrix import generate_handoff_matrix
-from reports.generate_network_volume_summary import generate_network_volume_summary
-from validators.validate_annex_activation import validate_annex_activation
-from validators.validate_connectivity import validate_connectivity
-from validators.validate_cross_graph import validate_cross_graph
-from validators.validate_power_ports import validate_power_ports
-from validators.validate_resilience import validate_resilience
-from validators.validate_role_assignments import validate_role_assignments
-from validators.validate_segmentation import validate_segmentation
-from validators.validate_semantic_consistency import validate_semantic_consistency
-from validators.validate_stage_confidence import (
+from network_methodology_sandbox.compiler.compile_graphs import compile_all_graphs, summarize_graph_bundle
+from network_methodology_sandbox.model_utils import load_yaml, write_yaml
+from network_methodology_sandbox.reports.generate_handoff_matrix import generate_handoff_matrix
+from network_methodology_sandbox.reports.generate_network_volume_summary import (
+    generate_network_volume_summary,
+)
+from network_methodology_sandbox.validators.validate_annex_activation import validate_annex_activation
+from network_methodology_sandbox.validators.validate_connectivity import validate_connectivity
+from network_methodology_sandbox.validators.validate_cross_graph import validate_cross_graph
+from network_methodology_sandbox.validators.validate_power_ports import validate_power_ports
+from network_methodology_sandbox.validators.validate_resilience import validate_resilience
+from network_methodology_sandbox.validators.validate_role_assignments import validate_role_assignments
+from network_methodology_sandbox.validators.validate_segmentation import validate_segmentation
+from network_methodology_sandbox.validators.validate_semantic_consistency import (
+    validate_semantic_consistency,
+)
+from network_methodology_sandbox.validators.validate_stage_confidence import (
     count_tbd_fields,
     derive_confidence_level,
     summarize_assumptions,
     validate_stage_confidence,
 )
-from validators.validate_time import validate_time
+from network_methodology_sandbox.validators.validate_time import validate_time
 
 
 def run_validators(
