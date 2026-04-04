@@ -7,18 +7,6 @@ validators:
     rules:
       - issue_code: physical_graph_empty
         message_contains: "Physical graph is empty"
-      - issue_code: carrier_diversity_weak_for_recovery
-        message_contains: "single_path_allowed carrier diversity"
-        field_ids:
-          - carrier_diversity_target
-      - issue_code: degraded_mode_weak_for_recovery
-        message_contains: "best_effort degraded mode"
-        field_ids:
-          - degraded_mode_profile
-      - issue_code: mttr_too_slow_for_critical_operations
-        message_contains: "same_day MTTR"
-        field_ids:
-          - mttr_target_class
       - issue_code: wan_edges_required
         message_contains: "requires at least two WAN edges"
         field_ids:
@@ -67,3 +55,27 @@ validators:
         field_ids:
           - security_zone_model
           - audit_logging_required
+      - issue_code: high_criticality_conflicts_with_single_path
+        message_contains: "single_path_allowed carrier diversity"
+        field_ids:
+          - carrier_diversity_target
+      - issue_code: high_criticality_conflicts_with_best_effort
+        message_contains: "best_effort degraded mode"
+        field_ids:
+          - degraded_mode_profile
+      - issue_code: high_criticality_conflicts_with_same_day_mttr
+        message_contains: "same_day MTTR"
+        field_ids:
+          - mttr_target_class
+      - issue_code: high_criticality_conflicts_with_shared_ok
+        message_contains: "shared_ok transport separation"
+        field_ids:
+          - transport_separation_policy
+      - issue_code: high_criticality_conflicts_with_flat_zones
+        message_contains: "flat zone model"
+        field_ids:
+          - security_zone_model
+      - issue_code: poe_required_conflicts_with_no_budget
+        message_contains: "poe_budget_class is set to none"
+        field_ids:
+          - poe_budget_class

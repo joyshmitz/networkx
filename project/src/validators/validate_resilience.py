@@ -22,7 +22,6 @@ def validate_resilience(
 
     redundancy_target = requirements.get("resilience", {}).get("redundancy_target")
     carrier_target = requirements.get("external_transport", {}).get("carrier_diversity_target")
-    criticality_class = requirements.get("metadata", {}).get("criticality_class")
     staffing_model = requirements.get("object_profile", {}).get("staffing_model")
 
     oob_required = requirements.get("security_access", {}).get("oob_required")
@@ -35,36 +34,6 @@ def validate_resilience(
                 "validator": "resilience",
                 "severity": "warning",
                 "message": "Remote-ops staffing without confirmed OOB access creates weak recovery assumptions.",
-            }
-        )
-
-    degraded_mode = requirements.get("resilience", {}).get("degraded_mode_profile")
-    mttr_target = requirements.get("resilience", {}).get("mttr_target_class")
-
-    if criticality_class in {"high", "mission_critical"} and carrier_target == "single_path_allowed":
-        issues.append(
-            {
-                "validator": "resilience",
-                "severity": "warning",
-                "message": "High-criticality object with single_path_allowed carrier diversity — weak for recovery.",
-            }
-        )
-
-    if criticality_class in {"high", "mission_critical"} and degraded_mode == "best_effort":
-        issues.append(
-            {
-                "validator": "resilience",
-                "severity": "warning",
-                "message": "High-criticality object with best_effort degraded mode — no guaranteed service survival.",
-            }
-        )
-
-    if criticality_class in {"high", "mission_critical"} and mttr_target == "same_day":
-        issues.append(
-            {
-                "validator": "resilience",
-                "severity": "warning",
-                "message": "High-criticality object with same_day MTTR — may be too slow for critical operations.",
             }
         )
 

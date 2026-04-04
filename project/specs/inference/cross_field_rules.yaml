@@ -118,6 +118,59 @@ rules:
         - field: critical_services.control_required
           op: is_yes
 
+  - rule_id: video_requires_local_archiving
+    mode: infer_if_tbd
+    target_section: critical_services
+    target_field: local_archiving_required
+    inferred_value: 'yes'
+    reason: Video service implies local archiving for continuity and evidence retention.
+    source_fields:
+      - critical_services.video_required
+    when:
+      all_of:
+        - field: critical_services.video_required
+          op: is_yes
+
+  - rule_id: iiot_requires_local_archiving
+    mode: infer_if_tbd
+    target_section: critical_services
+    target_field: local_archiving_required
+    inferred_value: 'yes'
+    reason: IIoT edge workloads require local data retention for continuity.
+    source_fields:
+      - critical_services.iiot_required
+    when:
+      all_of:
+        - field: critical_services.iiot_required
+          op: is_yes
+
+  - rule_id: control_requires_sub_ms_timing
+    mode: infer_if_tbd
+    target_section: time_sync
+    target_field: timing_accuracy_class
+    inferred_value: sub_ms
+    reason: Control workloads require sub-millisecond timing for loop stability.
+    source_fields:
+      - critical_services.control_required
+    when:
+      all_of:
+        - field: critical_services.control_required
+          op: is_yes
+
+  - rule_id: high_criticality_requires_ops_handoff
+    mode: infer_if_tbd
+    target_section: operations
+    target_field: operations_handoff_required
+    inferred_value: 'yes'
+    reason: High-criticality objects require formal operations handoff.
+    source_fields:
+      - metadata.criticality_class
+    when:
+      all_of:
+        - field: metadata.criticality_class
+          op: in
+          values: [high, mission_critical]
+
   - rule_id: remote_ops_conflicts_with_oob_disabled
     mode: flag_if_conflicts
     target_section: security_access
@@ -193,3 +246,116 @@ rules:
         - field: security_access.audit_logging_required
           op: eq
           value: 'no'
+
+  - rule_id: high_criticality_conflicts_with_single_path
+    mode: flag_if_conflicts
+    target_section: external_transport
+    target_field: carrier_diversity_target
+    severity: warning
+    message: High-criticality object with single_path_allowed carrier diversity — weak for recovery.
+    reason: High-criticality objects are inconsistent with single-path carrier diversity.
+    source_fields:
+      - metadata.criticality_class
+      - external_transport.carrier_diversity_target
+    when:
+      all_of:
+        - field: metadata.criticality_class
+          op: in
+          values: [high, mission_critical]
+        - field: external_transport.carrier_diversity_target
+          op: eq
+          value: single_path_allowed
+
+  - rule_id: high_criticality_conflicts_with_best_effort
+    mode: flag_if_conflicts
+    target_section: resilience
+    target_field: degraded_mode_profile
+    severity: warning
+    message: High-criticality object with best_effort degraded mode — no guaranteed service survival.
+    reason: High-criticality objects are inconsistent with best_effort degraded mode.
+    source_fields:
+      - metadata.criticality_class
+      - resilience.degraded_mode_profile
+    when:
+      all_of:
+        - field: metadata.criticality_class
+          op: in
+          values: [high, mission_critical]
+        - field: resilience.degraded_mode_profile
+          op: eq
+          value: best_effort
+
+  - rule_id: high_criticality_conflicts_with_same_day_mttr
+    mode: flag_if_conflicts
+    target_section: resilience
+    target_field: mttr_target_class
+    severity: warning
+    message: High-criticality object with same_day MTTR — may be too slow for critical operations.
+    reason: High-criticality objects are inconsistent with same_day MTTR target.
+    source_fields:
+      - metadata.criticality_class
+      - resilience.mttr_target_class
+    when:
+      all_of:
+        - field: metadata.criticality_class
+          op: in
+          values: [high, mission_critical]
+        - field: resilience.mttr_target_class
+          op: eq
+          value: same_day
+
+  - rule_id: high_criticality_conflicts_with_shared_ok
+    mode: flag_if_conflicts
+    target_section: external_transport
+    target_field: transport_separation_policy
+    severity: warning
+    message: High-criticality object with shared_ok transport separation — may violate isolation expectations.
+    reason: High-criticality objects are inconsistent with shared_ok transport separation.
+    source_fields:
+      - metadata.criticality_class
+      - external_transport.transport_separation_policy
+    when:
+      all_of:
+        - field: metadata.criticality_class
+          op: in
+          values: [high, mission_critical]
+        - field: external_transport.transport_separation_policy
+          op: eq
+          value: shared_ok
+
+  - rule_id: high_criticality_conflicts_with_flat_zones
+    mode: flag_if_conflicts
+    target_section: security_access
+    target_field: security_zone_model
+    severity: warning
+    message: High-criticality object with flat zone model — no network segmentation.
+    reason: High-criticality objects are inconsistent with flat zone model.
+    source_fields:
+      - metadata.criticality_class
+      - security_access.security_zone_model
+    when:
+      all_of:
+        - field: metadata.criticality_class
+          op: in
+          values: [high, mission_critical]
+        - field: security_access.security_zone_model
+          op: eq
+          value: flat
+
+  - rule_id: poe_required_conflicts_with_no_budget
+    mode: flag_if_conflicts
+    target_section: power_environment
+    target_field: poe_budget_class
+    severity: error
+    message: PoE is required, but poe_budget_class is set to none.
+    reason: PoE requirement is inconsistent with poe_budget_class='none'.
+    source_fields:
+      - power_environment.poe_required
+      - power_environment.poe_budget_class
+    when:
+      all_of:
+        - field: power_environment.poe_required
+          op: is_yes
+        - field: power_environment.poe_budget_class
+          op: eq
+          value: none

@@ -122,7 +122,7 @@ class TestSegmentation:
         issues = validate_segmentation(g, reqs)
         assert not any("IIOT zone is missing" in i["message"] for i in issues)
 
-    def test_high_crit_shared_ok_warns(self):
+    def test_high_crit_shared_ok_no_longer_in_segmentation(self):
         g = nx.DiGraph()
         g.add_node("OT")
         g.add_node("MGMT")
@@ -132,9 +132,9 @@ class TestSegmentation:
             "metadata": {"criticality_class": "high"},
         }
         issues = validate_segmentation(g, reqs)
-        assert any("shared_ok" in i["message"] for i in _issues_by(issues, "warning"))
+        assert not any("shared_ok" in i["message"] for i in issues)
 
-    def test_high_crit_flat_warns(self):
+    def test_high_crit_flat_no_longer_in_segmentation(self):
         g = nx.DiGraph()
         g.add_node("OT")
         reqs = {
@@ -142,7 +142,7 @@ class TestSegmentation:
             "metadata": {"criticality_class": "high"},
         }
         issues = validate_segmentation(g, reqs)
-        assert any("flat zone model" in i["message"] for i in _issues_by(issues, "warning"))
+        assert not any("flat zone model" in i["message"] for i in issues)
 
 
 # ---------------------------------------------------------------------------
@@ -172,44 +172,41 @@ class TestResilience:
         issues = validate_resilience(pg, fg, reqs)
         assert any("confirmed OOB access" in i["message"] for i in _issues_by(issues, "warning"))
 
-    def test_high_crit_single_path_warns(self):
+    def test_high_crit_single_path_no_longer_in_resilience(self):
         pg, fg = self._minimal_graphs()
         reqs = {
             "metadata": {"criticality_class": "high"},
-            "resilience": {"redundancy_target": "uplink_backup", "degraded_mode_profile": "telemetry_survives",
-                           "mttr_target_class": "four_hours"},
+            "resilience": {"redundancy_target": "uplink_backup"},
             "object_profile": {"staffing_model": "local_ops"},
             "security_access": {"oob_required": "yes"},
             "external_transport": {"carrier_diversity_target": "single_path_allowed"},
         }
         issues = validate_resilience(pg, fg, reqs)
-        assert any("single_path" in i["message"] for i in _issues_by(issues, "warning"))
+        assert not any("single_path" in i["message"] for i in issues)
 
-    def test_high_crit_best_effort_warns(self):
+    def test_high_crit_best_effort_no_longer_in_resilience(self):
         pg, fg = self._minimal_graphs()
         reqs = {
             "metadata": {"criticality_class": "mission_critical"},
-            "resilience": {"redundancy_target": "uplink_backup", "degraded_mode_profile": "best_effort",
-                           "mttr_target_class": "four_hours"},
+            "resilience": {"redundancy_target": "uplink_backup", "degraded_mode_profile": "best_effort"},
             "object_profile": {"staffing_model": "local_ops"},
             "security_access": {"oob_required": "yes"},
             "external_transport": {"carrier_diversity_target": "dual_carrier_required"},
         }
         issues = validate_resilience(pg, fg, reqs)
-        assert any("best_effort" in i["message"] for i in _issues_by(issues, "warning"))
+        assert not any("best_effort" in i["message"] for i in issues)
 
-    def test_high_crit_same_day_mttr_warns(self):
+    def test_high_crit_same_day_mttr_no_longer_in_resilience(self):
         pg, fg = self._minimal_graphs()
         reqs = {
             "metadata": {"criticality_class": "high"},
-            "resilience": {"redundancy_target": "uplink_backup", "degraded_mode_profile": "telemetry_survives",
-                           "mttr_target_class": "same_day"},
+            "resilience": {"redundancy_target": "uplink_backup", "mttr_target_class": "same_day"},
             "object_profile": {"staffing_model": "local_ops"},
             "security_access": {"oob_required": "yes"},
             "external_transport": {"carrier_diversity_target": "dual_carrier_required"},
         }
         issues = validate_resilience(pg, fg, reqs)
-        assert any("same_day" in i["message"] for i in _issues_by(issues, "warning"))
+        assert not any("same_day" in i["message"] for i in issues)
 
     def test_wan_no_with_dual_carrier_flags_missing_domains(self):
         pg = nx.Graph()
@@ -287,13 +284,13 @@ class TestPowerPorts:
         issues = validate_power_ports(reqs, g)
         assert any("power_source_model" in i["message"] for i in issues)
 
-    def test_poe_required_budget_none(self):
+    def test_poe_required_budget_none_no_longer_in_power_ports(self):
         g = nx.Graph()
         reqs = {"power_environment": {"poe_required": "yes", "poe_budget_class": "none",
                                        "power_source_model": "ac_dc_hybrid"},
                 "critical_services": {}}
         issues = validate_power_ports(reqs, g)
-        assert any("poe_budget_class" in i["message"] for i in issues)
+        assert not any("poe_budget_class" in i["message"] for i in issues)
 
     def test_poe_tbd_budget_no_false_error(self):
         """poe_budget_class: tbd should not trigger 'budget is none' error."""
@@ -461,3 +458,50 @@ class TestSemanticConsistency:
         }
         issues = validate_semantic_consistency(reqs, [])
         assert any("audit_logging_required='yes'" in i["message"] for i in _issues_by(issues, "warning"))
+
+    def test_high_crit_single_path_warns(self):
+        reqs = {
+            "metadata": {"criticality_class": "high"},
+            "external_transport": {"carrier_diversity_target": "single_path_allowed"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("single_path_allowed carrier diversity" in i["message"] for i in _issues_by(issues, "warning"))
+
+    def test_high_crit_best_effort_warns(self):
+        reqs = {
+            "metadata": {"criticality_class": "high"},
+            "resilience": {"degraded_mode_profile": "best_effort"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("best_effort degraded mode" in i["message"] for i in _issues_by(issues, "warning"))
+
+    def test_high_crit_same_day_mttr_warns(self):
+        reqs = {
+            "metadata": {"criticality_class": "high"},
+            "resilience": {"mttr_target_class": "same_day"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("same_day MTTR" in i["message"] for i in _issues_by(issues, "warning"))
+
+    def test_high_crit_shared_ok_warns(self):
+        reqs = {
+            "metadata": {"criticality_class": "high"},
+            "external_transport": {"transport_separation_policy": "shared_ok"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("shared_ok transport separation" in i["message"] for i in _issues_by(issues, "warning"))
+
+    def test_high_crit_flat_zones_warns(self):
+        reqs = {
+            "metadata": {"criticality_class": "high"},
+            "security_access": {"security_zone_model": "flat"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("flat zone model" in i["message"] for i in _issues_by(issues, "warning"))
+
+    def test_poe_required_budget_none_errors(self):
+        reqs = {
+            "power_environment": {"poe_required": "yes", "poe_budget_class": "none"},
+        }
+        issues = validate_semantic_consistency(reqs, [])
+        assert any("poe_budget_class is set to none" in i["message"] for i in _issues_by(issues, "error"))

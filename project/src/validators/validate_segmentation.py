@@ -66,25 +66,4 @@ def validate_segmentation(graph: nx.DiGraph, requirements: dict[str, Any]) -> li
             }
         )
 
-    criticality_class = requirements.get("metadata", {}).get("criticality_class")
-    transport_policy = requirements.get("external_transport", {}).get("transport_separation_policy")
-
-    if criticality_class in {"high", "mission_critical"} and transport_policy == "shared_ok":
-        issues.append(
-            {
-                "validator": "segmentation",
-                "severity": "warning",
-                "message": "High-criticality object with shared_ok transport separation — may violate isolation expectations.",
-            }
-        )
-
-    if criticality_class in {"high", "mission_critical"} and zone_model == "flat":
-        issues.append(
-            {
-                "validator": "segmentation",
-                "severity": "warning",
-                "message": "High-criticality object with flat zone model — no network segmentation.",
-            }
-        )
-
     return issues

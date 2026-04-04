@@ -116,6 +116,113 @@ class TestCrossFieldInference:
         with pytest.raises(InferenceRuleConflictError, match="Conflicting cross-field inference rules"):
             apply_cross_field_inferences(requirements, rules=conflicting_rules)
 
+    def test_video_infers_local_archiving_when_tbd(self):
+        requirements = {
+            "critical_services": {"video_required": "yes", "local_archiving_required": "tbd"},
+        }
+
+        normalized, assumptions = apply_cross_field_inferences(requirements)
+
+        assert normalized["critical_services"]["local_archiving_required"] == "yes"
+        by_field = {a["field_id"]: a for a in assumptions}
+        assert by_field["local_archiving_required"]["rule_id"] == "video_requires_local_archiving"
+
+    def test_iiot_infers_local_archiving_when_tbd(self):
+        requirements = {
+            "critical_services": {"iiot_required": "yes", "local_archiving_required": "tbd"},
+        }
+
+        normalized, assumptions = apply_cross_field_inferences(requirements)
+
+        assert normalized["critical_services"]["local_archiving_required"] == "yes"
+        by_field = {a["field_id"]: a for a in assumptions}
+        assert by_field["local_archiving_required"]["rule_id"] == "iiot_requires_local_archiving"
+
+    def test_control_infers_sub_ms_timing_when_tbd(self):
+        requirements = {
+            "critical_services": {"control_required": "yes"},
+            "time_sync": {"timing_accuracy_class": "tbd"},
+        }
+
+        normalized, assumptions = apply_cross_field_inferences(requirements)
+
+        assert normalized["time_sync"]["timing_accuracy_class"] == "sub_ms"
+        by_field = {a["field_id"]: a for a in assumptions}
+        assert by_field["timing_accuracy_class"]["rule_id"] == "control_requires_sub_ms_timing"
+
+    def test_high_criticality_infers_ops_handoff_when_tbd(self):
+        requirements = {
+            "metadata": {"criticality_class": "high"},
+            "operations": {"operations_handoff_required": "tbd"},
+        }
+
+        normalized, assumptions = apply_cross_field_inferences(requirements)
+
+        assert normalized["operations"]["operations_handoff_required"] == "yes"
+        by_field = {a["field_id"]: a for a in assumptions}
+        assert by_field["operations_handoff_required"]["rule_id"] == "high_criticality_requires_ops_handoff"
+
+    def test_explicit_local_archiving_blocks_video_inference(self):
+        requirements = {
+            "critical_services": {"video_required": "yes", "local_archiving_required": "no"},
+        }
+
+        normalized, assumptions = apply_cross_field_inferences(requirements)
+
+        assert normalized["critical_services"]["local_archiving_required"] == "no"
+        assert not any(a["field_id"] == "local_archiving_required" for a in assumptions)
+
+    def test_control_tbd_does_not_trigger_timing_inference(self):
+        requirements = {
+            "critical_services": {"control_required": "tbd"},
+            "time_sync": {"timing_accuracy_class": "tbd"},
+        }
+
+        normalized, assumptions = apply_cross_field_inferences(requirements)
+
+        assert normalized["time_sync"]["timing_accuracy_class"] == "tbd"
+        assert not any(a["field_id"] == "timing_accuracy_class" for a in assumptions)
+
+    def test_control_triggers_full_timing_chain(self):
+        requirements = {
+            "critical_services": {"control_required": "yes"},
+            "time_sync": {
+                "timing_required": "tbd",
+                "timing_accuracy_class": "tbd",
+                "sync_protocol": "tbd",
+            },
+        }
+
+        normalized, assumptions = apply_cross_field_inferences(requirements)
+
+        assert normalized["time_sync"]["timing_required"] == "yes"
+        assert normalized["time_sync"]["timing_accuracy_class"] == "sub_ms"
+        assert normalized["time_sync"]["sync_protocol"] == "ntp"
+        by_field = {a["field_id"]: a for a in assumptions}
+        assert by_field["timing_required"]["pass_index"] == 1
+        assert by_field["timing_accuracy_class"]["pass_index"] == 1
+        assert by_field["sync_protocol"]["pass_index"] == 2
+
+    def test_fully_answered_questionnaire_produces_zero_inferences(self):
+        from pathlib import Path
+        from model_utils import load_yaml
+
+        questionnaire_path = Path(__file__).resolve().parents[1] / "examples" / "sample_object_01" / "questionnaire.yaml"
+        questionnaire = load_yaml(questionnaire_path)
+
+        from compiler.build_requirements_model import (
+            apply_archetype_defaults,
+            load_archetypes,
+            resolve_archetype_id,
+        )
+
+        archetypes = load_archetypes()
+        archetype = archetypes[resolve_archetype_id(questionnaire)]
+        normalized, _ = apply_archetype_defaults(questionnaire, archetype)
+        _, inferences = apply_cross_field_inferences(normalized)
+
+        assert inferences == []
+
     def test_rule_ids_must_be_unique(self, tmp_path):
         rules_path = tmp_path / "cross_field_rules.yaml"
         rules_path.write_text(

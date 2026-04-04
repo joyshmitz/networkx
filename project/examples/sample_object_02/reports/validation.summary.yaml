@@ -24,22 +24,26 @@ issues:
   severity: error
   message: High-criticality objects cannot keep redundancy_target='none'.
   issue_code: high_criticality_conflicts_with_no_redundancy
-- validator: segmentation
-  severity: warning
-  message: High-criticality object with shared_ok transport separation — may violate
-    isolation expectations.
-- validator: resilience
+- validator: semantic_consistency
   severity: warning
   message: High-criticality object with single_path_allowed carrier diversity — weak
     for recovery.
-- validator: resilience
+  issue_code: high_criticality_conflicts_with_single_path
+- validator: semantic_consistency
   severity: warning
   message: High-criticality object with best_effort degraded mode — no guaranteed
     service survival.
-- validator: resilience
+  issue_code: high_criticality_conflicts_with_best_effort
+- validator: semantic_consistency
   severity: warning
   message: High-criticality object with same_day MTTR — may be too slow for critical
     operations.
+  issue_code: high_criticality_conflicts_with_same_day_mttr
+- validator: semantic_consistency
+  severity: warning
+  message: High-criticality object with shared_ok transport separation — may violate
+    isolation expectations.
+  issue_code: high_criticality_conflicts_with_shared_ok
 - validator: annex_activation
   severity: warning
   message: Annex 'time' activation conditions are met, but annex data is not present
