@@ -1,10 +1,6 @@
-import sys
 from datetime import date, datetime, timezone
-from pathlib import Path
 import shutil
 from typing import Any
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 # Single source of truth for the fixed exemplar date used across all intake tests.
 GOLDEN_DATE = date(2026, 4, 2)

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from intake.workspace_snapshot import SNAPSHOT_SCHEMA_VERSION, build_workspace_snapshot
-from intake.workspace_validation import WorkspaceValidationError
+from network_methodology_sandbox.intake.workspace_snapshot import (
+    SNAPSHOT_SCHEMA_VERSION,
+    build_workspace_snapshot,
+)
+from network_methodology_sandbox.intake.workspace_validation import WorkspaceValidationError
 
 from conftest import GOLDEN_DATE, copy_workspace
 

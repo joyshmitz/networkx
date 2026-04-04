@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import networkx as nx
 
-from compiler.compile_graphs import (
+from network_methodology_sandbox.compiler.compile_graphs import (
     compile_all_graphs,
     compile_failure_domain_graph,
+    compile_interface_graph,
     compile_logical_graph,
     compile_physical_graph,
     compile_service_graph,
-    compile_interface_graph,
     summarize_graph_bundle,
 )
 

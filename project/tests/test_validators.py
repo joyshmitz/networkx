@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import networkx as nx
 
-from validators.validate_connectivity import validate_connectivity
-from validators.validate_segmentation import validate_segmentation
-from validators.validate_resilience import validate_resilience
-from validators.validate_power_ports import validate_power_ports
-from validators.validate_semantic_consistency import validate_semantic_consistency
-from validators.validate_time import validate_time
-from validators.validate_stage_confidence import (
+from network_methodology_sandbox.validators.validate_connectivity import validate_connectivity
+from network_methodology_sandbox.validators.validate_segmentation import validate_segmentation
+from network_methodology_sandbox.validators.validate_resilience import validate_resilience
+from network_methodology_sandbox.validators.validate_power_ports import validate_power_ports
+from network_methodology_sandbox.validators.validate_semantic_consistency import (
+    validate_semantic_consistency,
+)
+from network_methodology_sandbox.validators.validate_time import validate_time
+from network_methodology_sandbox.validators.validate_stage_confidence import (
     derive_confidence_level,
     summarize_assumptions,
     validate_stage_confidence,

@@ -6,10 +6,10 @@ import pytest
 import yaml
 
 from conftest import GOLDEN_DATE as FIXED_DATE
-from intake.compile_intake import compile_intake
-from intake.generate_intake_sheets import generate
-from intake.init_workspace import init_workspace
-from intake.workspace_validation import WorkspaceValidationError
+from network_methodology_sandbox.intake.compile_intake import compile_intake
+from network_methodology_sandbox.intake.generate_intake_sheets import generate
+from network_methodology_sandbox.intake.init_workspace import init_workspace
+from network_methodology_sandbox.intake.workspace_validation import WorkspaceValidationError
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAMPLE_ROLE_ASSIGNMENTS = (

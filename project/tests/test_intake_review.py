@@ -4,8 +4,8 @@ from pathlib import Path
 
 import yaml
 
-from intake.review_packets import review_workspace
-from model_utils import load_yaml
+from network_methodology_sandbox.intake.review_packets import review_workspace
+from network_methodology_sandbox.model_utils import load_yaml
 
 from conftest import GOLDEN_DATE, copy_workspace, find_review_item
 

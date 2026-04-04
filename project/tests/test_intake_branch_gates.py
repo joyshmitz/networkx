@@ -7,15 +7,18 @@ from typing import Any
 from openpyxl import load_workbook
 import yaml
 
-from compiler.build_requirements_model import (
+from network_methodology_sandbox.compiler.build_requirements_model import (
     build_requirements_model,
     validate_requirements_model,
 )
-from compiler.compile_graphs import compile_all_graphs, summarize_graph_bundle
-from intake.compile_intake import compile_intake
-from intake.generate_intake_sheets import generate
-from model_utils import load_yaml
-from run_pipeline import run_validators, summarize_validation
+from network_methodology_sandbox.compiler.compile_graphs import (
+    compile_all_graphs,
+    summarize_graph_bundle,
+)
+from network_methodology_sandbox.intake.compile_intake import compile_intake
+from network_methodology_sandbox.intake.generate_intake_sheets import generate
+from network_methodology_sandbox.model_utils import load_yaml
+from network_methodology_sandbox.run_pipeline import run_validators, summarize_validation
 
 from conftest import GOLDEN_DATE
 

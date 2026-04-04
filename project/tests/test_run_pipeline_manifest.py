@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from model_utils import load_yaml
-from run_pipeline import _manifest_path, execute_pipeline
+from network_methodology_sandbox.model_utils import load_yaml
+from network_methodology_sandbox.run_pipeline import _manifest_path, execute_pipeline
 
 from conftest import copy_workspace
 

@@ -5,20 +5,22 @@ from copy import deepcopy
 import pytest
 import yaml
 
-from compiler.build_requirements_model import (
+from network_methodology_sandbox.compiler.build_requirements_model import (
     apply_archetype_defaults,
     load_archetypes,
     normalize_boolish_enums,
     resolve_archetype_id,
 )
-from compiler.cross_field_inference import (
+from network_methodology_sandbox.compiler.cross_field_inference import (
     InferenceRuleConflictError,
     InferenceRuleCatalogError,
     apply_cross_field_inferences,
     evaluate_condition,
     load_cross_field_rules,
 )
-from validators.validate_semantic_consistency import validate_semantic_consistency
+from network_methodology_sandbox.validators.validate_semantic_consistency import (
+    validate_semantic_consistency,
+)
 
 
 class TestCrossFieldInference:
@@ -205,12 +207,12 @@ class TestCrossFieldInference:
 
     def test_fully_answered_questionnaire_produces_zero_inferences(self):
         from pathlib import Path
-        from model_utils import load_yaml
+        from network_methodology_sandbox.model_utils import load_yaml
 
         questionnaire_path = Path(__file__).resolve().parents[1] / "examples" / "sample_object_01" / "questionnaire.yaml"
         questionnaire = load_yaml(questionnaire_path)
 
-        from compiler.build_requirements_model import (
+        from network_methodology_sandbox.compiler.build_requirements_model import (
             apply_archetype_defaults,
             load_archetypes,
             resolve_archetype_id,

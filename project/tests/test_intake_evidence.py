@@ -6,16 +6,16 @@ from pathlib import Path
 import pytest
 from openpyxl import load_workbook
 
-from intake.evidence_status import (
+from network_methodology_sandbox.intake.evidence_status import (
     EVIDENCE_SCHEMA_VERSION,
     _load_evidence_policy,
     build_evidence_status_from_snapshot,
     evidence_workspace,
     main as evidence_status_main,
 )
-from intake.review_packets import review_workspace
-from intake.workspace_snapshot import build_workspace_snapshot
-from model_utils import load_yaml
+from network_methodology_sandbox.intake.review_packets import review_workspace
+from network_methodology_sandbox.intake.workspace_snapshot import build_workspace_snapshot
+from network_methodology_sandbox.model_utils import load_yaml
 
 from conftest import GOLDEN_DATE, copy_workspace, find_evidence_field, find_review_item
 

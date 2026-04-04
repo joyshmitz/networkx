@@ -10,8 +10,8 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 from openpyxl import load_workbook
 import yaml
 
-from intake.compile_intake import compile_intake
-from intake.generate_intake_sheets import generate
+from network_methodology_sandbox.intake.compile_intake import compile_intake
+from network_methodology_sandbox.intake.generate_intake_sheets import generate
 
 
 from conftest import GOLDEN_DATETIME_UTC

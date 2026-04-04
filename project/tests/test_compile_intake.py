@@ -14,7 +14,7 @@ import yaml
 from openpyxl import Workbook
 from openpyxl.styles import numbers
 
-from intake.compile_intake import (
+from network_methodology_sandbox.intake.compile_intake import (
     _derive_status,
     _parse_value,
     _validate_values,
@@ -24,7 +24,10 @@ from intake.compile_intake import (
     compile_intake,
     parse_xlsx,
 )
-from intake.workspace_validation import IntakeCommandError, WorkspaceValidationError
+from network_methodology_sandbox.intake.workspace_validation import (
+    IntakeCommandError,
+    WorkspaceValidationError,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -394,7 +397,7 @@ class TestCompileIntegration:
     @pytest.fixture(scope="class")
     def compiled(self, tmp_path_factory):
         import shutil
-        from intake.generate_intake_sheets import generate
+        from network_methodology_sandbox.intake.generate_intake_sheets import generate
 
         tmp = tmp_path_factory.mktemp("compile")
         ws = tmp / "sample_object_01"

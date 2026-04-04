@@ -12,7 +12,7 @@ import pytest
 from openpyxl import load_workbook
 import yaml
 
-from intake.generate_intake_sheets import (
+from network_methodology_sandbox.intake.generate_intake_sheets import (
     assign_fields_to_persons,
     build_field_index,
     build_person_roles,

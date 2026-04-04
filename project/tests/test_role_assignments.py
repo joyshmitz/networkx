@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from validators.validate_role_assignments import (
+from network_methodology_sandbox.validators.validate_role_assignments import (
     build_person_to_roles,
     build_role_to_persons,
     validate_role_assignments,

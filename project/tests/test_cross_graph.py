@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import networkx as nx
 
-from validators.validate_cross_graph import validate_cross_graph
+from network_methodology_sandbox.validators.validate_cross_graph import validate_cross_graph
 
 
 def _issues_by(issues, severity=None):

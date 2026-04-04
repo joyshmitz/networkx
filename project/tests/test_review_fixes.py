@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from compiler.build_requirements_model import (
+from network_methodology_sandbox.compiler.build_requirements_model import (
     build_requirements_model,
     detect_questionnaire_version,
     load_archetypes,
 )
-from model_utils import merge_missing_values_tracked
+from network_methodology_sandbox.model_utils import merge_missing_values_tracked
 
 
 # ---------------------------------------------------------------------------
@@ -290,9 +290,11 @@ class TestSparseV2SchemaValidation:
         }
         requirements, assumptions = build_requirements_model(questionnaire)
         schema_path = Path(__file__).resolve().parents[1] / "specs" / "requirements" / "object_requirements_v2.schema.yaml"
-        from model_utils import load_yaml
+        from network_methodology_sandbox.model_utils import load_yaml
         schema = load_yaml(schema_path)
-        from compiler.build_requirements_model import validate_requirements_model
+        from network_methodology_sandbox.compiler.build_requirements_model import (
+            validate_requirements_model,
+        )
         # should not raise
         validate_requirements_model(requirements, schema=schema)
         assert len(assumptions) > 0

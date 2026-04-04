@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from validators.validate_annex_activation import (
+from network_methodology_sandbox.validators.validate_annex_activation import (
     annex_is_active,
     validate_annex_activation,
 )

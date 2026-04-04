@@ -9,10 +9,16 @@ from typing import Any
 import yaml
 import pytest
 
-from model_utils import load_yaml
-from compiler.build_requirements_model import build_requirements_model, validate_requirements_model
-from compiler.compile_graphs import compile_all_graphs, summarize_graph_bundle
-from run_pipeline import run_validators, summarize_validation
+from network_methodology_sandbox.model_utils import load_yaml
+from network_methodology_sandbox.compiler.build_requirements_model import (
+    build_requirements_model,
+    validate_requirements_model,
+)
+from network_methodology_sandbox.compiler.compile_graphs import (
+    compile_all_graphs,
+    summarize_graph_bundle,
+)
+from network_methodology_sandbox.run_pipeline import run_validators, summarize_validation
 
 
 SAMPLE_01 = Path(__file__).resolve().parents[1] / "examples" / "sample_object_01" / "questionnaire.yaml"

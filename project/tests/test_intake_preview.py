@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from intake.preview_status import preview_workspace
-from intake.workspace_snapshot import SNAPSHOT_SCHEMA_VERSION
-from model_utils import load_yaml
+from network_methodology_sandbox.intake.preview_status import preview_workspace
+from network_methodology_sandbox.intake.workspace_snapshot import SNAPSHOT_SCHEMA_VERSION
+from network_methodology_sandbox.model_utils import load_yaml
 
 from conftest import GOLDEN_DATE, copy_workspace
 

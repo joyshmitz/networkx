@@ -4,16 +4,16 @@ from pathlib import Path
 
 import pytest
 
-from intake.compile_intake import compile_intake
-from intake.evidence_status import evidence_workspace
-from intake.preview_status import preview_workspace
-from intake.review_packets import review_workspace
-from intake.workspace_manifest import (
+from network_methodology_sandbox.intake.compile_intake import compile_intake
+from network_methodology_sandbox.intake.evidence_status import evidence_workspace
+from network_methodology_sandbox.intake.preview_status import preview_workspace
+from network_methodology_sandbox.intake.review_packets import review_workspace
+from network_methodology_sandbox.intake.workspace_manifest import (
     WORKSPACE_MANIFEST_SCHEMA_VERSION,
     _normalize_artifact,
     refresh_workspace_manifest,
 )
-from model_utils import load_yaml
+from network_methodology_sandbox.model_utils import load_yaml
 
 from conftest import GOLDEN_DATE, copy_workspace
 
