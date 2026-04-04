@@ -104,6 +104,7 @@
 - interpreter for direct commands: активне `python` з встановленим продуктом
 - wrapper interpreter resolution: `PROJECT_INTAKE_PYTHON` -> `VIRTUAL_ENV/bin/python` -> repo-local `.venv/bin/python`
 - правило для прямих Python-команд: `python -m network_methodology_sandbox...`, а не `project/src/...`
+- правило для нових Python-імпортів: `network_methodology_sandbox...`; legacy top-level imports лишаються лише сумісним шаром
 - основна командна поверхня для координатора: `project/intake ...`
 - прямі Python-команди лишаються службовим інтерфейсом для супроводу та налагодження
 
