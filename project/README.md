@@ -99,7 +99,7 @@
 
 ## Виконання Команд
 
-Команди слід запускати з кореня репозиторію.
+Поки продукт ще не відв'язано від бібліотечного кореня, команди слід запускати з кореня репозиторію. Це поточний робочий контракт, але не цільовий стан. Залежність від `.venv/bin/python`, `PYTHONPATH=.` і локального checkout `networkx/` є відомим технічним боргом; він прямо зафіксований у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 - interpreter: `.venv/bin/python`
 - правило для запуску тестів і скриптів: `PYTHONPATH=.`
@@ -112,6 +112,8 @@
 python3 -m venv .venv
 .venv/bin/pip install -r project/requirements.txt jsonschema pytest
 ```
+
+Увага: цей спосіб працює лише в поточному форку, бо код одночасно спирається на локальний checkout `networkx/` у корені репозиторію. `networkx` ще не оформлений як явна продуктова залежність у `project/requirements.txt`. Це не дрібниця і не "так і задумано", а відомий незакритий борг до етапу dependency decoupling.
 
 Канонічна перевірка:
 
