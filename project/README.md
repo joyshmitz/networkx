@@ -99,7 +99,7 @@
 
 ## Виконання Команд
 
-Поки продукт ще не відв'язано від бібліотечного кореня, команди слід запускати з кореня репозиторію. Це поточний робочий контракт, але не цільовий стан. Залежність від `.venv/bin/python`, `PYTHONPATH=.` і локального checkout `networkx/` є відомим технічним боргом; він прямо зафіксований у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+Поки продукт ще не відв'язано від бібліотечного кореня, команди слід запускати з кореня репозиторію. Це поточний робочий контракт, але не цільовий стан. Залежність від `.venv/bin/python` і `PYTHONPATH=.` лишається відомим технічним боргом; він прямо зафіксований у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md). Водночас контракт залежностей для `project/` уже винесено в окремий [project/pyproject.toml](pyproject.toml), тому `networkx` більше не лишається неоголошеним шматком кореня.
 
 - interpreter: `.venv/bin/python`
 - правило для запуску тестів і скриптів: `PYTHONPATH=.`
@@ -110,10 +110,12 @@
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r project/requirements.txt jsonschema pytest
+.venv/bin/pip install -e './project[dev]'
 ```
 
-Увага: цей спосіб працює лише в поточному форку, бо код одночасно спирається на локальний checkout `networkx/` у корені репозиторію. `networkx` ще не оформлений як явна продуктова залежність у `project/requirements.txt`. Це не дрібниця і не "так і задумано", а відомий незакритий борг до етапу dependency decoupling.
+Якщо з якоїсь причини потрібен лише прямий список runtime-залежностей без editable install, можна використати `project/requirements.txt`. Але це fallback-шлях, який вимагає `git` і мережевий доступ через VCS-залежність `networkx`. Канонічний шлях для розробки і перевірки тепер саме `pip install -e './project[dev]'`.
+
+Увага: цей спосіб все ще не означає повне відділення від repo root. Продукт уже має явний dependency contract, але командна поверхня і частина запуску досі спираються на корінь репозиторію. Це не дрібниця і не "так і задумано", а наступний незакритий борг у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 Канонічна перевірка:
 

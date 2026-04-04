@@ -29,6 +29,7 @@ examples/basic/grid.edgelist
 
 # Generated when 'python setup_egg.py'
 networkx.egg-info/
+*.egg-info/
 
 # Sublime Text project files
 *.sublime-project

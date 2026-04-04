@@ -26,8 +26,8 @@
 
 Список цих милиць треба назвати прямо:
 
-- `project/requirements.txt` містить лише `pyyaml` і `openpyxl`, хоча код у `project/src/` реально використовує ще `jsonschema` і `networkx`.
-- [project/README.md](../../README.md) досі каже людині дописувати `jsonschema pytest` вручну після `-r project/requirements.txt`. Це означає, що в нас немає нормального контракту залежностей навіть для поточного стану.
+- На момент написання цього плану `project/requirements.txt` містив лише `pyyaml` і `openpyxl`, хоча код у `project/src/` реально використовував ще `jsonschema` і `networkx`. Цей конкретний розрив має бути закритий першим slice цього plan.
+- На момент написання цього плану [project/README.md](../../README.md) ще казав людині дописувати `jsonschema pytest` вручну після `-r project/requirements.txt`. Цю брехню теж треба прибрати першим slice цього plan.
 - [project/intake](../../intake) жорстко прибитий до `ROOT_DIR/.venv/bin/python`, до `cd "$ROOT_DIR"` і до `PYTHONPATH=.`. Це не продуктова командна поверхня, а shell-обхід довкола поточного layout.
 - `project/src/` не оформлений як окремий продуктовий пакет. У коді живуть загальні верхньорівневі назви на кшталт `compiler`, `validators`, `intake`, `reports` і `model_utils`. Як встановлюваний API це погана практика.
 - `git diff --name-only main..app-main -- networkx doc examples pyproject.toml README.rst requirements` зараз порожній. Тобто ми не ведемо продуктову роботу всередині бібліотеки. Залежність на бібліотечний корінь тримається не через необхідність, а через інерцію.

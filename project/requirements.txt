@@ -1,2 +1,9 @@
-pyyaml>=6.0
+# Runtime compatibility requirements for direct pip installs from the current repo.
+# The canonical product install path is now:
+#   .venv/bin/pip install -e './project[dev]'
+# Direct installs from this file require git and network access because NetworkX
+# is still pinned as a VCS dependency during dependency decoupling.
+PyYAML>=6.0
 openpyxl>=3.1
+jsonschema>=4.23
+networkx @ git+https://github.com/networkx/networkx.git@61d209875422f5c40600d2d425bd92fac9cc1b02

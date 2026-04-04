@@ -33,7 +33,7 @@ fail() {
 
 require_python() {
     if [ ! -x "$PYTHON" ]; then
-        fail "Missing interpreter at $PYTHON. Run: python3 -m venv .venv && .venv/bin/pip install -r project/requirements.txt jsonschema pytest. Note: this current repo-root setup also relies on the checked-out local networkx package and is tracked in project/docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md"
+        fail "Missing interpreter at $PYTHON. Run: python3 -m venv .venv && .venv/bin/pip install -e './project[dev]'. Note: repo-root launch coupling is still tracked in project/docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md"
     fi
 }
 
