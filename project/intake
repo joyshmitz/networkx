@@ -3,7 +3,36 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
-PYTHON="$ROOT_DIR/.venv/bin/python"
+
+fail() {
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+resolve_python() {
+    if [ -n "${PROJECT_INTAKE_PYTHON:-}" ]; then
+        [ -x "$PROJECT_INTAKE_PYTHON" ] || fail "PROJECT_INTAKE_PYTHON is not executable: $PROJECT_INTAKE_PYTHON"
+        printf '%s\n' "$PROJECT_INTAKE_PYTHON"
+        return 0
+    fi
+
+    if [ -n "${VIRTUAL_ENV:-}" ]; then
+        candidate="$VIRTUAL_ENV/bin/python"
+        [ -x "$candidate" ] || fail "Active virtualenv has no python interpreter at $candidate"
+        printf '%s\n' "$candidate"
+        return 0
+    fi
+
+    candidate="$ROOT_DIR/.venv/bin/python"
+    if [ -x "$candidate" ]; then
+        printf '%s\n' "$candidate"
+        return 0
+    fi
+
+    fail "No usable Python interpreter found. Activate a virtualenv with the product installed, set PROJECT_INTAKE_PYTHON explicitly, or create the compatibility env at $ROOT_DIR/.venv"
+}
+
+PYTHON=$(resolve_python)
 
 usage() {
     cat <<'EOF'
@@ -19,21 +48,16 @@ Usage:
   project/intake demo stress [--date YYYY-MM-DD]
 
 Notes:
-  - The wrapper uses the repository's bundled .venv/bin/python.
+  - The wrapper prefers PROJECT_INTAKE_PYTHON, then the active VIRTUAL_ENV, and only then falls back to the repository's .venv/bin/python.
   - Canonical execution goes through installed modules, not project/src paths.
   - `demo` replays checked-in exemplars in a temporary copy and does not edit the repo.
   - `generate --preserve-responses` reuses existing E/F/G/H workbook cells by field_id.
 EOF
 }
 
-fail() {
-    echo "ERROR: $*" >&2
-    exit 1
-}
-
 require_python() {
-    if [ ! -x "$PYTHON" ]; then
-        fail "Missing interpreter at $PYTHON. Run: python3 -m venv .venv && .venv/bin/pip install -e './project[dev]'. Note: repo-root launch coupling is still tracked in project/docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md"
+    if ! "$PYTHON" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('intake') and importlib.util.find_spec('run_pipeline') else 1)" >/dev/null 2>&1; then
+        fail "Python interpreter $PYTHON does not have the product installed. Activate a virtualenv and run: pip install -e './project[dev]'. The repo-local fallback env remains tracked in project/docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md"
     fi
 }
 
