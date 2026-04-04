@@ -125,7 +125,7 @@ def refresh_workspace_manifest(
         "manifest_at": date_used,
         "date_used": date_used,
         "object_id": object_id,
-        "workspace": str(workspace),
+        "workspace": workspace.name,
         "artifacts": merged_artifacts,
         "summary": _summary_counts(merged_artifacts),
     }
