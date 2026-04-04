@@ -49,14 +49,14 @@ Usage:
 
 Notes:
   - The wrapper prefers PROJECT_INTAKE_PYTHON, then the active VIRTUAL_ENV, and only then falls back to the repository's .venv/bin/python.
-  - Canonical execution goes through installed modules, not project/src paths.
+  - Canonical execution goes through installed modules under network_methodology_sandbox, not project/src paths.
   - `demo` replays checked-in exemplars in a temporary copy and does not edit the repo.
   - `generate --preserve-responses` reuses existing E/F/G/H workbook cells by field_id.
 EOF
 }
 
 require_python() {
-    if ! "$PYTHON" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('intake') and importlib.util.find_spec('run_pipeline') else 1)" >/dev/null 2>&1; then
+    if ! "$PYTHON" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('network_methodology_sandbox.intake.init_workspace') and importlib.util.find_spec('network_methodology_sandbox.run_pipeline') else 1)" >/dev/null 2>&1; then
         fail "Python interpreter $PYTHON does not have the product installed. Activate a virtualenv and run: pip install -e './project[dev]'. The repo-local fallback env remains tracked in project/docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md"
     fi
 }
@@ -72,42 +72,42 @@ run_generate() {
     [ $# -ge 1 ] || fail "generate requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    "$PYTHON" -m intake.generate_intake_sheets "$workspace" "$@"
+    "$PYTHON" -m network_methodology_sandbox.intake.generate_intake_sheets "$workspace" "$@"
 }
 
 run_init() {
     [ $# -ge 1 ] || fail "init requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    "$PYTHON" -m intake.init_workspace "$workspace" "$@"
+    "$PYTHON" -m network_methodology_sandbox.intake.init_workspace "$workspace" "$@"
 }
 
 run_compile() {
     [ $# -ge 1 ] || fail "compile requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    "$PYTHON" -m intake.compile_intake "$workspace" "$@"
+    "$PYTHON" -m network_methodology_sandbox.intake.compile_intake "$workspace" "$@"
 }
 
 run_preview() {
     [ $# -ge 1 ] || fail "preview requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    "$PYTHON" -m intake.preview_status "$workspace" "$@"
+    "$PYTHON" -m network_methodology_sandbox.intake.preview_status "$workspace" "$@"
 }
 
 run_review() {
     [ $# -ge 1 ] || fail "review requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    "$PYTHON" -m intake.review_packets "$workspace" "$@"
+    "$PYTHON" -m network_methodology_sandbox.intake.review_packets "$workspace" "$@"
 }
 
 run_evidence() {
     [ $# -ge 1 ] || fail "evidence requires <workspace>"
     workspace=$(resolve_path "$1")
     shift
-    "$PYTHON" -m intake.evidence_status "$workspace" "$@"
+    "$PYTHON" -m network_methodology_sandbox.intake.evidence_status "$workspace" "$@"
 }
 
 run_verify() {
@@ -144,9 +144,9 @@ run_demo() {
     workspace="$tmp_dir/$(basename "$exemplar_dir")"
     cp -R "$exemplar_dir" "$workspace"
 
-    "$PYTHON" -m intake.compile_intake "$workspace" --date "$demo_date"
+    "$PYTHON" -m network_methodology_sandbox.intake.compile_intake "$workspace" --date "$demo_date"
 
-    if "$PYTHON" -m run_pipeline "$workspace/questionnaire.yaml"; then
+    if "$PYTHON" -m network_methodology_sandbox.run_pipeline "$workspace/questionnaire.yaml"; then
         pipeline_rc=0
     else
         pipeline_rc=$?

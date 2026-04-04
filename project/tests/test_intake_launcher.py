@@ -29,6 +29,23 @@ def _write_python_shim(path: Path, marker_path: Path) -> Path:
 
 
 class TestIntakeLauncher:
+    def test_canonical_namespace_entrypoints_are_executable(self, tmp_path: Path) -> None:
+        commands = [
+            [sys.executable, "-m", "network_methodology_sandbox.intake.init_workspace", "--help"],
+            [sys.executable, "-m", "network_methodology_sandbox.run_pipeline", "--help"],
+        ]
+
+        for command in commands:
+            completed = subprocess.run(
+                command,
+                cwd=tmp_path,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            assert completed.returncode == 0, completed.stderr
+            assert "usage:" in completed.stdout
+
     def test_wrapper_prefers_project_intake_python_override(self, tmp_path: Path) -> None:
         marker = tmp_path / "override-python.txt"
         shim = _write_python_shim(tmp_path / "override-python", marker)

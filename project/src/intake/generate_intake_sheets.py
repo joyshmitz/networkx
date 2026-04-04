@@ -2,7 +2,7 @@
 """Generate per-person intake Excel sheets and guide.md from specs.
 
 Usage:
-    python -m intake.generate_intake_sheets \
+    python -m network_methodology_sandbox.intake.generate_intake_sheets \
         project/examples/sample_object_01 --date 2026-04-02 --preserve-responses
 """
 from __future__ import annotations

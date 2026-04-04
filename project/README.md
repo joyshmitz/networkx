@@ -99,11 +99,11 @@
 
 ## Виконання Команд
 
-Продукт усе ще не відв'язано від бібліотечного checkout повністю, але канонічний запуск уже більше не повинен спиратися на `PYTHONPATH=.` або на прямий виклик `project/src/...`. Поточний перехідний контракт такий: wrapper [project/intake](intake) спочатку шукає `PROJECT_INTAKE_PYTHON`, потім активний `VIRTUAL_ENV/bin/python`, і лише як сумісний fallback звертається до repo-local `.venv/bin/python`. Прямі Python-команди мають іти через встановлені модулі `-m intake...` або `-m run_pipeline`. Залежність від repo-bundled fallback `.venv` лишається відкритим технічним боргом і прямо зафіксована у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+Продукт усе ще не відв'язано від бібліотечного checkout повністю, але канонічний запуск уже більше не повинен спиратися на `PYTHONPATH=.` або на прямий виклик `project/src/...`. Поточний перехідний контракт такий: wrapper [project/intake](intake) спочатку шукає `PROJECT_INTAKE_PYTHON`, потім активний `VIRTUAL_ENV/bin/python`, і лише як сумісний fallback звертається до repo-local `.venv/bin/python`. Канонічний Python-namespace для продукту тепер `network_methodology_sandbox`, а старі top-level модулі `intake`, `compiler`, `validators`, `reports`, `model_utils` і `run_pipeline` лишаються тимчасовим сумісним шаром на час переходу. Залежність від repo-bundled fallback `.venv` і від цього legacy import surface лишається відкритим технічним боргом і прямо зафіксована у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 - interpreter for direct commands: активне `python` з встановленим продуктом
 - wrapper interpreter resolution: `PROJECT_INTAKE_PYTHON` -> `VIRTUAL_ENV/bin/python` -> repo-local `.venv/bin/python`
-- правило для прямих Python-команд: `python -m ...`, а не `project/src/...`
+- правило для прямих Python-команд: `python -m network_methodology_sandbox...`, а не `project/src/...`
 - основна командна поверхня для координатора: `project/intake ...`
 - прямі Python-команди лишаються службовим інтерфейсом для супроводу та налагодження
 
@@ -130,12 +130,12 @@ project/intake verify
 Наведені нижче прямі приклади використовують відносні шляхи `project/...`, тому їх слід запускати з кореня репозиторію. Це службовий шлях для супроводу та налагодження. Канонічний користувацький шлях лишається через `project/intake`, який уже може працювати і з іншого `cwd`.
 
 ```bash
-python -m intake.init_workspace project/examples/my_object
-python -m intake.generate_intake_sheets project/examples/sample_object_01 --date 2026-04-02
-python -m intake.compile_intake project/examples/sample_object_01 --date 2026-04-02
-python -m intake.preview_status project/examples/sample_object_01 --date 2026-04-02
-python -m intake.review_packets project/examples/sample_object_01 --date 2026-04-02
-python -m intake.evidence_status project/examples/sample_object_01 --date 2026-04-02
+python -m network_methodology_sandbox.intake.init_workspace project/examples/my_object
+python -m network_methodology_sandbox.intake.generate_intake_sheets project/examples/sample_object_01 --date 2026-04-02
+python -m network_methodology_sandbox.intake.compile_intake project/examples/sample_object_01 --date 2026-04-02
+python -m network_methodology_sandbox.intake.preview_status project/examples/sample_object_01 --date 2026-04-02
+python -m network_methodology_sandbox.intake.review_packets project/examples/sample_object_01 --date 2026-04-02
+python -m network_methodology_sandbox.intake.evidence_status project/examples/sample_object_01 --date 2026-04-02
 ```
 
 ## Правила Перегенерації Та Перезапису

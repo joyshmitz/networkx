@@ -32,7 +32,7 @@ py-modules = ["model_utils", "run_pipeline"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["compiler*", "intake*", "reports*", "validators*"]
+include = ["compiler*", "intake*", "reports*", "validators*", "network_methodology_sandbox*"]
 # These are implicit namespace packages today because project/src still has no
 # package root. This is transitional packaging, not the target product layout.
 namespaces = true
