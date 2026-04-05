@@ -25,14 +25,7 @@ dev = [
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-# These top-level module names are a transition surface only. They mirror the
-# current import tree so the app can be installed before the namespace rewrite
-# planned in dependency decoupling phase 3.
-py-modules = ["model_utils", "run_pipeline"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["compiler*", "intake*", "reports*", "validators*", "network_methodology_sandbox*"]
-# These are implicit namespace packages today because project/src still has no
-# package root. This is transitional packaging, not the target product layout.
-namespaces = true
+include = ["network_methodology_sandbox*"]

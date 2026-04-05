@@ -4,6 +4,18 @@ from pathlib import Path
 
 
 TARGET_FILES = [
+    "project/src/network_methodology_sandbox/intake/workspace_manifest.py",
+    "project/src/network_methodology_sandbox/intake/workspace_snapshot.py",
+    "project/src/network_methodology_sandbox/intake/init_workspace.py",
+    "project/src/network_methodology_sandbox/intake/generate_intake_sheets.py",
+    "project/src/network_methodology_sandbox/intake/compile_intake.py",
+    "project/src/network_methodology_sandbox/intake/preview_status.py",
+    "project/src/network_methodology_sandbox/intake/review_packets.py",
+    "project/src/network_methodology_sandbox/intake/evidence_status.py",
+    "project/src/network_methodology_sandbox/run_pipeline.py",
+]
+
+REMOVED_LEGACY_FILES = [
     "project/src/intake/workspace_manifest.py",
     "project/src/intake/workspace_snapshot.py",
     "project/src/intake/init_workspace.py",
@@ -12,7 +24,6 @@ TARGET_FILES = [
     "project/src/intake/preview_status.py",
     "project/src/intake/review_packets.py",
     "project/src/intake/evidence_status.py",
-    "project/src/run_pipeline.py",
 ]
 
 LEGACY_IMPORT_PATTERNS = [
@@ -35,3 +46,10 @@ def test_intake_family_no_longer_uses_legacy_product_imports() -> None:
                 offenders.append(f"{relative_path}: {pattern}")
 
     assert offenders == []
+
+
+def test_legacy_intake_paths_are_removed() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+
+    for relative_path in REMOVED_LEGACY_FILES:
+        assert not (repo_root / relative_path).exists()

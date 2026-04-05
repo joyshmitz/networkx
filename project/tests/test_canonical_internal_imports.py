@@ -4,6 +4,25 @@ from pathlib import Path
 
 
 TARGET_FILES = [
+    "project/src/network_methodology_sandbox/compiler/build_requirements_model.py",
+    "project/src/network_methodology_sandbox/compiler/compile_graphs.py",
+    "project/src/network_methodology_sandbox/compiler/cross_field_inference.py",
+    "project/src/network_methodology_sandbox/reports/generate_handoff_matrix.py",
+    "project/src/network_methodology_sandbox/reports/generate_network_volume_summary.py",
+    "project/src/network_methodology_sandbox/validators/validate_annex_activation.py",
+    "project/src/network_methodology_sandbox/validators/validate_connectivity.py",
+    "project/src/network_methodology_sandbox/validators/validate_cross_graph.py",
+    "project/src/network_methodology_sandbox/validators/validate_power_ports.py",
+    "project/src/network_methodology_sandbox/validators/validate_resilience.py",
+    "project/src/network_methodology_sandbox/validators/validate_role_assignments.py",
+    "project/src/network_methodology_sandbox/validators/validate_segmentation.py",
+    "project/src/network_methodology_sandbox/validators/validate_semantic_consistency.py",
+    "project/src/network_methodology_sandbox/validators/validate_stage_confidence.py",
+    "project/src/network_methodology_sandbox/validators/validate_time.py",
+    "project/src/network_methodology_sandbox/run_pipeline.py",
+]
+
+REMOVED_LEGACY_FILES = [
     "project/src/compiler/build_requirements_model.py",
     "project/src/compiler/compile_graphs.py",
     "project/src/compiler/cross_field_inference.py",
@@ -42,3 +61,10 @@ def test_core_modules_no_longer_use_legacy_product_imports() -> None:
                 offenders.append(f"{relative_path}: {pattern}")
 
     assert offenders == []
+
+
+def test_legacy_core_paths_are_removed() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+
+    for relative_path in REMOVED_LEGACY_FILES:
+        assert not (repo_root / relative_path).exists()
