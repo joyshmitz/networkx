@@ -15,7 +15,7 @@
 - попереджувальний звіт про підтвердження плюс вузьке блокувальне етапне обмеження;
 - YAML-каталог міжпольових правил виведення і окремий шар семантичної узгодженості;
 - індекс згенерованих артефактів у `reports/workspace.manifest.yaml`;
-- останній підтверджений результат перевірки: `project/intake verify` -> `332 passed`.
+- останній підтверджений результат перевірки: `project/intake verify` -> `335 passed`.
 
 Є ще одна неприємна, але важлива правда. Продукт уже живе в `project/`, а не в бібліотечному коді `networkx/`. Тому репозиторій більше не слід читати як "форк бібліотеки з якоюсь додатковою папкою". Поточна стратегія репозиторію описана в [REPO_STRATEGY.md](../REPO_STRATEGY.md), стратегічний план відділення описаний у [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md), а [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) тепер слід читати не як головний фронт роботи, а як майже виконаний execution plan фази розриву залежностей із одним залишковим repo-root боргом навколо `project/intake` і fallback `.venv`.
 
@@ -99,10 +99,10 @@
 
 ## Виконання Команд
 
-Продукт усе ще не відв'язано від бібліотечного checkout повністю, але канонічний запуск уже більше не повинен спиратися на `PYTHONPATH=.` або на прямий виклик `project/src/...`. Поточний контракт такий: wrapper [project/intake](intake) спочатку шукає `PROJECT_INTAKE_PYTHON`, потім активний `VIRTUAL_ENV/bin/python`, і лише як сумісний fallback звертається до repo-local `.venv/bin/python`. Канонічний Python-namespace для продукту тепер `network_methodology_sandbox`, і саме він є встановлюваною поверхнею пакета. Старі top-level модулі `intake`, `compiler`, `validators`, `reports`, `model_utils` і `run_pipeline` більше не входять до продуктового install contract і мають вважатися видаленими з підтримуваного API. Залежність від repo-bundled fallback `.venv` лишається відкритим технічним боргом і прямо зафіксована у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+Продукт усе ще не відв'язано від бібліотечного checkout повністю, але канонічний запуск уже більше не повинен спиратися на `PYTHONPATH=.` або на прямий виклик `project/src/...`. Поточний контракт такий: wrapper [project/intake](intake) спочатку шукає `PROJECT_INTAKE_PYTHON`, потім активний `VIRTUAL_ENV/bin/python`, потім product-local `.venv/bin/python`, а поки продукт ще живе всередині цього monorepo, зберігає parent-repo `.venv/bin/python` як сумісний fallback. Канонічний Python-namespace для продукту тепер `network_methodology_sandbox`, і саме він є встановлюваною поверхнею пакета. Старі top-level модулі `intake`, `compiler`, `validators`, `reports`, `model_utils` і `run_pipeline` більше не входять до продуктового install contract і мають вважатися видаленими з підтримуваного API. Залежність від repo-bundled fallback `.venv` лишається відкритим технічним боргом і прямо зафіксована у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 - interpreter for direct commands: активне `python` з встановленим продуктом
-- wrapper interpreter resolution: `PROJECT_INTAKE_PYTHON` -> `VIRTUAL_ENV/bin/python` -> repo-local `.venv/bin/python`
+- wrapper interpreter resolution: `PROJECT_INTAKE_PYTHON` -> `VIRTUAL_ENV/bin/python` -> product-local `.venv/bin/python` -> parent-repo `.venv/bin/python` as monorepo compatibility fallback
 - правило для прямих Python-команд: `python -m network_methodology_sandbox...`, а не `project/src/...`
 - правило для нових Python-імпортів: тільки `network_methodology_sandbox...`
 - основна командна поверхня для координатора: `project/intake ...`
@@ -118,7 +118,7 @@ pip install -e './project[dev]'
 
 Якщо з якоїсь причини потрібен лише прямий список runtime-залежностей без editable install, можна використати `project/requirements.txt`. Але це fallback-шлях, який вимагає `git` і мережевий доступ через VCS-залежність `networkx`. Канонічний шлях для розробки і перевірки тепер саме `pip install -e './project[dev]'`.
 
-Увага: цей спосіб все ще не означає повне відділення від repo root. Продукт уже має явний dependency contract, canonical namespace і чесний installed surface, але командна поверхня досі спирається на shell wrapper у цьому репозиторії та на repo-local `.venv` fallback. Це не дрібниця і не "так і задумано", але це вже не головний фронт переписування Python-межі. Поточна нагальність тепер змістилася в extraction rehearsal, а цей борг лишається як хвіст фази decoupling у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+Увага: цей спосіб все ще не означає повне відділення від repo root. Продукт уже має явний dependency contract, canonical namespace і чесний installed surface, а shell wrapper тепер достатньо product-root aware, щоб чесно репетирувати extracted layout без hardcode на `project/tests` і `project/examples`. Але командна поверхня все ще живе як shell wrapper у цьому репозиторії та, поки триває monorepo-stage, зберігає parent-repo `.venv` compatibility fallback. Це не дрібниця і не "так і задумано", але це вже не головний фронт переписування Python-межі. Поточна нагальність тепер змістилася в extraction rehearsal, а цей борг лишається як хвіст фази decoupling у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 Канонічна перевірка:
 

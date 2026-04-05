@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
+
+from network_methodology_sandbox.model_utils import resolve_project_root
 
 OBJECT_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{1,63}$")
 
@@ -12,6 +15,17 @@ class IntakeCommandError(ValueError):
 
 class WorkspaceValidationError(IntakeCommandError):
     """Raised when a human-facing workspace command gets invalid workspace input."""
+
+
+def intake_command_label() -> str:
+    overridden = os.environ.get("NETWORK_METHODOLOGY_SANDBOX_INTAKE_COMMAND")
+    if overridden:
+        return overridden
+
+    project_root = resolve_project_root()
+    if project_root.name == "project" and (project_root.parent / "networkx").is_dir():
+        return "project/intake"
+    return "intake"
 
 
 def validate_object_id(object_id: str) -> str:
@@ -35,11 +49,11 @@ def resolve_object_id(
 
 
 def _init_command(workspace_path: Path) -> str:
-    return f"project/intake init {workspace_path}"
+    return f"{intake_command_label()} init {workspace_path}"
 
 
 def _generate_command(workspace_path: Path) -> str:
-    return f"project/intake generate {workspace_path}"
+    return f"{intake_command_label()} generate {workspace_path}"
 
 
 def ensure_workspace_directory(

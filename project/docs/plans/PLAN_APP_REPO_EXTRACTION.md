@@ -35,13 +35,13 @@
 - Ми не ведемо окрему продуктову розробку всередині `networkx/`.
 - `project/pyproject.toml` і `project/requirements.txt` уже декларують `networkx` як явну залежність продукту.
 - Встановлювана Python-поверхня продукту вже звужена до `network_methodology_sandbox`, а legacy top-level install surface прибрана.
-- Основний залишковий операційний борг уже не в Python package layout, а в тому, що `project/intake` лишається shell wrapper усередині цього repo і все ще має repo-local `.venv` fallback.
+- Основний залишковий операційний борг уже не в Python package layout. Shell wrapper `project/intake` уже доведено до product-root-aware стану для `tests/`, `examples/` і operator-facing command hints, але він усе ще живе всередині цього repo і, поки триває monorepo-stage, зберігає parent-repo `.venv` як compatibility fallback.
 
 ### Що це означає
 
 - Ми вже відокремили продукт концептуально і значною мірою операційно.
 - Найбільший технічний шматок decoupling уже виконано.
-- Розділення repo прямо зараз уже варте репетиції; головний ризик тепер не в імпортній межі, а в repo-root shell debt і прихованих assumptions навколо нового layout.
+- Розділення repo прямо зараз уже варте репетиції; головний ризик тепер не в імпортній межі, а в shell-layer debt, install-story для нового кореня і прихованих assumptions навколо реального split workflow.
 
 ## Головне Рішення
 
@@ -122,6 +122,8 @@
 - змоделювати новий repo layout;
 - прогнати встановлення, `verify` і прикладні сценарії в репетиційній структурі;
 - зафіксувати всі приховані залежності на старий root.
+
+Перший практичний rehearsal slice цієї фази вже прибирає найпростіший самообман: shell wrapper більше не жорстко пришитий до `project/tests` і `project/examples`, а операторські підказки можуть показувати `intake ...` у extracted-like layout замість вічного `project/intake ...`. Це ще не split і не остаточна installer story, але це вже реальна перевірка нового layout, а не черговий документ про нього.
 
 ### Фаза 4. Реальне Відділення Репозиторію
 

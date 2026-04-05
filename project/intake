@@ -2,11 +2,33 @@
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+PRODUCT_ROOT=$SCRIPT_DIR
+PARENT_DIR=$(CDPATH= cd -- "$PRODUCT_ROOT/.." && pwd)
 
 fail() {
     echo "ERROR: $*" >&2
     exit 1
+}
+
+legacy_monorepo_layout() {
+    [ "$PRODUCT_ROOT" = "$PARENT_DIR/project" ] &&
+    [ -f "$PARENT_DIR/pyproject.toml" ] &&
+    [ -d "$PARENT_DIR/networkx" ]
+}
+
+resolve_command_label() {
+    if legacy_monorepo_layout; then
+        printf '%s\n' "project/intake"
+    else
+        printf '%s\n' "intake"
+    fi
+}
+
+INTAKE_COMMAND_LABEL=$(resolve_command_label)
+export NETWORK_METHODOLOGY_SANDBOX_INTAKE_COMMAND=$INTAKE_COMMAND_LABEL
+
+install_hint() {
+    printf "pip install -e '%s[dev]'" "$PRODUCT_ROOT"
 }
 
 resolve_python() {
@@ -23,41 +45,50 @@ resolve_python() {
         return 0
     fi
 
-    candidate="$ROOT_DIR/.venv/bin/python"
+    candidate="$PRODUCT_ROOT/.venv/bin/python"
     if [ -x "$candidate" ]; then
         printf '%s\n' "$candidate"
         return 0
     fi
 
-    fail "No usable Python interpreter found. Activate a virtualenv with the product installed, set PROJECT_INTAKE_PYTHON explicitly, or create the compatibility env at $ROOT_DIR/.venv"
+    if legacy_monorepo_layout; then
+        candidate="$PARENT_DIR/.venv/bin/python"
+        if [ -x "$candidate" ]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    fi
+
+    fail "No usable Python interpreter found. Activate a virtualenv with the product installed, set PROJECT_INTAKE_PYTHON explicitly, or create a compatibility env at $PRODUCT_ROOT/.venv"
 }
 
 PYTHON=$(resolve_python)
 
 usage() {
-    cat <<'EOF'
+    cat <<EOF
 Usage:
-  project/intake init <workspace> [--object-id OBJECT_ID]
-  project/intake generate <workspace> [--date YYYY-MM-DD] [--preserve-responses]
-  project/intake compile <workspace> [--date YYYY-MM-DD]
-  project/intake preview <workspace> [--date YYYY-MM-DD]
-  project/intake review <workspace> [--date YYYY-MM-DD]
-  project/intake evidence <workspace> [--date YYYY-MM-DD]
-  project/intake verify [pytest args...]
-  project/intake demo happy [--date YYYY-MM-DD]
-  project/intake demo stress [--date YYYY-MM-DD]
+  $INTAKE_COMMAND_LABEL init <workspace> [--object-id OBJECT_ID]
+  $INTAKE_COMMAND_LABEL generate <workspace> [--date YYYY-MM-DD] [--preserve-responses]
+  $INTAKE_COMMAND_LABEL compile <workspace> [--date YYYY-MM-DD]
+  $INTAKE_COMMAND_LABEL preview <workspace> [--date YYYY-MM-DD]
+  $INTAKE_COMMAND_LABEL review <workspace> [--date YYYY-MM-DD]
+  $INTAKE_COMMAND_LABEL evidence <workspace> [--date YYYY-MM-DD]
+  $INTAKE_COMMAND_LABEL verify [pytest args...]
+  $INTAKE_COMMAND_LABEL demo happy [--date YYYY-MM-DD]
+  $INTAKE_COMMAND_LABEL demo stress [--date YYYY-MM-DD]
 
 Notes:
-  - The wrapper prefers PROJECT_INTAKE_PYTHON, then the active VIRTUAL_ENV, and only then falls back to the repository's .venv/bin/python.
+  - The wrapper prefers PROJECT_INTAKE_PYTHON, then the active VIRTUAL_ENV, then $PRODUCT_ROOT/.venv/bin/python.
+  - While the product still lives inside the monorepo, the parent repo's .venv/bin/python remains a compatibility fallback.
   - Canonical execution goes through installed modules under network_methodology_sandbox, not project/src paths.
-  - `demo` replays checked-in exemplars in a temporary copy and does not edit the repo.
-  - `generate --preserve-responses` reuses existing E/F/G/H workbook cells by field_id.
+  - demo replays checked-in exemplars in a temporary copy and does not edit the repo.
+  - generate --preserve-responses reuses existing E/F/G/H workbook cells by field_id.
 EOF
 }
 
 require_python() {
     if ! "$PYTHON" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('network_methodology_sandbox.intake.init_workspace') and importlib.util.find_spec('network_methodology_sandbox.run_pipeline') else 1)" >/dev/null 2>&1; then
-        fail "Python interpreter $PYTHON does not have the product installed. Activate a virtualenv and run: pip install -e './project[dev]'. The repo-local fallback env remains tracked in project/docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md"
+        fail "Python interpreter $PYTHON does not have the product installed. Activate a virtualenv and run: $(install_hint). The repo-local fallback env remains tracked in project/docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md"
     fi
 }
 
@@ -111,7 +142,7 @@ run_evidence() {
 }
 
 run_verify() {
-    "$PYTHON" -m pytest "$ROOT_DIR/project/tests" -q "$@"
+    "$PYTHON" -m pytest "$PRODUCT_ROOT/tests" -q "$@"
 }
 
 run_demo() {
@@ -134,8 +165,8 @@ run_demo() {
     done
 
     case "$demo_name" in
-        happy) exemplar_dir="$ROOT_DIR/project/examples/sample_object_01" ;;
-        stress) exemplar_dir="$ROOT_DIR/project/examples/sample_object_02" ;;
+        happy) exemplar_dir="$PRODUCT_ROOT/examples/sample_object_01" ;;
+        stress) exemplar_dir="$PRODUCT_ROOT/examples/sample_object_02" ;;
         *) fail "demo target must be 'happy' or 'stress'" ;;
     esac
 

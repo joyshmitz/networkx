@@ -11,6 +11,7 @@ import yaml
 from network_methodology_sandbox.intake.workspace_validation import (
     IntakeCommandError,
     ensure_init_target,
+    intake_command_label,
     resolve_object_id,
 )
 from network_methodology_sandbox.model_utils import resolve_project_root
@@ -95,7 +96,7 @@ def main() -> None:
         raise SystemExit(1) from exc
 
     print("Workspace initialized. Edit role_assignments.yaml, then run:")
-    print(f"project/intake generate {result['workspace']}")
+    print(f"{intake_command_label()} generate {result['workspace']}")
 
 
 if __name__ == "__main__":
