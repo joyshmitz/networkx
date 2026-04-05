@@ -2,7 +2,7 @@
 
 **Дата:** 2026-04-04  
 **Гілка:** `app-main`  
-**Статус:** активний план виконання  
+**Статус:** план фази 1; основна маса робіт виконана, лишився repo-root shell debt  
 **Батьківський стратегічний план:** [PLAN_APP_REPO_EXTRACTION.md](PLAN_APP_REPO_EXTRACTION.md)  
 **Пов'язана політика репозиторію:** [REPO_STRATEGY.md](../../../REPO_STRATEGY.md)  
 **Поточна точка входу в продукт:** [project/README.md](../../README.md)
@@ -19,6 +19,8 @@
 - зробити залежність на `networkx` явною;
 - прибрати фальшивий контракт пакування;
 - довести, що продукт можна встановити і перевірити без опори на кореневий editable-пакет бібліотечного форка.
+
+Станом на поточний baseline цей документ уже не повинен читатися як найнагальніший фронт змін. Explicit dependency contract, canonical namespace, cleanup legacy install surface і перевірка з чистого `cwd` уже доставлені. План лишається важливим як execution record фази 1 і як реєстр одного відкритого хвоста: `project/intake` усе ще живе як shell wrapper у межах цього repo і має repo-local `.venv` fallback.
 
 ## Неприємна Правда
 

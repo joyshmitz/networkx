@@ -15,7 +15,7 @@
 | зрозуміти, що це вже не бібліотечний fork, а продуктовий repo | [REPO_STRATEGY.md](../../REPO_STRATEGY.md) |
 | зрозуміти, як влаштований сам продукт і куди далі дивитися | [project/README.md](../README.md) |
 | зрозуміти стратегічний напрямок: коли і як продукт відокремиться від бібліотечного форка | [PLAN_APP_REPO_EXTRACTION.md](plans/PLAN_APP_REPO_EXTRACTION.md) |
-| виконувати поточну фазу розриву залежностей без розмивання scope | [PLAN_APP_DEPENDENCY_DECOUPLING.md](plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) |
+| зрозуміти, що саме вже доставила фаза dependency decoupling і який repo-root борг ще лишився | [PLAN_APP_DEPENDENCY_DECOUPLING.md](plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) |
 | щоденно працювати з workspace об'єкта | [INTAKE_OPERATOR_GUIDE.md](methodology/INTAKE_OPERATOR_GUIDE.md) |
 | зрозуміти, що саме зафіксовано в baseline `v1` і де його межі | [V1_CLOSEOUT_2026-04-03.md](reviews/V1_CLOSEOUT_2026-04-03.md) |
 
@@ -39,6 +39,11 @@
 4. [PLAN_APP_DEPENDENCY_DECOUPLING.md](plans/PLAN_APP_DEPENDENCY_DECOUPLING.md)
 5. [INTAKE_OPERATOR_GUIDE.md](methodology/INTAKE_OPERATOR_GUIDE.md)
 6. [V1_CLOSEOUT_2026-04-03.md](reviews/V1_CLOSEOUT_2026-04-03.md)
+
+Практична поправка після cleanup хвилі така:
+
+- стратегічна нагальність уже не в тому, щоб ще раз "доробляти namespace", а в тому, щоб відрепетирувати extraction і чесно закрити repo-root shell debt;
+- `PLAN_APP_DEPENDENCY_DECOUPLING.md` треба читати як execution record майже завершеної фази 1 і як реєстр залишкового боргу, а не як новий центр тяжіння для щоденних змін.
 
 ## Документаційна Дисципліна
 

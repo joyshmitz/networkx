@@ -6,7 +6,7 @@
 **Пов'язана політика репозиторію:** [REPO_STRATEGY.md](../../../REPO_STRATEGY.md)  
 **Поточна точка входу в продукт:** [project/README.md](../../README.md)  
 **Поточний операторський контракт:** [INTAKE_OPERATOR_GUIDE.md](../methodology/INTAKE_OPERATOR_GUIDE.md)  
-**Поточний план виконання для фази 1:** [PLAN_APP_DEPENDENCY_DECOUPLING.md](PLAN_APP_DEPENDENCY_DECOUPLING.md)  
+**План виконання для вже майже закритої фази 1:** [PLAN_APP_DEPENDENCY_DECOUPLING.md](PLAN_APP_DEPENDENCY_DECOUPLING.md)  
 **Історичний контекст планування, який тепер вважається архівним:**  
 - `project/docs/methodology/INTAKE_MASTER_NOTE.md`
 - `project/docs/plans/PLAN_CF2_BOOTSTRAP_FINAL.md`
@@ -33,14 +33,15 @@
 - Майже всі продуктові зміни відносно `main` живуть у `project/` і пов'язаних стратегічних документах.
 - В `project/src/` код імпортує `networkx` як бібліотеку через публічний Python API.
 - Ми не ведемо окрему продуктову розробку всередині `networkx/`.
-- `project/requirements.txt` зараз не декларує `networkx` як залежність.
-- Продукт досі фактично покладається на кореневий пакет, підключений у режимі editable, у бібліотечному репозиторії.
+- `project/pyproject.toml` і `project/requirements.txt` уже декларують `networkx` як явну залежність продукту.
+- Встановлювана Python-поверхня продукту вже звужена до `network_methodology_sandbox`, а legacy top-level install surface прибрана.
+- Основний залишковий операційний борг уже не в Python package layout, а в тому, що `project/intake` лишається shell wrapper усередині цього repo і все ще має repo-local `.venv` fallback.
 
 ### Що це означає
 
-- Ми вже достатньо відокремили продукт концептуально.
-- Ми ще не відокремили його операційно.
-- Розділення repo прямо зараз можливе, але буде брудним.
+- Ми вже відокремили продукт концептуально і значною мірою операційно.
+- Найбільший технічний шматок decoupling уже виконано.
+- Розділення repo прямо зараз уже варте репетиції; головний ризик тепер не в імпортній межі, а в repo-root shell debt і прихованих assumptions навколо нового layout.
 
 ## Головне Рішення
 
@@ -99,7 +100,7 @@
 - зафіксувати окремий шлях встановлення й тестування для продукту;
 - перевірити, що всі продуктові тести проходять у такому режимі.
 
-Поточний виконавчий контур для цього етапу вже винесений окремо в [PLAN_APP_DEPENDENCY_DECOUPLING.md](PLAN_APP_DEPENDENCY_DECOUPLING.md). Нові зміни в цій фазі мають іти через нього, а не через розмиті доповнення до цього стратегічного документа.
+Станом на теперішній baseline ця фаза вже майже закрита: dependency contract, canonical namespace, cleanup legacy install surface і verification в чистому `cwd` уже доставлені. [PLAN_APP_DEPENDENCY_DECOUPLING.md](PLAN_APP_DEPENDENCY_DECOUPLING.md) слід читати як execution record цієї хвилі та як реєстр одного залишкового боргу навколо `project/intake` і repo-local `.venv`, а не як головний фронт нової нагальної роботи.
 
 ### Фаза 2. Продуктова Межа Пакування
 

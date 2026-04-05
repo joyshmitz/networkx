@@ -15,9 +15,9 @@
 - попереджувальний звіт про підтвердження плюс вузьке блокувальне етапне обмеження;
 - YAML-каталог міжпольових правил виведення і окремий шар семантичної узгодженості;
 - індекс згенерованих артефактів у `reports/workspace.manifest.yaml`;
-- останній підтверджений результат перевірки: `project/intake verify` -> `321 passed`.
+- останній підтверджений результат перевірки: `project/intake verify` -> `332 passed`.
 
-Є ще одна неприємна, але важлива правда. Продукт уже живе в `project/`, а не в бібліотечному коді `networkx/`. Тому репозиторій більше не слід читати як "форк бібліотеки з якоюсь додатковою папкою". Поточна стратегія репозиторію описана в [REPO_STRATEGY.md](../REPO_STRATEGY.md), стратегічний план відділення описаний у [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md), а поточний план виконання для наступного кроку винесено в [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+Є ще одна неприємна, але важлива правда. Продукт уже живе в `project/`, а не в бібліотечному коді `networkx/`. Тому репозиторій більше не слід читати як "форк бібліотеки з якоюсь додатковою папкою". Поточна стратегія репозиторію описана в [REPO_STRATEGY.md](../REPO_STRATEGY.md), стратегічний план відділення описаний у [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md), а [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) тепер слід читати не як головний фронт роботи, а як майже виконаний execution plan фази розриву залежностей із одним залишковим repo-root боргом навколо `project/intake` і fallback `.venv`.
 
 ## З Чого Почати
 
@@ -27,7 +27,7 @@
 | щоденно вести intake по робочій папці | [INTAKE_OPERATOR_GUIDE.md](docs/methodology/INTAKE_OPERATOR_GUIDE.md) |
 | зрозуміти repo-рішення і чому `project/` уже є продуктом | [REPO_STRATEGY.md](../REPO_STRATEGY.md) |
 | зрозуміти наступну стратегічну фазу після стабілізації `v1` | [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md) |
-| виконувати поточний технічний крок перед майбутнім repo split | [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) |
+| перевірити, що вже доставила фаза dependency decoupling і який залишковий борг ще відкритий | [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) |
 | зрозуміти послідовність роботи між ролями та етапами | [QUESTIONNAIRE_WORKFLOW.md](docs/methodology/QUESTIONNAIRE_WORKFLOW.md) |
 | зрозуміти зони відповідальності та правила перевірки | [ROLE_MAP.md](docs/methodology/ROLE_MAP.md) |
 | зрозуміти межі методології та правила людської взаємодії | [HUMAN_INTERACTION_MODEL.md](docs/methodology/HUMAN_INTERACTION_MODEL.md) |
@@ -41,7 +41,7 @@
 | `docs/decisions/` | журнал рішень та архітектурні пояснення |
 | `docs/README.md` | карта активних і історичних документів |
 | `docs/methodology/` | опис робочого процесу, ролей, меж модулів і користувацьких правил |
-| `docs/plans/` | поточний стратегічний план відділення, поточний план виконання і історичні плани |
+| `docs/plans/` | поточний стратегічний план відділення, execution-план вже майже закритої фази decoupling і історичні плани |
 | `docs/reviews/` | підсумки релізів, матеріали перевірок і коригувальні нотатки |
 | `specs/` | декларативні контракти анкети, словника, підтверджень, перевірки та вимог |
 | `src/` | компілятори, перевірки, генератори звітів, intake-команди та спільні шари даних |
@@ -118,7 +118,7 @@ pip install -e './project[dev]'
 
 Якщо з якоїсь причини потрібен лише прямий список runtime-залежностей без editable install, можна використати `project/requirements.txt`. Але це fallback-шлях, який вимагає `git` і мережевий доступ через VCS-залежність `networkx`. Канонічний шлях для розробки і перевірки тепер саме `pip install -e './project[dev]'`.
 
-Увага: цей спосіб все ще не означає повне відділення від repo root. Продукт уже має явний dependency contract, але командна поверхня і частина запуску досі спираються на корінь репозиторію. Це не дрібниця і не "так і задумано", а наступний незакритий борг у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+Увага: цей спосіб все ще не означає повне відділення від repo root. Продукт уже має явний dependency contract, canonical namespace і чесний installed surface, але командна поверхня досі спирається на shell wrapper у цьому репозиторії та на repo-local `.venv` fallback. Це не дрібниця і не "так і задумано", але це вже не головний фронт переписування Python-межі. Поточна нагальність тепер змістилася в extraction rehearsal, а цей борг лишається як хвіст фази decoupling у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
 
 Канонічна перевірка:
 
@@ -148,4 +148,4 @@ python -m network_methodology_sandbox.intake.evidence_status project/examples/sa
 
 ## Історичний Контекст
 
-Плани `v0`, `v1`, bootstrap-етап і review briefs лишаються в репозиторії для простежуваності. Їх слід читати як історичні записи виконання, а не як поточний робочий перелік. Основний користувацький довідник зараз: [INTAKE_OPERATOR_GUIDE.md](docs/methodology/INTAKE_OPERATOR_GUIDE.md). Підсумок зафіксованого baseline `v1`: [V1_CLOSEOUT_2026-04-03.md](docs/reviews/V1_CLOSEOUT_2026-04-03.md). Поточний стратегічний рух уперед: [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md). Поточний execution plan: [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+Плани `v0`, `v1`, bootstrap-етап і review briefs лишаються в репозиторії для простежуваності. Їх слід читати як історичні записи виконання, а не як поточний робочий перелік. Основний користувацький довідник зараз: [INTAKE_OPERATOR_GUIDE.md](docs/methodology/INTAKE_OPERATOR_GUIDE.md). Підсумок зафіксованого baseline `v1`: [V1_CLOSEOUT_2026-04-03.md](docs/reviews/V1_CLOSEOUT_2026-04-03.md). Поточний стратегічний рух уперед: [PLAN_APP_REPO_EXTRACTION.md](docs/plans/PLAN_APP_REPO_EXTRACTION.md). [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md) тепер описує щойно виконану хвилю decoupling і залишковий repo-root debt, а не нову нагальну фазу переписування імпортів.
