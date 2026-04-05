@@ -118,7 +118,15 @@ pip install -e './project[dev]'
 
 Якщо з якоїсь причини потрібен лише прямий список runtime-залежностей без editable install, можна використати `project/requirements.txt`. Але це fallback-шлях, який вимагає `git` і мережевий доступ через VCS-залежність `networkx`. Канонічний шлях для розробки і перевірки тепер саме `pip install -e './project[dev]'`.
 
-Увага: цей спосіб все ще не означає повне відділення від repo root. Продукт уже має явний dependency contract, canonical namespace і чесний installed surface, а shell wrapper тепер достатньо product-root aware, щоб чесно репетирувати extracted layout без hardcode на `project/tests` і `project/examples`. Але командна поверхня все ще живе як shell wrapper у цьому репозиторії та, поки триває monorepo-stage, зберігає parent-repo `.venv` compatibility fallback. Це не дрібниця і не "так і задумано", але це вже не головний фронт переписування Python-межі. Поточна нагальність тепер змістилася в extraction rehearsal, а цей борг лишається як хвіст фази decoupling у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+Увага: цей спосіб все ще не означає повне відділення від repo root. Продукт уже має явний dependency contract, canonical namespace і чесний installed surface, а shell wrapper тепер достатньо product-root aware, щоб чесно репетирувати extracted layout без hardcode на `project/tests` і `project/examples`. Далі ми вже перевірили жорсткіший сценарій: copied-root rehearsal зі свіжим product-local `.venv`, `pip install -e '<copied-root>[dev]'`, а потім `verify` і `demo` без опори на монорепо `.venv`. Але командна поверхня все ще живе як shell wrapper у цьому репозиторії та, поки триває monorepo-stage, зберігає parent-repo `.venv` compatibility fallback. Це не дрібниця і не "так і задумано", але це вже не головний фронт переписування Python-межі. Поточна нагальність тепер змістилася в extraction rehearsal, а цей борг лишається як хвіст фази decoupling у [PLAN_APP_DEPENDENCY_DECOUPLING.md](docs/plans/PLAN_APP_DEPENDENCY_DECOUPLING.md).
+
+Для повторюваної репетиції extracted install у репозиторії є окремий harness:
+
+```bash
+.venv/bin/python project/tests/rehearse_extracted_install.py
+```
+
+Він копіює продукт у temp-root, піднімає там свіжий `.venv`, виконує `pip install -e '<copied-root>[dev]'`, а далі проганяє `intake verify`, `demo happy` і `demo stress` уже без залежності на монорепо `.venv`.
 
 Канонічна перевірка:
 

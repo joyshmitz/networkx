@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -9,12 +10,16 @@ from conftest import GOLDEN_DATE as FIXED_DATE
 from network_methodology_sandbox.intake.compile_intake import compile_intake
 from network_methodology_sandbox.intake.generate_intake_sheets import generate
 from network_methodology_sandbox.intake.init_workspace import init_workspace
-from network_methodology_sandbox.intake.workspace_validation import WorkspaceValidationError
+from network_methodology_sandbox.intake.workspace_validation import (
+    WorkspaceValidationError,
+    intake_command_label,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAMPLE_ROLE_ASSIGNMENTS = (
     PROJECT_ROOT / "examples" / "sample_object_01" / "role_assignments.yaml"
 )
+INTAKE_COMMAND = intake_command_label()
 
 
 def _load_yaml(path: Path) -> dict:
@@ -93,7 +98,10 @@ class TestInitWorkspace:
 
 class TestWorkspaceCommandValidation:
     def test_generate_missing_workspace_suggests_init(self, tmp_path):
-        with pytest.raises(WorkspaceValidationError, match="project/intake init"):
+        with pytest.raises(
+            WorkspaceValidationError,
+            match=rf"{re.escape(INTAKE_COMMAND)} init",
+        ):
             generate(
                 tmp_path / "missing_workspace",
                 project_root=PROJECT_ROOT,
@@ -123,7 +131,10 @@ class TestWorkspaceCommandValidation:
             encoding="utf-8",
         )
 
-        with pytest.raises(WorkspaceValidationError, match="Run: project/intake generate"):
+        with pytest.raises(
+            WorkspaceValidationError,
+            match=rf"Run: {re.escape(INTAKE_COMMAND)} generate",
+        ):
             compile_intake(
                 workspace,
                 project_root=PROJECT_ROOT,

@@ -6,13 +6,17 @@ from network_methodology_sandbox.intake.workspace_snapshot import (
     SNAPSHOT_SCHEMA_VERSION,
     build_workspace_snapshot,
 )
-from network_methodology_sandbox.intake.workspace_validation import WorkspaceValidationError
+from network_methodology_sandbox.intake.workspace_validation import (
+    WorkspaceValidationError,
+    intake_command_label,
+)
 
 from conftest import GOLDEN_DATE, copy_workspace
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 HAPPY_PATH = PROJECT_ROOT / "examples" / "sample_object_01"
 STRESS_PATH = PROJECT_ROOT / "examples" / "sample_object_02"
+INTAKE_COMMAND = intake_command_label()
 
 
 def test_snapshot_sample01_summary_and_role_resolution(tmp_path):
@@ -110,7 +114,7 @@ def test_snapshot_missing_workspace_raises_clear_validation_error(tmp_path):
         )
     except WorkspaceValidationError as exc:
         assert "Workspace not found" in str(exc)
-        assert "project/intake init" in str(exc)
+        assert f"{INTAKE_COMMAND} init" in str(exc)
     else:
         raise AssertionError("Expected WorkspaceValidationError for missing workspace")
 

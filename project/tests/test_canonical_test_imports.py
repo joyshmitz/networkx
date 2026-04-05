@@ -4,26 +4,26 @@ from pathlib import Path
 
 
 TARGET_FILES = [
-    "project/tests/conftest.py",
-    "project/tests/test_annex_activation.py",
-    "project/tests/test_compile_graphs.py",
-    "project/tests/test_compile_intake.py",
-    "project/tests/test_cross_graph.py",
-    "project/tests/test_generate_intake.py",
-    "project/tests/test_inference_rules.py",
-    "project/tests/test_init_workspace.py",
-    "project/tests/test_intake_branch_gates.py",
-    "project/tests/test_intake_evidence.py",
-    "project/tests/test_intake_happy_path_golden.py",
-    "project/tests/test_intake_preview.py",
-    "project/tests/test_intake_review.py",
-    "project/tests/test_pipeline_e2e.py",
-    "project/tests/test_review_fixes.py",
-    "project/tests/test_role_assignments.py",
-    "project/tests/test_run_pipeline_manifest.py",
-    "project/tests/test_validators.py",
-    "project/tests/test_workspace_manifest.py",
-    "project/tests/test_workspace_snapshot.py",
+    "tests/conftest.py",
+    "tests/test_annex_activation.py",
+    "tests/test_compile_graphs.py",
+    "tests/test_compile_intake.py",
+    "tests/test_cross_graph.py",
+    "tests/test_generate_intake.py",
+    "tests/test_inference_rules.py",
+    "tests/test_init_workspace.py",
+    "tests/test_intake_branch_gates.py",
+    "tests/test_intake_evidence.py",
+    "tests/test_intake_happy_path_golden.py",
+    "tests/test_intake_preview.py",
+    "tests/test_intake_review.py",
+    "tests/test_pipeline_e2e.py",
+    "tests/test_review_fixes.py",
+    "tests/test_role_assignments.py",
+    "tests/test_run_pipeline_manifest.py",
+    "tests/test_validators.py",
+    "tests/test_workspace_manifest.py",
+    "tests/test_workspace_snapshot.py",
 ]
 
 LEGACY_IMPORT_PATTERNS = [
@@ -44,11 +44,11 @@ LEGACY_IMPORT_PATTERNS = [
 
 
 def test_functional_tests_use_canonical_namespace_imports() -> None:
-    repo_root = Path(__file__).resolve().parents[2]
+    product_root = Path(__file__).resolve().parents[1]
     offenders: list[str] = []
 
     for relative_path in TARGET_FILES:
-        content = (repo_root / relative_path).read_text(encoding="utf-8")
+        content = (product_root / relative_path).read_text(encoding="utf-8")
         for pattern in LEGACY_IMPORT_PATTERNS:
             if pattern in content:
                 offenders.append(f"{relative_path}: {pattern}")

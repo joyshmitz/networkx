@@ -35,13 +35,13 @@
 - Ми не ведемо окрему продуктову розробку всередині `networkx/`.
 - `project/pyproject.toml` і `project/requirements.txt` уже декларують `networkx` як явну залежність продукту.
 - Встановлювана Python-поверхня продукту вже звужена до `network_methodology_sandbox`, а legacy top-level install surface прибрана.
-- Основний залишковий операційний борг уже не в Python package layout. Shell wrapper `project/intake` уже доведено до product-root-aware стану для `tests/`, `examples/` і operator-facing command hints, але він усе ще живе всередині цього repo і, поки триває monorepo-stage, зберігає parent-repo `.venv` як compatibility fallback.
+- Основний залишковий операційний борг уже не в Python package layout. Shell wrapper `project/intake` уже доведено до product-root-aware стану для `tests/`, `examples/` і operator-facing command hints. Окремий copied-root rehearsal зі свіжим product-local `.venv` і `pip install -e '<copied-root>[dev]'` уже підтвердив, що `verify` і `demo` можуть відпрацювати без опори на монорепо `.venv`. Але wrapper усе ще живе всередині цього repo і, поки триває monorepo-stage, зберігає parent-repo `.venv` як compatibility fallback.
 
 ### Що це означає
 
 - Ми вже відокремили продукт концептуально і значною мірою операційно.
 - Найбільший технічний шматок decoupling уже виконано.
-- Розділення repo прямо зараз уже варте репетиції; головний ризик тепер не в імпортній межі, а в shell-layer debt, install-story для нового кореня і прихованих assumptions навколо реального split workflow.
+- Розділення repo прямо зараз уже варте репетиції; головний ризик тепер не в імпортній межі, а в shell-layer debt, фінальному installer/default-runtime contract і прихованих assumptions навколо реального split workflow.
 
 ## Головне Рішення
 
@@ -123,7 +123,12 @@
 - прогнати встановлення, `verify` і прикладні сценарії в репетиційній структурі;
 - зафіксувати всі приховані залежності на старий root.
 
-Перший практичний rehearsal slice цієї фази вже прибирає найпростіший самообман: shell wrapper більше не жорстко пришитий до `project/tests` і `project/examples`, а операторські підказки можуть показувати `intake ...` у extracted-like layout замість вічного `project/intake ...`. Це ще не split і не остаточна installer story, але це вже реальна перевірка нового layout, а не черговий документ про нього.
+Перші практичні rehearsal slices цієї фази вже прибрали два найпростіші самообмани:
+
+- shell wrapper більше не жорстко пришитий до `project/tests` і `project/examples`, а операторські підказки можуть показувати `intake ...` у extracted-like layout замість вічного `project/intake ...`;
+- copied-root harness `project/tests/rehearse_extracted_install.py` уже доводить жорсткіший сценарій: temp-root copy, fresh `.venv`, `pip install -e '<copied-root>[dev]'`, після чого `verify`, `demo happy` і `demo stress` проходять без опори на монорепо `.venv`.
+
+Це все ще не split і не остаточний installer/default-runtime contract, але це вже реальна перевірка нового layout, а не черговий документ про нього.
 
 ### Фаза 4. Реальне Відділення Репозиторію
 
