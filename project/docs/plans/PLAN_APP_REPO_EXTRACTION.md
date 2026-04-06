@@ -35,7 +35,7 @@
 - Ми не ведемо окрему продуктову розробку всередині `networkx/`.
 - `project/pyproject.toml` і `project/requirements.txt` уже декларують `networkx` як явну залежність продукту.
 - Встановлювана Python-поверхня продукту вже звужена до `network_methodology_sandbox`, а legacy top-level install surface прибрана.
-- Основний залишковий операційний борг уже не в Python package layout. Shell wrapper `project/intake` уже доведено до product-root-aware стану для `tests/`, `examples/` і operator-facing command hints. Окремий copied-root rehearsal зі свіжим product-local `.venv` і `pip install -e '<copied-root>[dev]'` уже підтвердив, що `verify` і `demo` можуть відпрацювати без опори на монорепо `.venv`. Але wrapper усе ще живе всередині цього repo і, поки триває monorepo-stage, зберігає parent-repo `.venv` як compatibility fallback.
+- Основний залишковий операційний борг уже не в Python package layout. Shell wrapper `project/intake` уже доведено до product-root-aware стану для `tests/`, `examples/` і operator-facing command hints. Окремий copied-root rehearsal зі свіжим product-local `.venv` і `pip install -e '<copied-root>[dev]'` уже підтвердив, що `verify` і `demo` можуть відпрацювати без опори на монорепо `.venv`. Але wrapper усе ще живе всередині цього repo і, поки триває monorepo-stage, зберігає parent-repo `.venv` як deprecated compatibility fallback (з warning на stderr). Коли warning перестане з'являтися у реальному workflow — fallback можна буде безпечно видалити.
 
 ### Що це означає
 

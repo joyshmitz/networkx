@@ -54,6 +54,7 @@ resolve_python() {
     if legacy_monorepo_layout; then
         candidate="$PARENT_DIR/.venv/bin/python"
         if [ -x "$candidate" ]; then
+            echo "WARNING: using parent-repo .venv as monorepo-stage compatibility fallback. This path will be removed. Create $PRODUCT_ROOT/.venv or set PROJECT_INTAKE_PYTHON to silence this warning." >&2
             printf '%s\n' "$candidate"
             return 0
         fi

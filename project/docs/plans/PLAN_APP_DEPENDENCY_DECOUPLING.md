@@ -20,7 +20,7 @@
 - прибрати фальшивий контракт пакування;
 - довести, що продукт можна встановити і перевірити без опори на кореневий editable-пакет бібліотечного форка.
 
-Станом на поточний baseline цей документ уже не повинен читатися як найнагальніший фронт змін. Explicit dependency contract, canonical namespace, cleanup legacy install surface і перевірка з чистого `cwd` уже доставлені. План лишається важливим як execution record фази 1 і як реєстр одного відкритого хвоста: `project/intake` усе ще живе як shell wrapper у межах цього repo і має repo-local `.venv` fallback.
+Станом на поточний baseline цей документ уже не повинен читатися як найнагальніший фронт змін. Explicit dependency contract, canonical namespace, cleanup legacy install surface і перевірка з чистого `cwd` уже доставлені. План лишається важливим як execution record фази 1 і як реєстр одного відкритого хвоста: `project/intake` усе ще живе як shell wrapper у межах цього repo і має parent-repo `.venv` як deprecated compatibility fallback (з warning на stderr). Коли warning перестане з'являтися у реальному workflow — fallback можна буде безпечно видалити.
 
 ## Неприємна Правда
 
